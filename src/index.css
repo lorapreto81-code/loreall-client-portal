@@ -6,50 +6,50 @@
 
 @layer base {
   :root {
-    --background: 228 33% 97%;
-    --foreground: 240 50% 20%;
+    --background: 240 33% 5%;
+    --foreground: 240 20% 97%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 50% 20%;
+    --card: 240 33% 11%;
+    --card-foreground: 240 20% 97%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 50% 20%;
+    --popover: 240 33% 11%;
+    --popover-foreground: 240 20% 97%;
 
     --primary: 222 100% 56%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 270 65% 51%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 263 70% 80%;
 
-    --muted: 220 14% 90%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 240 20% 18%;
+    --muted-foreground: 240 10% 55%;
 
     --accent: 190 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 50% 90%;
 
-    --success: 160 75% 24%;
-    --success-foreground: 0 0% 100%;
+    --success: 160 50% 40%;
+    --success-foreground: 160 40% 75%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 38 80% 55%;
+    --warning-foreground: 38 70% 82%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 240 20% 22%;
+    --input: 240 20% 22%;
     --ring: 222 100% 56%;
 
     --radius: 0.625rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 240 33% 7%;
+    --sidebar-foreground: 240 5% 65%;
+    --sidebar-primary: 240 6% 90%;
+    --sidebar-primary-foreground: 240 33% 7%;
+    --sidebar-accent: 240 20% 15%;
+    --sidebar-accent-foreground: 240 6% 90%;
+    --sidebar-border: 240 20% 22%;
+    --sidebar-ring: 222 100% 56%;
   }
 }
 
@@ -93,9 +93,9 @@
   }
 
   .card-elevated {
-    background: white;
+    background: hsl(var(--card));
     border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
     border: 1px solid hsl(var(--border));
   }
 }
