@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/authStore";
 import { getCustomerInvoices, generatePaymentLink } from "@/lib/api";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
+import MyPlanSection from "@/components/MyPlanSection";
 import logo from "@/assets/loreall-logo.png";
 
 const RENEWAL_PERIODS = [
