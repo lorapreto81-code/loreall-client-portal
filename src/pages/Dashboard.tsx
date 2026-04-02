@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import ChangePlanBottomSheet from "@/components/ChangePlanBottomSheet";
 import { useTheme } from "@/hooks/use-theme";
-import logo from "@/assets/loreall-logo.png";
+const logo = "/logo.png";
 
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();

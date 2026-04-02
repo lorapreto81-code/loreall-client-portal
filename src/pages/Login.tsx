@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { searchCustomer } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
-import logo from "@/assets/loreall-logo.png";
+const logo = "/logo.png";
 
 const Login = () => {
   const [usuario, setUsuario] = useState("");

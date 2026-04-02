@@ -9,7 +9,7 @@ import {
   Plan, PERIOD_MAP, getPlanName, getPlanValue,
   matchesScreenCount, hasAnyScreenTag, matchesPeriod,
 } from "@/lib/planUtils";
-import logo from "@/assets/loreall-logo.png";
+const logo = "/logo.png";
 
 interface Props {
   open: boolean;
