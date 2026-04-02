@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LogOut, Copy, Check, Share2, ChevronDown, ChevronUp,
-  AlertTriangle, Sun, Moon, Gift
+  LogOut, ChevronDown, ChevronUp,
+  AlertTriangle, Sun, Moon, Gift, MessageCircle, Film
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { getCustomerInvoices } from "@/lib/api";
