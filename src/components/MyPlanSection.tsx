@@ -48,6 +48,7 @@ const MyPlanSection = () => {
     queryKey: ["plans"],
     queryFn: getPlans,
     staleTime: 120_000,
+    enabled: !!customer,
   });
 
   if (!customer) return null;
