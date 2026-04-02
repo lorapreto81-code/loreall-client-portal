@@ -107,7 +107,7 @@ const Dashboard = () => {
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="container flex items-center justify-between py-3">
-          <img src={logo} alt="Loreall Play TV" className="h-10" />
+          <img src={logo} alt="Loreall Play TV" style={{ width: 80, height: "auto" }} />
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-foreground">{customer.name}</p>
