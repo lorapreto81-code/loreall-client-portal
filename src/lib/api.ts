@@ -1,21 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
-
-async function invokeProxy(action: string, params: Record<string, string> = {}, body?: Record<string, unknown>) {
-  const queryParams = new URLSearchParams({ action, ...params }).toString();
-  
-  const { data, error } = await supabase.functions.invoke("topgestor-proxy", {
-    method: body ? "POST" : "GET",
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-    // Pass query params via the function URL
-  });
-
-  if (error) throw new Error(error.message || "Erro na requisição");
-  return data;
-}
-
-// We need to use fetch directly to pass query params since supabase.functions.invoke doesn't support them well
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
