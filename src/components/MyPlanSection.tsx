@@ -31,6 +31,24 @@ const MyPlanSection = () => {
     enabled: !!customer,
   });
 
+  const currentPlanId = customer?.plan?.id;
+  const currentPlanName = customer?.plan?.name || "";
+  const currentPeriod = detectCurrentPeriod(currentPlanName);
+
+  const allPlans: Plan[] = Array.isArray(plansQuery.data)
+    ? plansQuery.data
+    : plansQuery.data?.data || [];
+
+  const filteredPlans = useMemo(() => {
+    if (!currentPeriod) return [];
+    return allPlans.filter((p) => {
+      const name = getPlanName(p);
+      return hasAnyScreenTag(name) &&
+        matchesPeriod(name, currentPeriod) &&
+        matchesScreenCount(name, selectedScreens);
+    });
+  }, [allPlans, currentPeriod, selectedScreens]);
+
   if (!customer) return null;
 
   const currentPlanId = customer.plan?.id;
