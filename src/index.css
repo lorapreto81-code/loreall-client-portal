@@ -151,4 +151,30 @@
   .dark .card-elevated {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   }
+
+  /* Support buttons */
+  .btn-support {
+    background: #F4F6FB;
+    border: 1px solid #E2E8F0;
+    color: #1E1B4B;
+  }
+
+  .dark .btn-support {
+    background: #1E1E38;
+    border: 1px solid #2A2A45;
+    color: #F0F0FF;
+  }
+
+  /* Notice banner */
+  .notice-banner {
+    background: #FAEEDA;
+    border-color: #F59E0B;
+    color: #854F0B;
+  }
+
+  .dark .notice-banner {
+    background: #1A1200;
+    border-color: #FAC775;
+    color: #FAC775;
+  }
 }

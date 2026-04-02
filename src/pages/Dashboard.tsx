@@ -73,6 +73,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <NoticeBanner />
       {/* 1. HEADER */}
       <header className="bg-card sticky top-0 z-10" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
