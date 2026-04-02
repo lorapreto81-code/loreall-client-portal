@@ -150,6 +150,30 @@ const Dashboard = () => {
           </button>
         </div>
 
+        {/* 4.5. SUPORTE E PEDIR CONTEÚDO */}
+        <div className="grid grid-cols-2 gap-3">
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Preciso%20de%20suporte.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-support font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{ minHeight: 56, borderRadius: 16 }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            Suporte
+          </a>
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Quero%20pedir%20um%20conteúdo.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}%20-%20Conteúdo%3A%20`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-support font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{ minHeight: 56, borderRadius: 16 }}
+          >
+            <Film className="h-4 w-4" />
+            Pedir conteúdo
+          </a>
+        </div>
+
         {/* 5. FATURAS RECENTES */}
         <div className="card-elevated p-5">
           <h2 className="text-base font-bold text-foreground mb-3">Faturas recentes</h2>
