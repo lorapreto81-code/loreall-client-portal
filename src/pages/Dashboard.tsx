@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LogOut, Copy, Check, Share2, ChevronDown, ChevronUp,
-  AlertTriangle, Sun, Moon, Gift
+  LogOut, ChevronDown, ChevronUp,
+  AlertTriangle, Sun, Moon, Gift, MessageCircle, Film
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { getCustomerInvoices } from "@/lib/api";
@@ -13,7 +13,9 @@ import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import ChangePlanBottomSheet from "@/components/ChangePlanBottomSheet";
 import { useTheme } from "@/hooks/use-theme";
+import NoticeBanner from "@/components/NoticeBanner";
 const logo = "/logo.png";
+const WHATSAPP_NUMBER = "5583985591952";
 
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();
@@ -71,6 +73,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <NoticeBanner />
       {/* 1. HEADER */}
       <header className="bg-card sticky top-0 z-10" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
@@ -146,6 +149,30 @@ const Dashboard = () => {
           >
             Trocar plano
           </button>
+        </div>
+
+        {/* 4.5. SUPORTE E PEDIR CONTEÚDO */}
+        <div className="grid grid-cols-2 gap-3">
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Preciso%20de%20suporte.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-support font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{ minHeight: 56, borderRadius: 16 }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            Suporte
+          </a>
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Quero%20pedir%20um%20conteúdo.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}%20-%20Conteúdo%3A%20`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-support font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{ minHeight: 56, borderRadius: 16 }}
+          >
+            <Film className="h-4 w-4" />
+            Pedir conteúdo
+          </a>
         </div>
 
         {/* 5. FATURAS RECENTES */}
