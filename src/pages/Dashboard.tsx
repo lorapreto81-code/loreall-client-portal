@@ -11,19 +11,12 @@ import { getCustomerInvoices, generatePaymentLink } from "@/lib/api";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import MyPlanSection from "@/components/MyPlanSection";
+import RenewalSection from "@/components/RenewalSection";
 import logo from "@/assets/loreall-logo.png";
-
-const RENEWAL_PERIODS = [
-  { months: 1, label: "1 mês" },
-  { months: 3, label: "3 meses" },
-  { months: 6, label: "6 meses" },
-  { months: 12, label: "12 meses" },
-];
 
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [selectedPeriod, setSelectedPeriod] = useState(1);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [paymentModal, setPaymentModal] = useState<string | null>(null);
   const [copiedRef, setCopiedRef] = useState(false);
@@ -53,7 +46,6 @@ const Dashboard = () => {
 
   const days = daysUntil(customer.data_de_vencimento);
   const planValue = typeof customer.plan?.value === "string" ? parseFloat(customer.plan.value) : (customer.plan?.value || 0);
-  const renewalTotal = planValue * selectedPeriod;
   const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
 
   const referralLink = `https://loreallplay.com.br/ref/${customer.usuario}`;
@@ -167,35 +159,7 @@ const Dashboard = () => {
         </div>
 
         {/* Renewal Section */}
-        <div className="card-elevated p-6">
-          <h2 className="text-lg font-bold text-foreground mb-4">Renovar acesso</h2>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {RENEWAL_PERIODS.map((p) => (
-              <button
-                key={p.months}
-                onClick={() => setSelectedPeriod(p.months)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedPeriod === p.months
-                    ? "btn-primary-gradient"
-                    : "border-[1.5px] border-secondary text-secondary hover:bg-secondary/5"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Total: <span className="font-bold text-foreground text-lg">{formatCurrency(renewalTotal)}</span>
-          </p>
-          <button
-            onClick={handleGeneratePayment}
-            disabled={generatingLink}
-            className="btn-primary-gradient px-6 py-3 font-semibold text-sm inline-flex items-center gap-2 disabled:opacity-60"
-          >
-            {generatingLink && <Loader2 className="h-4 w-4 animate-spin" />}
-            Gerar fatura de renovação
-          </button>
-        </div>
+        <RenewalSection />
 
         {/* My Plan Section */}
         <MyPlanSection />
