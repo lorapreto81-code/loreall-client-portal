@@ -40,3 +40,22 @@ export async function generatePaymentLink(customerId: number) {
   });
   return handleResponse(res);
 }
+
+export async function getPlans() {
+  const res = await fetch(`${API_BASE}/plans`, { headers });
+  return handleResponse(res);
+}
+
+export async function updateCustomer(customerId: number, body: Record<string, unknown>) {
+  const res = await fetch(`${API_BASE}/customers/${customerId}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+  });
+  return handleResponse(res);
+}
+
+export async function getCustomer(customerId: number) {
+  const res = await fetch(`${API_BASE}/customers/${customerId}`, { headers });
+  return handleResponse(res);
+}
