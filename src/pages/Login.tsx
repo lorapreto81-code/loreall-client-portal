@@ -36,7 +36,7 @@ const Login = () => {
       }
       login(found);
       toast.success("Bem-vindo, " + found.name + "!");
-      navigate("/dashboard");
+      navigate("/welcome");
     } catch (err: any) {
       toast.error(err.message || "Erro ao fazer login.");
     } finally {
