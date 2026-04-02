@@ -45,8 +45,7 @@ const Dashboard = () => {
   if (!customer) return null;
 
   const days = daysUntil(customer.data_de_vencimento);
-  const planValue = typeof customer.plan?.value === "string" ? parseFloat(customer.plan.value) : (customer.plan?.value || 0);
-  const renewalTotal = planValue * selectedPeriod;
+  const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
   const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
 
   const referralLink = `https://loreallplay.com.br/ref/${customer.usuario}`;
