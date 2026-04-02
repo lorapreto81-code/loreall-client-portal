@@ -219,17 +219,41 @@ const Dashboard = () => {
         </div>
 
         {/* 6. INDIQUE E GANHE — Em breve */}
-        <div className="card-elevated p-5" style={{ opacity: 0.6, cursor: "default" }}>
+        <div className="card-elevated p-5 card-referral" style={{ opacity: 0.75, cursor: "default" }}>
           <div className="flex items-center gap-2 mb-1">
-            <Gift className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-base font-bold text-foreground">Indique e ganhe</h2>
-            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+            <Gift className="h-5 w-5 referral-icon" />
+            <h2 className="text-base font-medium referral-title">Indique e ganhe</h2>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full referral-badge">
               Em breve
             </span>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm referral-subtitle">
             Em breve disponível para você!
           </p>
+        </div>
+
+        {/* 7. SUPORTE E PEDIR CONTEÚDO */}
+        <div className="grid grid-cols-2 gap-3">
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Preciso%20de%20suporte.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-footer text-sm flex items-center justify-center gap-2 transition-all hover:opacity-80"
+            style={{ height: 48, borderRadius: 12 }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            Suporte
+          </a>
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Quero%20pedir%20um%20conteúdo.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}%20-%20Conteúdo%3A%20`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-footer text-sm flex items-center justify-center gap-2 transition-all hover:opacity-80"
+            style={{ height: 48, borderRadius: 12 }}
+          >
+            <Film className="h-4 w-4" />
+            Pedir conteúdo
+          </a>
         </div>
 
         <div className="h-4" />

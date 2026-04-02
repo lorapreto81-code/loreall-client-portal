@@ -152,18 +152,44 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   }
 
-  /* Support buttons */
-  .btn-support {
-    background: #F4F6FB;
-    border: 1px solid #E2E8F0;
-    color: #1E1B4B;
+  /* Support buttons - subtle footer style */
+  .btn-footer {
+    background: transparent;
+    border: 0.5px solid #E2E8F0;
+    color: #6B7280;
+    font-weight: 500;
   }
 
-  .dark .btn-support {
-    background: #1E1E38;
-    border: 1px solid #2A2A45;
-    color: #F0F0FF;
+  .dark .btn-footer {
+    border-color: #2A2A45;
+    color: #8888AA;
   }
+
+  /* Referral card - golden */
+  .card-referral {
+    border-color: #F59E0B !important;
+    border-width: 1px !important;
+  }
+  .referral-icon { color: #854F0B; }
+  .referral-title { color: #854F0B; }
+  .referral-badge {
+    background: #FAEEDA;
+    color: #854F0B;
+    border: 0.5px solid #F59E0B;
+  }
+  .referral-subtitle { color: #B45309; }
+
+  .dark .card-referral {
+    border-color: rgba(250, 199, 117, 0.5) !important;
+  }
+  .dark .referral-icon { color: #FAC775; }
+  .dark .referral-title { color: #FAC775; }
+  .dark .referral-badge {
+    background: #2A1A00;
+    color: #FAC775;
+    border: 0.5px solid #FAC775;
+  }
+  .dark .referral-subtitle { color: #EF9F27; }
 
   /* Notice banner */
   .notice-banner {
