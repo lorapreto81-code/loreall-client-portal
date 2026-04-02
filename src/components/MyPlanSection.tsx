@@ -74,23 +74,23 @@ const MyPlanSection = () => {
   };
 
   return (
-    <div className="card-elevated p-6">
-      <h2 className="text-lg font-bold text-foreground mb-2">Adicionar ou remover telas</h2>
+    <>
       <p className="text-sm text-muted-foreground mb-4">
         Escolha a quantidade de telas para o mesmo período do seu plano atual.
       </p>
 
       {/* Screen toggle */}
-      <div className="grid grid-cols-3 gap-2 mb-6">
+      <div className="grid grid-cols-3 gap-2 mb-5">
         {SCREEN_OPTIONS.map((n) => (
           <button
             key={n}
             onClick={() => setSelectedScreens(n)}
-            className={`py-3 rounded-lg text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] ${
+            className={`py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] ${
               selectedScreens === n
                 ? "btn-primary-gradient"
-                : "bg-card border border-border text-muted-foreground hover:border-secondary"
+                : "bg-card border border-border text-muted-foreground"
             }`}
+            style={{ minHeight: 44 }}
           >
             {screenLabel(n)}
           </button>
@@ -99,23 +99,23 @@ const MyPlanSection = () => {
 
       {/* Plans for same period */}
       {plansQuery.isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {[...Array(2)].map((_, i) => (
-            <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+            <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
           ))}
         </div>
       ) : !currentPeriod ? (
         <p className="text-sm text-muted-foreground">Não foi possível detectar o período do plano atual.</p>
       ) : filteredPlans.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {filteredPlans.map((plan) => {
             const isCurrent = plan.id === currentPlanId;
             return (
               <button
                 key={plan.id}
                 onClick={() => handlePlanClick(plan)}
-                className={`relative p-5 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                  isCurrent ? "cursor-default" : "card-elevated hover:shadow-md cursor-pointer"
+                className={`relative p-4 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                  isCurrent ? "cursor-default" : "card-elevated cursor-pointer"
                 }`}
                 style={
                   isCurrent
@@ -123,18 +123,18 @@ const MyPlanSection = () => {
                         border: "2px solid transparent",
                         background:
                           "linear-gradient(white,white) padding-box, linear-gradient(135deg,#00C8FF,#7B2FD4) border-box",
-                        borderRadius: "16px",
+                        borderRadius: 16,
                       }
-                    : undefined
+                    : { minHeight: 44 }
                 }
               >
                 {isCurrent && (
-                  <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-pill btn-primary-gradient">
-                    Plano atual
+                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-pill btn-primary-gradient">
+                    Atual
                   </span>
                 )}
-                <p className="font-bold text-foreground text-base mb-1">{getPlanName(plan)}</p>
-                <p className="text-lg font-bold gradient-primary-text">
+                <p className="font-bold text-foreground text-sm mb-1">{getPlanName(plan)}</p>
+                <p className="text-base font-bold gradient-primary-text">
                   {formatCurrency(getPlanValue(plan))}
                 </p>
               </button>
@@ -150,8 +150,8 @@ const MyPlanSection = () => {
       {/* Confirmation modal */}
       {confirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm p-4">
-          <div className="card-elevated p-6 w-full max-w-md relative animate-in fade-in zoom-in-95">
-            <button onClick={() => setConfirmModal(null)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+          <div className="card-elevated p-6 w-full max-w-sm relative animate-in fade-in zoom-in-95">
+            <button onClick={() => setConfirmModal(null)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2">
               <X className="h-5 w-5" />
             </button>
             <h3 className="text-lg font-bold text-foreground mb-2">Trocar de plano</h3>
@@ -164,14 +164,16 @@ const MyPlanSection = () => {
               <button
                 onClick={handleConfirm}
                 disabled={saving}
-                className="btn-primary-gradient px-5 py-2.5 text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-60"
+                className="btn-primary-gradient px-5 py-2.5 text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-60 flex-1"
+                style={{ minHeight: 44 }}
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                 Confirmar
               </button>
               <button
                 onClick={() => setConfirmModal(null)}
-                className="px-5 py-2.5 text-sm border-[1.5px] border-secondary text-secondary rounded-lg hover:bg-secondary/5 transition-all"
+                className="px-5 py-2.5 text-sm rounded-lg transition-all flex-1"
+                style={{ minHeight: 44, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
               >
                 Cancelar
               </button>
@@ -179,7 +181,7 @@ const MyPlanSection = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
