@@ -1,7 +1,7 @@
 const API_BASE = "https://topgestor.me/api/v1";
-const API_TOKEN = "SEU_TOKEN_AQUI"; // TODO: Substituir pelo seu token real
+const API_TOKEN = import.meta.env.VITE_TOPGESTOR_TOKEN || "103|LzEGmH0wGvj0IZpvnugN58cDqBXWHyhsU98jwkDJ533c098c";
 
-const headers = {
+const headers: Record<string, string> = {
   Authorization: `Bearer ${API_TOKEN}`,
   Accept: "application/json",
   "Content-Type": "application/json",
