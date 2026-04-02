@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import Welcome from "./pages/Welcome";
 
 const queryClient = new QueryClient();
 
