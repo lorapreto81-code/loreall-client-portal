@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   LogOut, Copy, Check, Share2, ChevronDown, ChevronUp,
-  AlertTriangle
+  AlertTriangle, Sun, Moon, Gift
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { getCustomerInvoices } from "@/lib/api";
@@ -12,12 +12,13 @@ import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import ChangePlanBottomSheet from "@/components/ChangePlanBottomSheet";
+import { useTheme } from "@/hooks/use-theme";
 import logo from "@/assets/loreall-logo.png";
 
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [copiedRef, setCopiedRef] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const [showAllInvoices, setShowAllInvoices] = useState(false);
   const [renewalOpen, setRenewalOpen] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
@@ -47,23 +48,21 @@ const Dashboard = () => {
 
   const days = daysUntil(customer.data_de_vencimento);
   const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
-  const referralLink = `https://loreallplay.com.br/ref/${customer.usuario}`;
   const invoices: any[] = invoicesQuery.data?.data || invoicesQuery.data || [];
-  const visibleInvoices = showAllInvoices ? invoices.slice(0, 10) : invoices.slice(0, 3);
 
-  const handleCopyRef = () => {
-    navigator.clipboard.writeText(referralLink);
-    setCopiedRef(true);
-    toast.success("Link copiado!");
-    setTimeout(() => setCopiedRef(false), 2000);
-  };
+  // AJUSTE 3: Smart invoice status — if customer expiry is in the future,
+  // pending invoices are treated as "paid" (visual only)
+  const customerNotExpired = days >= 0;
+  const processedInvoices = invoices.map((inv: any) => {
+    const invStatus = (inv.status || "").toLowerCase();
+    const isPending = ["pendente", "pending", "em aberto"].includes(invStatus);
+    if (isPending && customerNotExpired) {
+      return { ...inv, _displayStatus: "pago", _hidePay: true };
+    }
+    return { ...inv, _displayStatus: inv.status, _hidePay: false };
+  });
 
-  const shareWhatsApp = () => {
-    const msg = encodeURIComponent(
-      `Assista TV com qualidade usando a Loreall Play TV! Acesse pelo meu link: ${referralLink}`
-    );
-    window.open(`https://wa.me/?text=${msg}`, "_blank");
-  };
+  const visibleInvoices = showAllInvoices ? processedInvoices.slice(0, 10) : processedInvoices.slice(0, 3);
 
   const handleLogout = () => {
     logout();
@@ -76,14 +75,22 @@ const Dashboard = () => {
       <header className="bg-card sticky top-0 z-10" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
           <img src={logo} alt="Loreall Play TV" style={{ height: 36, width: "auto" }} />
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5">
             <StatusBadge status={status} />
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+              style={{ minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
+              title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+            >
+              {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+            </button>
             <button
               onClick={handleLogout}
               className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
               style={{ minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
             >
-              <LogOut className="h-4.5 w-4.5" />
+              <LogOut className="h-[18px] w-[18px]" />
             </button>
           </div>
         </div>
@@ -111,13 +118,13 @@ const Dashboard = () => {
 
         {/* 3. BANNER DE ALERTA */}
         {days < 0 && (
-          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-destructive/10 text-destructive">
+          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-destructive/10 text-destructive-foreground">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             Seu acesso está vencido. Renove para continuar assistindo.
           </div>
         )}
         {days >= 0 && days < 7 && (
-          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning">
+          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning-foreground">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             Seu acesso vence em {days} dia(s). Renove agora!
           </div>
@@ -134,7 +141,7 @@ const Dashboard = () => {
           </button>
           <button
             onClick={() => setChangePlanOpen(true)}
-            className="bg-muted font-semibold text-sm text-secondary flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] border border-secondary"
+            className="bg-muted font-semibold text-sm text-secondary-foreground flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] border border-secondary"
             style={{ minHeight: 64, borderRadius: 16 }}
           >
             Trocar plano
@@ -152,14 +159,14 @@ const Dashboard = () => {
             </div>
           ) : invoicesQuery.isError ? (
             <p className="text-sm text-destructive">Erro ao carregar faturas.</p>
-          ) : Array.isArray(invoices) && invoices.length > 0 ? (
+          ) : Array.isArray(processedInvoices) && processedInvoices.length > 0 ? (
             <>
               <div className="space-y-2">
                 {visibleInvoices.map((inv: any) => {
-                  const isPending = ["pendente", "pending", "em aberto"].includes((inv.status || "").toLowerCase());
                   const dateStr = inv.issuance_date || inv.created_at || "";
                   const d = new Date(dateStr);
                   const monthYear = d.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+                  const showPay = !inv._hidePay && ["pendente", "pending", "em aberto"].includes((inv.status || "").toLowerCase()) && inv.checkout_url;
 
                   return (
                     <div
@@ -170,8 +177,8 @@ const Dashboard = () => {
                       <span className="text-sm font-medium text-foreground capitalize">{monthYear}</span>
                       <span className="text-sm text-muted-foreground">{formatCurrency(inv.total_amount || inv.amount || 0)}</span>
                       <div className="flex items-center gap-2">
-                        <StatusBadge status={inv.status || "pendente"} />
-                        {isPending && inv.checkout_url && (
+                        <StatusBadge status={inv._displayStatus || "pendente"} />
+                        {showPay && (
                           <a
                             href={inv.checkout_url}
                             target="_blank"
@@ -186,7 +193,7 @@ const Dashboard = () => {
                   );
                 })}
               </div>
-              {invoices.length > 3 && (
+              {processedInvoices.length > 3 && (
                 <button
                   onClick={() => setShowAllInvoices(!showAllInvoices)}
                   className="mt-3 text-sm font-medium text-secondary hover:underline inline-flex items-center gap-1 transition-colors"
@@ -205,32 +212,18 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* 6. INDIQUE E GANHE */}
-        <div className="card-elevated p-5">
-          <h2 className="text-base font-bold text-foreground mb-1">Indique e ganhe</h2>
-          <p className="text-sm text-muted-foreground mb-3">
-            Indique amigos e ganhe dias grátis! 🎉
+        {/* 6. INDIQUE E GANHE — Em breve */}
+        <div className="card-elevated p-5" style={{ opacity: 0.6, cursor: "default" }}>
+          <div className="flex items-center gap-2 mb-1">
+            <Gift className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-base font-bold text-foreground">Indique e ganhe</h2>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+              Em breve
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Em breve disponível para você!
           </p>
-          <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground font-mono mb-3 break-all">
-            {referralLink}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleCopyRef}
-              className="btn-primary-gradient px-4 py-2.5 text-sm flex-1 inline-flex items-center justify-center gap-1.5"
-              style={{ minHeight: 44 }}
-            >
-              {copiedRef ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copiedRef ? "Copiado!" : "Copiar link"}
-            </button>
-            <button
-              onClick={shareWhatsApp}
-              className="px-4 py-2.5 text-sm flex-1 rounded-lg inline-flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] bg-muted border border-success text-success"
-              style={{ minHeight: 44 }}
-            >
-              <Share2 className="h-4 w-4" /> WhatsApp
-            </button>
-          </div>
         </div>
 
         <div className="h-4" />
