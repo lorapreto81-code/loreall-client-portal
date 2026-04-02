@@ -152,6 +152,30 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   }
 
+  /* Skeleton loader */
+  .skeleton-bar {
+    background: #E2E8F0;
+    border-radius: 8px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .dark .skeleton-bar {
+    background: #1E1E38;
+  }
+
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* "Ver todas" button */
+  .btn-see-all {
+    color: #6B7280;
+  }
+  .dark .btn-see-all {
+    color: #8888AA;
+  }
+
   /* Support buttons - subtle footer style */
   .btn-footer {
     background: transparent;
@@ -202,5 +226,20 @@
     background: #1A1200;
     border-color: #FAC775;
     color: #FAC775;
+  }
+
+  /* Welcome spinner */
+  .welcome-spinner {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: #00C8FF;
+    border-right-color: #7B2FD4;
+    animation: welcome-spin 0.8s linear infinite;
+  }
+
+  @keyframes welcome-spin {
+    to { transform: rotate(360deg); }
   }
 }

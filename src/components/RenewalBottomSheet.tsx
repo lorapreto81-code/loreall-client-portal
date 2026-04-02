@@ -110,8 +110,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           </div>
           <h3 className="text-lg font-bold text-foreground text-center mb-1">Sua fatura está pronta!</h3>
           {selectedPlan && (
-            <p className="text-center text-sm text-muted-foreground mb-5">
-              Valor: <span className="font-semibold text-foreground">{formatCurrency(getPlanValue(selectedPlan))}</span>
+            <p className="text-center mb-5">
+              <span className="text-[20px] font-bold text-foreground">{formatCurrency(getPlanValue(selectedPlan))}</span>
             </p>
           )}
           <div className="flex flex-col gap-2.5">

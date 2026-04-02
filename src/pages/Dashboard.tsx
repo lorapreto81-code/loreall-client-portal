@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   LogOut, ChevronDown, ChevronUp,
@@ -17,9 +17,35 @@ import NoticeBanner from "@/components/NoticeBanner";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
+/** Returns color for days remaining */
+const getDaysColor = (days: number): string => {
+  if (days < 0) return "#E24B4A";
+  if (days < 7) return "#F09595";
+  if (days <= 15) return "#FAC775";
+  return "#5DCAA5";
+};
+
+/** Returns correct text for days remaining */
+const getDaysText = (days: number): string => {
+  if (days < 0) return "Acesso vencido";
+  if (days === 0) return "Vence hoje!";
+  if (days === 1) return "Falta 1 dia";
+  return `Faltam ${days} dias`;
+};
+
+/** Plural for telas */
+const telasLabel = (n: number | string): string => {
+  const num = typeof n === "number" ? n : parseInt(String(n), 10) || 1;
+  return num === 1 ? "1 simultânea" : `${num} simultâneas`;
+};
+
+/** First name */
+const firstName = (name: string): string => (name || "").split(" ")[0];
+
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
   const [showAllInvoices, setShowAllInvoices] = useState(false);
   const [renewalOpen, setRenewalOpen] = useState(false);
@@ -52,8 +78,6 @@ const Dashboard = () => {
   const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
   const invoices: any[] = invoicesQuery.data?.data || invoicesQuery.data || [];
 
-  // AJUSTE 3: Smart invoice status — if customer expiry is in the future,
-  // pending invoices are treated as "paid" (visual only)
   const customerNotExpired = days >= 0;
   const processedInvoices = invoices.map((inv: any) => {
     const invStatus = (inv.status || "").toLowerCase();
@@ -71,6 +95,13 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  const handleRenewalClose = () => {
+    setRenewalOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
+  };
+
+  const isLoading = invoicesQuery.isLoading;
+
   return (
     <div className="min-h-screen bg-background">
       <NoticeBanner />
@@ -79,6 +110,10 @@ const Dashboard = () => {
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
           <img src={logo} alt="Loreall Play TV" style={{ height: 36, width: "auto" }} />
           <div className="flex items-center gap-1.5">
+            {/* AJUSTE 5 — Greeting */}
+            <span className="text-[13px] text-muted-foreground hidden min-[320px]:inline">
+              Olá, {firstName(customer.name)}!
+            </span>
             <StatusBadge status={status} />
             <button
               onClick={toggleTheme}
@@ -101,23 +136,35 @@ const Dashboard = () => {
 
       <main className="px-4 py-3 max-w-[480px] mx-auto" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {/* 2. CARD DE STATUS */}
-        <div className="card-elevated p-5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Próximo vencimento</p>
-          <p className="text-2xl font-bold text-foreground">{formatDate(customer.data_de_vencimento)}</p>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {days >= 0 ? `Faltam ${days} dia(s)` : `Vencido há ${Math.abs(days)} dia(s)`}
-          </p>
-          <div className="grid grid-cols-2 gap-3 mt-4 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Plano</p>
-              <p className="text-sm font-semibold text-foreground">{customer.plan?.name || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Telas</p>
-              <p className="text-sm font-semibold text-foreground">{customer.telas || "—"} simultânea(s)</p>
+        {isLoading ? (
+          <div className="card-elevated p-5 space-y-3">
+            <div className="skeleton-bar h-3 w-32" />
+            <div className="skeleton-bar h-7 w-48" />
+            <div className="skeleton-bar h-4 w-36" />
+            <div className="grid grid-cols-2 gap-3 mt-4 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+              <div className="space-y-1.5"><div className="skeleton-bar h-3 w-12" /><div className="skeleton-bar h-4 w-24" /></div>
+              <div className="space-y-1.5"><div className="skeleton-bar h-3 w-12" /><div className="skeleton-bar h-4 w-20" /></div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="card-elevated p-5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Próximo vencimento</p>
+            <p className="text-2xl font-bold text-foreground">{formatDate(customer.data_de_vencimento)}</p>
+            <p className="text-sm font-medium mt-0.5" style={{ color: getDaysColor(days) }}>
+              {getDaysText(days)}
+            </p>
+            <div className="grid grid-cols-2 gap-3 mt-4 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Plano</p>
+                <p className="text-sm font-semibold text-foreground">{customer.plan?.name || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Telas</p>
+                <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 3. BANNER DE ALERTA */}
         {days < 0 && (
@@ -129,7 +176,7 @@ const Dashboard = () => {
         {days >= 0 && days < 7 && (
           <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning-foreground">
             <AlertTriangle className="h-5 w-5 shrink-0" />
-            Seu acesso vence em {days} dia(s). Renove agora!
+            Seu acesso vence em {days === 1 ? "1 dia" : `${days} dias`}. Renove agora!
           </div>
         )}
 
@@ -151,16 +198,13 @@ const Dashboard = () => {
           </button>
         </div>
 
-
-
-
         {/* 5. FATURAS RECENTES */}
         <div className="card-elevated p-5">
           <h2 className="text-base font-bold text-foreground mb-3">Faturas recentes</h2>
           {invoicesQuery.isLoading ? (
             <div className="space-y-2.5">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-14 bg-muted animate-pulse rounded-xl" />
+                <div key={i} className="skeleton-bar h-14 rounded-xl" />
               ))}
             </div>
           ) : invoicesQuery.isError ? (
@@ -202,13 +246,13 @@ const Dashboard = () => {
               {processedInvoices.length > 3 && (
                 <button
                   onClick={() => setShowAllInvoices(!showAllInvoices)}
-                  className="mt-3 text-sm font-medium text-secondary hover:underline inline-flex items-center gap-1 transition-colors"
+                  className="mt-3 text-sm font-medium inline-flex items-center gap-1 transition-colors btn-see-all"
                   style={{ minHeight: 44 }}
                 >
                   {showAllInvoices ? (
                     <><ChevronUp className="h-4 w-4" /> Mostrar menos</>
                   ) : (
-                    <><ChevronDown className="h-4 w-4" /> Ver todas</>
+                    <><ChevronDown className="h-4 w-4" /> Ver todas as faturas</>
                   )}
                 </button>
               )}
@@ -259,7 +303,7 @@ const Dashboard = () => {
         <div className="h-4" />
       </main>
 
-      <RenewalBottomSheet open={renewalOpen} onClose={() => setRenewalOpen(false)} />
+      <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ChangePlanBottomSheet open={changePlanOpen} onClose={() => setChangePlanOpen(false)} />
     </div>
   );
