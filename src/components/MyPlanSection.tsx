@@ -51,25 +51,6 @@ const MyPlanSection = () => {
 
   if (!customer) return null;
 
-  const currentPlanId = customer.plan?.id;
-  const currentPlanName = customer.plan?.name || "";
-  const currentPeriod = detectCurrentPeriod(currentPlanName);
-
-  const allPlans: Plan[] = Array.isArray(plansQuery.data)
-    ? plansQuery.data
-    : plansQuery.data?.data || [];
-
-  // Show plans matching the same period as current plan, for each screen count
-  const filteredPlans = useMemo(() => {
-    if (!currentPeriod) return [];
-    return allPlans.filter((p) => {
-      const name = getPlanName(p);
-      return hasAnyScreenTag(name) &&
-        matchesPeriod(name, currentPeriod) &&
-        matchesScreenCount(name, selectedScreens);
-    });
-  }, [allPlans, currentPeriod, selectedScreens]);
-
   const handlePlanClick = (plan: Plan) => {
     if (plan.id === currentPlanId) return;
     setConfirmModal(plan);
