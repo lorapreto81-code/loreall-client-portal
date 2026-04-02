@@ -197,6 +197,9 @@ const Dashboard = () => {
           </button>
         </div>
 
+        {/* My Plan Section */}
+        <MyPlanSection />
+
         {/* Referral Section */}
         <div className="card-elevated p-6">
           <h2 className="text-lg font-bold text-foreground mb-2">Indique e ganhe</h2>
