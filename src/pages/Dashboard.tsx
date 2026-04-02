@@ -4,14 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   LogOut, Copy, Check, Share2, ChevronDown, ChevronUp,
-  Loader2, AlertTriangle, ExternalLink, FileText, X
+  AlertTriangle
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { getCustomerInvoices } from "@/lib/api";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
-import MyPlanSection from "@/components/MyPlanSection";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
+import ChangePlanBottomSheet from "@/components/ChangePlanBottomSheet";
 import logo from "@/assets/loreall-logo.png";
 
 const Dashboard = () => {
@@ -20,7 +20,7 @@ const Dashboard = () => {
   const [copiedRef, setCopiedRef] = useState(false);
   const [showAllInvoices, setShowAllInvoices] = useState(false);
   const [renewalOpen, setRenewalOpen] = useState(false);
-  const [planOpen, setPlanOpen] = useState(false);
+  const [changePlanOpen, setChangePlanOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !customer) navigate("/login", { replace: true });
@@ -73,7 +73,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* 1. HEADER */}
-      <header className="bg-card sticky top-0 z-10" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+      <header className="bg-card sticky top-0 z-10" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
           <img src={logo} alt="Loreall Play TV" style={{ height: 36, width: "auto" }} />
           <div className="flex items-center gap-2.5">
@@ -111,13 +111,13 @@ const Dashboard = () => {
 
         {/* 3. BANNER DE ALERTA */}
         {days < 0 && (
-          <div className="flex items-center gap-2.5 bg-destructive/10 text-destructive rounded-xl p-4 text-sm font-medium">
+          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-destructive/10 text-destructive">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             Seu acesso está vencido. Renove para continuar assistindo.
           </div>
         )}
         {days >= 0 && days < 7 && (
-          <div className="flex items-center gap-2.5 bg-warning/10 text-warning rounded-xl p-4 text-sm font-medium">
+          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             Seu acesso vence em {days} dia(s). Renove agora!
           </div>
@@ -133,9 +133,9 @@ const Dashboard = () => {
             Renovar acesso
           </button>
           <button
-            onClick={() => setPlanOpen(!planOpen)}
-            className="bg-card font-semibold text-sm text-foreground flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={{ minHeight: 64, borderRadius: 16, border: "1.5px solid hsl(var(--secondary))" }}
+            onClick={() => setChangePlanOpen(true)}
+            className="bg-muted font-semibold text-sm text-secondary flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] border border-secondary"
+            style={{ minHeight: 64, borderRadius: 16 }}
           >
             Trocar plano
           </button>
@@ -211,7 +211,7 @@ const Dashboard = () => {
           <p className="text-sm text-muted-foreground mb-3">
             Indique amigos e ganhe dias grátis! 🎉
           </p>
-          <div className="p-3 bg-muted rounded-lg text-xs text-foreground font-mono mb-3 break-all">
+          <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground font-mono mb-3 break-all">
             {referralLink}
           </div>
           <div className="flex gap-2">
@@ -225,41 +225,19 @@ const Dashboard = () => {
             </button>
             <button
               onClick={shareWhatsApp}
-              className="px-4 py-2.5 text-sm flex-1 rounded-lg inline-flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ minHeight: 44, border: "1.5px solid hsl(var(--success))", color: "hsl(var(--success))" }}
+              className="px-4 py-2.5 text-sm flex-1 rounded-lg inline-flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] bg-muted border border-success text-success"
+              style={{ minHeight: 44 }}
             >
               <Share2 className="h-4 w-4" /> WhatsApp
             </button>
           </div>
         </div>
 
-        {/* 7. TROCAR PLANO (accordion) */}
-        <div className="card-elevated overflow-hidden">
-          <button
-            onClick={() => setPlanOpen(!planOpen)}
-            className="w-full flex items-center justify-between p-5 text-left"
-            style={{ minHeight: 44 }}
-          >
-            <span className="text-base font-bold text-foreground">Adicionar ou remover telas</span>
-            <ChevronDown
-              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${planOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-          <div
-            className="overflow-hidden transition-all duration-200 ease-out"
-            style={{ maxHeight: planOpen ? 800 : 0, opacity: planOpen ? 1 : 0 }}
-          >
-            <div className="px-5 pb-5">
-              <MyPlanSection />
-            </div>
-          </div>
-        </div>
-
         <div className="h-4" />
       </main>
 
-      {/* Bottom sheet: Renovar acesso */}
       <RenewalBottomSheet open={renewalOpen} onClose={() => setRenewalOpen(false)} />
+      <ChangePlanBottomSheet open={changePlanOpen} onClose={() => setChangePlanOpen(false)} />
     </div>
   );
 };
