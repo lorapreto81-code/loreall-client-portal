@@ -48,7 +48,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <img src={logo} alt="Loreall Play TV" className="h-20" />
+          <img src={logo} alt="Loreall Play TV" style={{ width: 120, height: "auto" }} />
         </div>
         <div className="card-elevated p-8">
           <h1 className="text-xl font-bold text-foreground text-center mb-6">
