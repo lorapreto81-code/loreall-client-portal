@@ -13,7 +13,9 @@ import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import ChangePlanBottomSheet from "@/components/ChangePlanBottomSheet";
 import { useTheme } from "@/hooks/use-theme";
+import NoticeBanner from "@/components/NoticeBanner";
 const logo = "/logo.png";
+const WHATSAPP_NUMBER = "5583985591952";
 
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();
