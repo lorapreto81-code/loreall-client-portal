@@ -31,13 +31,10 @@ const RenewalSection = () => {
     enabled: !!customer,
   });
 
-  if (!customer) return null;
-
   const allPlans: Plan[] = Array.isArray(plansQuery.data)
     ? plansQuery.data
     : plansQuery.data?.data || [];
 
-  // Build available tabs: only periods that have a matching plan for customer's telas
   const availableTabs = useMemo(() => {
     return PERIOD_MAP.map((period) => {
       const plan = allPlans.find((p) => {
@@ -52,6 +49,8 @@ const RenewalSection = () => {
 
   const activeTab = availableTabs[selectedPeriodIdx] || availableTabs[0];
   const selectedPlan = activeTab?.plan;
+
+  if (!customer) return null;
 
   const handleGenerate = async () => {
     if (!selectedPlan) return;

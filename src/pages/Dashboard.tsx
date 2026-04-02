@@ -11,14 +11,8 @@ import { getCustomerInvoices, generatePaymentLink } from "@/lib/api";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import MyPlanSection from "@/components/MyPlanSection";
+import RenewalSection from "@/components/RenewalSection";
 import logo from "@/assets/loreall-logo.png";
-
-const RENEWAL_PERIODS = [
-  { months: 1, label: "1 mês" },
-  { months: 3, label: "3 meses" },
-  { months: 6, label: "6 meses" },
-  { months: 12, label: "12 meses" },
-];
 
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();
