@@ -1,13 +1,20 @@
-const API_BASE = "https://topgestor.me/api/v1";
-const API_TOKEN = import.meta.env.VITE_TOPGESTOR_TOKEN || "103|LzEGmH0wGvj0IZpvnugN58cDqBXWHyhsU98jwkDJ533c098c";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-const headers: Record<string, string> = {
-  Authorization: `Bearer ${API_TOKEN}`,
-  Accept: "application/json",
-  "Content-Type": "application/json",
-};
+async function callProxy(action: string, params: Record<string, string> = {}, options?: { method?: string; body?: Record<string, unknown> }) {
+  const qp = new URLSearchParams({ action, ...params }).toString();
+  const url = `${SUPABASE_URL}/functions/v1/topgestor-proxy?${qp}`;
+  
+  const res = await fetch(url, {
+    method: options?.method || "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": ANON_KEY,
+      "Authorization": `Bearer ${ANON_KEY}`,
+    },
+    ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
+  });
 
-async function handleResponse(res: Response) {
   if (res.status === 401) {
     window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     throw new Error("Sessão expirada. Faça login novamente.");
@@ -17,45 +24,31 @@ async function handleResponse(res: Response) {
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || `Erro ${res.status}`);
+    throw new Error(data.error || data.message || `Erro ${res.status}`);
   }
   return res.json();
 }
 
 export async function searchCustomer(query: string) {
-  const res = await fetch(`${API_BASE}/customers/search/${encodeURIComponent(query)}`, { headers });
-  return handleResponse(res);
+  return callProxy("search-customer", { query });
 }
 
 export async function getCustomerInvoices(customerId: number, perPage = 10) {
-  const res = await fetch(`${API_BASE}/customers/${customerId}/invoices?per_page=${perPage}`, { headers });
-  return handleResponse(res);
+  return callProxy("get-invoices", { id: String(customerId), per_page: String(perPage) });
 }
 
 export async function generatePaymentLink(customerId: number) {
-  const res = await fetch(`${API_BASE}/customers/${customerId}/payment-link`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({}),
-  });
-  return handleResponse(res);
+  return callProxy("generate-payment-link", { id: String(customerId) }, { method: "POST" });
 }
 
 export async function getPlans() {
-  const res = await fetch(`${API_BASE}/plans`, { headers });
-  return handleResponse(res);
+  return callProxy("get-plans");
 }
 
 export async function updateCustomer(customerId: number, body: Record<string, unknown>) {
-  const res = await fetch(`${API_BASE}/customers/${customerId}`, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify(body),
-  });
-  return handleResponse(res);
+  return callProxy("update-customer", { id: String(customerId) }, { method: "POST", body });
 }
 
 export async function getCustomer(customerId: number) {
-  const res = await fetch(`${API_BASE}/customers/${customerId}`, { headers });
-  return handleResponse(res);
+  return callProxy("get-customer", { id: String(customerId) });
 }
