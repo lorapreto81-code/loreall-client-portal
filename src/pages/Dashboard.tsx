@@ -17,7 +17,6 @@ import logo from "@/assets/loreall-logo.png";
 const Dashboard = () => {
   const { customer, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [selectedPeriod, setSelectedPeriod] = useState(1);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [paymentModal, setPaymentModal] = useState<string | null>(null);
   const [copiedRef, setCopiedRef] = useState(false);
