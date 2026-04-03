@@ -304,6 +304,12 @@ const Dashboard = () => {
         <div className="h-4" />
       </main>
 
+      <ExpirationPopup
+        days={days}
+        customerUsuario={customer.usuario}
+        onRenew={() => setRenewalOpen(true)}
+        isReady={!isLoading}
+      />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ChangePlanBottomSheet open={changePlanOpen} onClose={() => setChangePlanOpen(false)} />
     </div>
