@@ -119,6 +119,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     if (!selectedPlan) return;
     setGenerating(true);
     try {
+      const refCode = localStorage.getItem("loreall_pending_ref") || undefined;
       const data = await createPixPayment({
         customer_id: customer.id,
         customer_name: customer.name,
@@ -126,6 +127,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         plan_id: selectedPlan.id,
         plan_name: getPlanName(selectedPlan),
         amount: getPlanValue(selectedPlan),
+        referral_code: refCode,
       });
       setPix(data);
       setPixStatus("pending");
