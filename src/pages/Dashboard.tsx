@@ -225,6 +225,7 @@ const Dashboard = () => {
         isReady={!isLoading}
       />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
+      <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
       
     </div>
   );
