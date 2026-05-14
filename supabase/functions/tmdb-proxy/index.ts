@@ -49,10 +49,17 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const sep = path.includes("?") ? "&" : "?";
-    const apiRes = await fetch(`${API_BASE}${path}${sep}api_key=${key}`, {
-      headers: { Accept: "application/json" },
-    });
+    const isBearer = key.includes(".") && key.length > 60; // v4 read access token (JWT)
+    const headers: Record<string, string> = { Accept: "application/json" };
+    let finalUrl = `${API_BASE}${path}`;
+    if (isBearer) {
+      headers["Authorization"] = `Bearer ${key}`;
+    } else {
+      const sep = path.includes("?") ? "&" : "?";
+      finalUrl = `${API_BASE}${path}${sep}api_key=${key}`;
+    }
+
+    const apiRes = await fetch(finalUrl, { headers });
     const body = await apiRes.text();
     return new Response(body, {
       status: apiRes.status,
