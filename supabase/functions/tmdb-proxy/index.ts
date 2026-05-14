@@ -6,7 +6,7 @@ const corsHeaders = {
 const API_BASE = "https://api.themoviedb.org/3";
 
 function getKey(): string {
-  const key = Deno.env.get("TMDB_API_KEY");
+  const key = Deno.env.get("TMDB_API_KEY")?.trim();
   if (!key) throw new Error("TMDB_API_KEY not configured");
   return key;
 }
@@ -49,14 +49,14 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const isBearer = key.includes(".") && key.length > 60; // v4 read access token (JWT)
+    const isBearer = key.startsWith("eyJ") || (key.includes(".") && key.length > 60); // v4 read access token (JWT)
     const headers: Record<string, string> = { Accept: "application/json" };
     let finalUrl = `${API_BASE}${path}`;
     if (isBearer) {
       headers["Authorization"] = `Bearer ${key}`;
     } else {
       const sep = path.includes("?") ? "&" : "?";
-      finalUrl = `${API_BASE}${path}${sep}api_key=${key}`;
+      finalUrl = `${API_BASE}${path}${sep}api_key=${encodeURIComponent(key)}`;
     }
 
     const apiRes = await fetch(finalUrl, { headers });
