@@ -48,7 +48,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
-  const [showAllInvoices, setShowAllInvoices] = useState(false);
   const [renewalOpen, setRenewalOpen] = useState(false);
   
 
