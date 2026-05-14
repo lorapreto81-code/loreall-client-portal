@@ -93,44 +93,27 @@ Deno.serve(async (req) => {
       case "renew-customer": {
         const id = url.searchParams.get("id");
         if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        const body = await req.json().catch(() => ({}));
-        // 1) Run the full renewal flow (registers sale, generates/updates invoice, etc.)
-        const renewRes = await fetch(`${API_BASE}/customers/${id}/renew`, {
+        // IMPORTANT: do NOT call /renew (it extends the due date immediately).
+        // Only generate the payment link — TopGestor renews automatically once paid.
+        const linkRes = await fetch(`${API_BASE}/customers/${id}/payment-link`, {
           method: "POST",
           headers: apiHeaders(token),
-          body: JSON.stringify(body),
+          body: JSON.stringify({}),
         });
-        const renewData = await renewRes.json().catch(() => ({}));
-        if (!renewRes.ok) {
-          return new Response(JSON.stringify(renewData), {
-            status: renewRes.status,
+        const linkData = await linkRes.json().catch(() => ({}));
+        if (!linkRes.ok) {
+          return new Response(JSON.stringify(linkData), {
+            status: linkRes.status,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        // 2) Fetch the checkout URL for the (now existing) open invoice
-        let checkoutUrl: string | null =
-          renewData?.data?.invoice?.checkout_url ||
-          renewData?.data?.checkout_url ||
+        const checkoutUrl =
+          linkData?.data?.checkout_url ||
+          linkData?.checkout_url ||
+          linkData?.data?.invoice?.checkout_url ||
           null;
-        if (!checkoutUrl) {
-          const linkRes = await fetch(`${API_BASE}/customers/${id}/payment-link`, {
-            method: "POST",
-            headers: apiHeaders(token),
-            body: JSON.stringify({}),
-          });
-          const linkData = await linkRes.json().catch(() => ({}));
-          checkoutUrl =
-            linkData?.data?.checkout_url ||
-            linkData?.checkout_url ||
-            linkData?.data?.invoice?.checkout_url ||
-            null;
-        }
         return new Response(
-          JSON.stringify({
-            success: true,
-            data: { ...(renewData?.data || {}), checkout_url: checkoutUrl },
-            meta: renewData?.meta || null,
-          }),
+          JSON.stringify({ success: true, data: { ...(linkData?.data || {}), checkout_url: checkoutUrl } }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
