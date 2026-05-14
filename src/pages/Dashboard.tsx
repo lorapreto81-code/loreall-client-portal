@@ -191,6 +191,9 @@ const Dashboard = () => {
           Renovar acesso
         </button>
 
+        {/* 4.5 LANÇAMENTOS */}
+        <LaunchesBanner />
+
         {/* 5. FATURAS RECENTES */}
         <div className="card-elevated p-5">
           <h2 className="text-base font-bold text-foreground mb-3">Faturas recentes</h2>
