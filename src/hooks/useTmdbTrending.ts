@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface TmdbItem {
   id: number;
@@ -19,22 +18,22 @@ export const tmdbPoster = (p: string | null, size: "w342" | "w500" = "w500") =>
   p ? `${IMG_BASE}/${size}${p}` : null;
 
 async function fetchTrending(): Promise<TmdbItem[]> {
-  const { data, error } = await supabase.functions.invoke("tmdb-proxy", {
-    body: null,
-    method: "GET",
-  } as any);
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tmdb-proxy?action=trending&language=pt-BR`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+  });
 
-  // Fallback: invoke with query string via direct fetch since edge function uses query params
-  if (error || !data) {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tmdb-proxy?action=trending&language=pt-BR`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-    });
-    if (!res.ok) throw new Error("Falha ao carregar lançamentos");
-    const json = await res.json();
-    return normalize(json.results || []);
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    console.warn("TMDB launches unavailable", json?.status_message || json?.error || res.statusText);
+    return [];
   }
-  return normalize((data as any).results || []);
+
+  return normalize(json?.results || []);
 }
 
 function normalize(results: any[]): TmdbItem[] {
@@ -58,5 +57,6 @@ export function useTmdbTrending() {
     queryKey: ["tmdb-trending"],
     queryFn: fetchTrending,
     staleTime: 1000 * 60 * 60 * 6, // 6h
+    retry: false,
   });
 }
