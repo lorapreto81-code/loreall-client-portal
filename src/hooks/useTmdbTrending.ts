@@ -42,7 +42,7 @@ function normalize(results: any[]): TmdbItem[] {
     .filter((r) => r.backdrop_path)
     .map((r) => ({
       id: r.id,
-      media_type: r.media_type === "tv" ? "tv" : "movie",
+      media_type: (r.media_type === "tv" ? "tv" : "movie") as "movie" | "tv",
       title: r.title || r.name || "",
       overview: r.overview || "",
       backdrop_path: r.backdrop_path,
