@@ -66,30 +66,10 @@ const Dashboard = () => {
     return () => window.removeEventListener("auth:unauthorized", handler);
   }, [logout, navigate]);
 
-  const invoicesQuery = useQuery({
-    queryKey: ["invoices", customer?.id],
-    queryFn: () => getCustomerInvoices(customer!.id),
-    enabled: !!customer?.id,
-    staleTime: 60_000,
-  });
-
   if (!customer) return null;
 
   const days = daysUntil(customer.data_de_vencimento);
   const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
-  const invoices: any[] = invoicesQuery.data?.data || invoicesQuery.data || [];
-
-  const customerNotExpired = days >= 0;
-  const processedInvoices = invoices.map((inv: any) => {
-    const invStatus = (inv.status || "").toLowerCase();
-    const isPending = ["pendente", "pending", "em aberto"].includes(invStatus);
-    if (isPending && customerNotExpired) {
-      return { ...inv, _displayStatus: "pago", _hidePay: true };
-    }
-    return { ...inv, _displayStatus: inv.status, _hidePay: false };
-  });
-
-  const visibleInvoices = showAllInvoices ? processedInvoices.slice(0, 10) : processedInvoices.slice(0, 3);
 
   const handleLogout = () => {
     logout();
@@ -101,7 +81,7 @@ const Dashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
   };
 
-  const isLoading = invoicesQuery.isLoading;
+  const isLoading = false;
 
   return (
     <div className="min-h-screen bg-background">
