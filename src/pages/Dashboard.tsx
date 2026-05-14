@@ -50,6 +50,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
   const [renewalOpen, setRenewalOpen] = useState(false);
+  const [referralOpen, setReferralOpen] = useState(false);
   
 
   useEffect(() => {
