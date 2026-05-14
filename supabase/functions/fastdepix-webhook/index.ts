@@ -110,11 +110,11 @@ Deno.serve(async (req) => {
     let renewalResponse: unknown = null;
 
     if (becomingPaid) {
-      // Renova no TopGestor com o plano selecionado
       const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
       if (!tgToken) {
         console.error("[fastdepix-webhook] TOPGESTOR_API_TOKEN not configured");
       } else {
+        // 1) Renova o indicado (cliente que pagou)
         try {
           const tgRes = await fetch(`${TG_BASE}/customers/${payment.customer_id}/renew`, {
             method: "POST",
@@ -137,6 +137,24 @@ Deno.serve(async (req) => {
           renewalResponse = { error: e instanceof Error ? e.message : "unknown" };
         }
         updates.renewal_response = renewalResponse;
+
+        // 2) Processa indicação (se este pagamento veio com referral_code)
+        const refCode: string | null = payment?.metadata?.referral_code || null;
+        if (refCode) {
+          try {
+            await processReferralOnPayment(supabase, tgToken, payment, refCode);
+          } catch (e) {
+            console.error("[fastdepix-webhook] referral processing failed", e);
+          }
+        }
+
+        // 3) Libera indicações pendentes do tipo "pending_referrer_renewal"
+        // onde ESTE customer (que acabou de pagar/renovar) é o INDICADOR
+        try {
+          await releasePendingReferrals(supabase, tgToken, payment.customer_id);
+        } catch (e) {
+          console.error("[fastdepix-webhook] release pending failed", e);
+        }
       }
     }
 
