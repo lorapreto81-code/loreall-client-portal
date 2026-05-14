@@ -302,7 +302,7 @@ const Dashboard = () => {
         isReady={!isLoading}
       />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
-      <ChangePlanBottomSheet open={changePlanOpen} onClose={() => setChangePlanOpen(false)} />
+      
     </div>
   );
 };
