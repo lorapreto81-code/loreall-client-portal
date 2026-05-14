@@ -1,18 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Gift } from "lucide-react";
 import { searchCustomer } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 const logo = "/logo.png";
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
+const REF_KEY = "loreall_pending_ref";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
+  const [refCode, setRefCode] = useState<string | null>(null);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      const code = ref.trim().toUpperCase();
+      localStorage.setItem(REF_KEY, code);
+      setRefCode(code);
+    } else {
+      const stored = localStorage.getItem(REF_KEY);
+      if (stored) setRefCode(stored);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
