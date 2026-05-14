@@ -85,6 +85,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           setPixStatus(newStatus);
           if (newStatus === "paid" && customer) {
             toast.success("Pagamento confirmado! Renovando seu acesso...");
+            // Consumiu indicação pendente
+            localStorage.removeItem("loreall_pending_ref");
             try {
               const cust = await getCustomer(customer.id);
               login((cust.data || cust) as Customer);
