@@ -15,6 +15,7 @@ import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import { useTheme } from "@/hooks/use-theme";
 import NoticeBanner from "@/components/NoticeBanner";
 import ExpirationPopup from "@/components/ExpirationPopup";
+import LaunchesBanner from "@/components/LaunchesBanner";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
@@ -189,6 +190,9 @@ const Dashboard = () => {
         >
           Renovar acesso
         </button>
+
+        {/* 4.5 LANÇAMENTOS */}
+        <LaunchesBanner />
 
         {/* 5. FATURAS RECENTES */}
         <div className="card-elevated p-5">
