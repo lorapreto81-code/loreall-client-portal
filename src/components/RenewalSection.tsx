@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, Copy, Check, X } from "lucide-react";
-import { getPlans, updateCustomer, getCustomer, generatePaymentLink } from "@/lib/api";
+import { getPlans, getCustomer, renewCustomer } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
@@ -56,23 +56,22 @@ const RenewalSection = () => {
     if (!selectedPlan) return;
     setGeneratingLink(true);
     try {
-      // Update plan first
-      await updateCustomer(customer.id, { plan_id: selectedPlan.id });
-      // Generate payment link
-      const data = await generatePaymentLink(customer.id);
-      const url = data.checkout_url || data.data?.checkout_url;
+      const data = await renewCustomer(customer.id, { plan_id: selectedPlan.id });
+      const url =
+        data.data?.checkout_url ||
+        data.checkout_url ||
+        data.data?.invoice?.checkout_url;
       if (url) {
-        // Refresh customer data
         const custData = await getCustomer(customer.id);
         login((custData.data || custData) as Customer);
         queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
         setPaymentModal(url);
-        toast.success("Fatura gerada com sucesso!");
+        toast.success("Renovação gerada com sucesso!");
       } else {
-        toast.error("Não foi possível gerar o link de pagamento.");
+        toast.error("Não foi possível obter o link de pagamento.");
       }
     } catch (err: any) {
-      toast.error(err.message || "Erro ao gerar fatura.");
+      toast.error(err.message || "Erro ao gerar renovação.");
     } finally {
       setGeneratingLink(false);
     }
