@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LogOut, ChevronDown, ChevronUp,
+  LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { getCustomerInvoices } from "@/lib/api";
-import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
+import { formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 
