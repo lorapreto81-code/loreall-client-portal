@@ -10,7 +10,6 @@ const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
@@ -18,8 +17,8 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const id = identifier.trim();
-    if (!id || !password.trim()) {
-      toast.error("Preencha todos os campos.");
+    if (!id) {
+      toast.error("Informe seu usuário ou celular.");
       return;
     }
     setLoading(true);
@@ -41,10 +40,6 @@ const Login = () => {
       });
       if (!found) {
         toast.error("Usuário ou celular não encontrado.");
-        return;
-      }
-      if (found.password !== password) {
-        toast.error("Senha incorreta.");
         return;
       }
       login(found);
@@ -81,19 +76,7 @@ const Login = () => {
                 autoComplete="username"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                Senha
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Sua senha"
-                autoComplete="current-password"
-              />
-            </div>
+
             <button
               type="submit"
               disabled={loading}
