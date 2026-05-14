@@ -90,6 +90,51 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "renew-customer": {
+        const id = url.searchParams.get("id");
+        if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const body = await req.json().catch(() => ({}));
+        // 1) Run the full renewal flow (registers sale, generates/updates invoice, etc.)
+        const renewRes = await fetch(`${API_BASE}/customers/${id}/renew`, {
+          method: "POST",
+          headers: apiHeaders(token),
+          body: JSON.stringify(body),
+        });
+        const renewData = await renewRes.json().catch(() => ({}));
+        if (!renewRes.ok) {
+          return new Response(JSON.stringify(renewData), {
+            status: renewRes.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        // 2) Fetch the checkout URL for the (now existing) open invoice
+        let checkoutUrl: string | null =
+          renewData?.data?.invoice?.checkout_url ||
+          renewData?.data?.checkout_url ||
+          null;
+        if (!checkoutUrl) {
+          const linkRes = await fetch(`${API_BASE}/customers/${id}/payment-link`, {
+            method: "POST",
+            headers: apiHeaders(token),
+            body: JSON.stringify({}),
+          });
+          const linkData = await linkRes.json().catch(() => ({}));
+          checkoutUrl =
+            linkData?.data?.checkout_url ||
+            linkData?.checkout_url ||
+            linkData?.data?.invoice?.checkout_url ||
+            null;
+        }
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { ...(renewData?.data || {}), checkout_url: checkoutUrl },
+            meta: renewData?.meta || null,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

@@ -52,3 +52,10 @@ export async function updateCustomer(customerId: number, body: Record<string, un
 export async function getCustomer(customerId: number) {
   return callProxy("get-customer", { id: String(customerId) });
 }
+
+export async function renewCustomer(
+  customerId: number,
+  body: { plan_id?: number; dias?: number; data_de_vencimento?: string; invoice_status?: string } = {}
+) {
+  return callProxy("renew-customer", { id: String(customerId) }, { method: "POST", body });
+}
