@@ -11,7 +11,7 @@ import { getCustomerInvoices } from "@/lib/api";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
-import ChangePlanBottomSheet from "@/components/ChangePlanBottomSheet";
+
 import { useTheme } from "@/hooks/use-theme";
 import NoticeBanner from "@/components/NoticeBanner";
 import ExpirationPopup from "@/components/ExpirationPopup";
@@ -50,7 +50,7 @@ const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
   const [showAllInvoices, setShowAllInvoices] = useState(false);
   const [renewalOpen, setRenewalOpen] = useState(false);
-  const [changePlanOpen, setChangePlanOpen] = useState(false);
+  
 
   useEffect(() => {
     if (!isAuthenticated || !customer) navigate("/login", { replace: true });
@@ -182,22 +182,13 @@ const Dashboard = () => {
         )}
 
         {/* 4. DOIS BOTÕES DE AÇÃO */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setRenewalOpen(true)}
-            className="btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2"
-            style={{ minHeight: 64, borderRadius: 16 }}
-          >
-            Renovar acesso
-          </button>
-          <button
-            onClick={() => setChangePlanOpen(true)}
-            className="bg-muted font-semibold text-sm text-secondary-foreground flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] border border-secondary"
-            style={{ minHeight: 64, borderRadius: 16 }}
-          >
-            Trocar plano
-          </button>
-        </div>
+        <button
+          onClick={() => setRenewalOpen(true)}
+          className="btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 w-full"
+          style={{ minHeight: 64, borderRadius: 16 }}
+        >
+          Renovar acesso
+        </button>
 
         {/* 5. FATURAS RECENTES */}
         <div className="card-elevated p-5">
@@ -311,7 +302,7 @@ const Dashboard = () => {
         isReady={!isLoading}
       />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
-      <ChangePlanBottomSheet open={changePlanOpen} onClose={() => setChangePlanOpen(false)} />
+      
     </div>
   );
 };
