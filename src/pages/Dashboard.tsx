@@ -15,6 +15,7 @@ import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import { useTheme } from "@/hooks/use-theme";
 import NoticeBanner from "@/components/NoticeBanner";
 import ExpirationPopup from "@/components/ExpirationPopup";
+import LaunchesBanner from "@/components/LaunchesBanner";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
