@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: number
+          customer_name: string
+          customer_whatsapp: string | null
+          fastdepix_status: string
+          fastdepix_transaction_id: number | null
+          id: string
+          metadata: Json | null
+          paid_at: string | null
+          plan_id: number
+          plan_name: string
+          qr_code_expires_at: string | null
+          qr_code_text: string | null
+          qr_code_url: string | null
+          renewal_response: Json | null
+          renewed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: number
+          customer_name: string
+          customer_whatsapp?: string | null
+          fastdepix_status?: string
+          fastdepix_transaction_id?: number | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          plan_id: number
+          plan_name: string
+          qr_code_expires_at?: string | null
+          qr_code_text?: string | null
+          qr_code_url?: string | null
+          renewal_response?: Json | null
+          renewed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: number
+          customer_name?: string
+          customer_whatsapp?: string | null
+          fastdepix_status?: string
+          fastdepix_transaction_id?: number | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          plan_id?: number
+          plan_name?: string
+          qr_code_expires_at?: string | null
+          qr_code_text?: string | null
+          qr_code_url?: string | null
+          renewal_response?: Json | null
+          renewed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

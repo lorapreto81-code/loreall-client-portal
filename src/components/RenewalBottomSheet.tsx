@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ExternalLink, Copy, Check, X } from "lucide-react";
-import { getPlans, getCustomer, renewCustomer } from "@/lib/api";
+import { Loader2, ExternalLink, Copy, Check, X, QrCode } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
@@ -16,6 +17,8 @@ interface Props {
   onClose: () => void;
 }
 
+const PIX_MAX_AMOUNT = 500; // Fast Depix exige CPF para >= R$ 500
+
 const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const { customer, login } = useAuthStore();
   const queryClient = useQueryClient();
@@ -25,15 +28,19 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     : parseInt(String(customer?.telas || "1"), 10) || 1;
 
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const [generatingLink, setGeneratingLink] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [pix, setPix] = useState<CreatePixResponse | null>(null);
+  const [pixStatus, setPixStatus] = useState<string>("pending");
+  const [copied, setCopied] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  // fallback (planos >= R$500)
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
 
   const plansQuery = useQuery({
     queryKey: ["plans"],
     queryFn: getPlans,
     staleTime: 120_000,
-    enabled: !!customer,
+    enabled: !!customer && open,
   });
 
   const allPlans: Plan[] = Array.isArray(plansQuery.data)
@@ -54,12 +61,85 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;
+  const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
+  const canUsePix = planValue > 0 && planValue < PIX_MAX_AMOUNT;
+
+  // Tick para countdown
+  useEffect(() => {
+    if (!pix) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [pix]);
+
+  // Realtime: escuta mudança de status do payment
+  useEffect(() => {
+    if (!pix?.payment_id) return;
+    const channel = supabase
+      .channel(`payment-${pix.payment_id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "payments", filter: `id=eq.${pix.payment_id}` },
+        async (payload) => {
+          const newStatus = (payload.new as { fastdepix_status?: string })?.fastdepix_status;
+          if (!newStatus) return;
+          setPixStatus(newStatus);
+          if (newStatus === "paid" && customer) {
+            toast.success("Pagamento confirmado! Renovando seu acesso...");
+            try {
+              const cust = await getCustomer(customer.id);
+              login((cust.data || cust) as Customer);
+            } catch (e) {
+              console.error("refresh customer failed", e);
+            }
+            queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [pix?.payment_id, customer, login, queryClient]);
 
   if (!customer) return null;
 
-  const handleGenerate = async () => {
+  const resetState = () => {
+    setPix(null);
+    setPaymentUrl(null);
+    setPixStatus("pending");
+    setCopied(false);
+  };
+
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
+  const handleGeneratePix = async () => {
     if (!selectedPlan) return;
-    setGeneratingLink(true);
+    setGenerating(true);
+    try {
+      const data = await createPixPayment({
+        customer_id: customer.id,
+        customer_name: customer.name,
+        customer_whatsapp: String((customer as any).whatsapp || (customer as any).celular || ""),
+        plan_id: selectedPlan.id,
+        plan_name: getPlanName(selectedPlan),
+        amount: getPlanValue(selectedPlan),
+      });
+      setPix(data);
+      setPixStatus("pending");
+      toast.success("QR Code PIX gerado!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar PIX.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleGenerateLink = async () => {
+    if (!selectedPlan) return;
+    setGenerating(true);
     try {
       const data = await renewCustomer(customer.id, { plan_id: selectedPlan.id });
       const url =
@@ -67,36 +147,107 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         data.checkout_url ||
         data.data?.invoice?.checkout_url;
       if (url) {
-        const custData = await getCustomer(customer.id);
-        login((custData.data || custData) as Customer);
+        const cust = await getCustomer(customer.id);
+        login((cust.data || cust) as Customer);
         queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
         setPaymentUrl(url);
-        toast.success("Renovação gerada com sucesso!");
+        toast.success("Fatura gerada com sucesso!");
       } else {
         toast.error("Não foi possível obter o link de pagamento.");
       }
     } catch (err: any) {
-      toast.error(err.message || "Erro ao gerar renovação.");
+      toast.error(err.message || "Erro ao gerar fatura.");
     } finally {
-      setGeneratingLink(false);
+      setGenerating(false);
     }
   };
 
-  const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    toast.success("Link copiado!");
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
-
-  const handleClose = () => {
-    setPaymentUrl(null);
-    onClose();
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Copiado!");
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (!open) return null;
 
-  // Success modal with payment URL
+  // ---------- Tela: PIX gerado ----------
+  if (pix) {
+    const expiresMs = new Date(pix.expires_at).getTime() - now;
+    const expired = expiresMs <= 0;
+    const minutes = Math.max(0, Math.floor(expiresMs / 60000));
+    const seconds = Math.max(0, Math.floor((expiresMs % 60000) / 1000));
+    const isPaid = pixStatus === "paid";
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
+        <div
+          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button onClick={handleClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
+            <X className="h-5 w-5" />
+          </button>
+          <div className="flex justify-center mb-3">
+            <img src={logo} alt="Loreall Play TV" style={{ width: 56, height: "auto" }} />
+          </div>
+
+          {isPaid ? (
+            <div className="text-center py-6">
+              <div className="mx-auto mb-3 inline-flex items-center justify-center rounded-full p-3" style={{ background: "rgba(93, 202, 165, 0.15)" }}>
+                <Check className="h-8 w-8" style={{ color: "#5DCAA5" }} />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-1">Pagamento confirmado!</h3>
+              <p className="text-sm text-muted-foreground mb-5">Seu acesso já foi renovado.</p>
+              <button onClick={handleClose} className="btn-primary-gradient w-full py-3 font-semibold text-sm" style={{ minHeight: 48 }}>
+                Concluir
+              </button>
+            </div>
+          ) : (
+            <>
+              <h3 className="text-base font-bold text-foreground text-center mb-1">Pague com PIX</h3>
+              <p className="text-center text-[20px] font-bold text-foreground mb-1">{formatCurrency(pix.amount)}</p>
+              <p className="text-center text-xs text-muted-foreground mb-3">
+                {expired ? "QR Code expirado" : `Expira em ${minutes}:${String(seconds).padStart(2, "0")}`}
+              </p>
+
+              {pix.qr_code_url && (
+                <div className="flex justify-center mb-4">
+                  <div className="bg-white p-3 rounded-xl">
+                    <img src={pix.qr_code_url} alt="QR Code PIX" style={{ width: 220, height: 220 }} />
+                  </div>
+                </div>
+              )}
+
+              {pix.qr_code_text && (
+                <>
+                  <p className="text-xs text-muted-foreground mb-1.5">Código copia e cola:</p>
+                  <div className="bg-muted rounded-lg p-2.5 mb-3">
+                    <p className="text-[11px] text-foreground break-all font-mono">{pix.qr_code_text}</p>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(pix.qr_code_text)}
+                    className="w-full px-5 py-3 text-sm rounded-lg inline-flex items-center justify-center gap-1.5 transition-all mb-2"
+                    style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? "Copiado!" : "Copiar código PIX"}
+                  </button>
+                </>
+              )}
+
+              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground justify-center">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Aguardando pagamento...
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- Tela: link TopGestor (fallback ≥ R$500) ----------
   if (paymentUrl) {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
@@ -131,8 +282,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               className="px-5 py-3 text-sm rounded-lg inline-flex items-center justify-center gap-1.5 transition-all"
               style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
             >
-              {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copiedLink ? "Copiado!" : "Copiar link"}
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? "Copiado!" : "Copiar link"}
             </button>
             <button onClick={handleClose} className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2" style={{ minHeight: 44 }}>
               Fechar
@@ -143,6 +294,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     );
   }
 
+  // ---------- Tela: seleção de plano ----------
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
       <div
@@ -199,17 +351,35 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               <>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-muted-foreground">Total</span>
-                  <span className="text-xl font-bold text-foreground">{formatCurrency(getPlanValue(selectedPlan))}</span>
+                  <span className="text-xl font-bold text-foreground">{formatCurrency(planValue)}</span>
                 </div>
-                <button
-                  onClick={handleGenerate}
-                  disabled={generatingLink}
-                  className="btn-primary-gradient w-full py-3.5 font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
-                  style={{ minHeight: 48 }}
-                >
-                  {generatingLink && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Gerar fatura
-                </button>
+
+                {canUsePix ? (
+                  <button
+                    onClick={handleGeneratePix}
+                    disabled={generating}
+                    className="btn-primary-gradient w-full py-3.5 font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                    style={{ minHeight: 48 }}
+                  >
+                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+                    Pagar com PIX
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleGenerateLink}
+                      disabled={generating}
+                      className="btn-primary-gradient w-full py-3.5 font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                      style={{ minHeight: 48 }}
+                    >
+                      {generating && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Gerar fatura
+                    </button>
+                    <p className="text-[11px] text-muted-foreground text-center mt-2">
+                      PIX instantâneo disponível para valores abaixo de {formatCurrency(PIX_MAX_AMOUNT)}.
+                    </p>
+                  </>
+                )}
               </>
             )}
           </>
