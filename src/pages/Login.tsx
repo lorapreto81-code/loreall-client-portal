@@ -1,18 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Gift } from "lucide-react";
 import { searchCustomer } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 const logo = "/logo.png";
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
+const REF_KEY = "loreall_pending_ref";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
+  const [refCode, setRefCode] = useState<string | null>(null);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      const code = ref.trim().toUpperCase();
+      localStorage.setItem(REF_KEY, code);
+      setRefCode(code);
+    } else {
+      const stored = localStorage.getItem(REF_KEY);
+      if (stored) setRefCode(stored);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +77,14 @@ const Login = () => {
           <h1 className="text-xl font-bold text-foreground text-center mb-6">
             Minha Conta
           </h1>
+          {refCode && (
+            <div className="mb-4 p-3 rounded-lg flex items-start gap-2.5" style={{ background: "rgba(123, 47, 212, 0.08)", border: "1px solid rgba(123, 47, 212, 0.2)" }}>
+              <Gift className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#7B2FD4" }} />
+              <div className="text-xs text-foreground">
+                Você foi indicado com o código <span className="font-bold">{refCode}</span>. Ao renovar via PIX, seu indicador ganha 1 mês grátis.
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">

@@ -15,6 +15,7 @@ import { useTheme } from "@/hooks/use-theme";
 import NoticeBanner from "@/components/NoticeBanner";
 import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
+import ReferralSheet from "@/components/ReferralSheet";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
@@ -49,6 +50,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
   const [renewalOpen, setRenewalOpen] = useState(false);
+  const [referralOpen, setReferralOpen] = useState(false);
   
 
   useEffect(() => {
@@ -172,19 +174,22 @@ const Dashboard = () => {
         {/* 4.5 LANÇAMENTOS */}
         <LaunchesBanner />
 
-        {/* 6. INDIQUE E GANHE — Em breve */}
-        <div className="card-elevated p-5 card-referral" style={{ opacity: 0.75, cursor: "default" }}>
+        {/* 6. INDIQUE E GANHE */}
+        <button
+          onClick={() => setReferralOpen(true)}
+          className="card-elevated p-5 card-referral text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
           <div className="flex items-center gap-2 mb-1">
             <Gift className="h-5 w-5 referral-icon" />
             <h2 className="text-base font-medium referral-title">Indique e ganhe</h2>
             <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full referral-badge">
-              Em breve
+              +30 dias
             </span>
           </div>
           <p className="text-sm referral-subtitle">
-            Em breve disponível para você!
+            Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
           </p>
-        </div>
+        </button>
 
         {/* 7. SUPORTE E PEDIR CONTEÚDO */}
         <div className="grid grid-cols-2 gap-3">
@@ -220,6 +225,7 @@ const Dashboard = () => {
         isReady={!isLoading}
       />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
+      <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
       
     </div>
   );

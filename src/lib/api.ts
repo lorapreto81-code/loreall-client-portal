@@ -76,6 +76,7 @@ export async function createPixPayment(body: {
   plan_id: number;
   plan_name: string;
   amount: number;
+  referral_code?: string;
 }): Promise<CreatePixResponse> {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/fastdepix-create-pix`, {
     method: "POST",
@@ -90,3 +91,46 @@ export async function createPixPayment(body: {
   if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
   return data as CreatePixResponse;
 }
+
+// ----- Referrals -----
+async function callReferrals(action: string, params: Record<string, string> = {}, options?: { method?: string; body?: Record<string, unknown> }) {
+  const qp = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/referrals-api?${qp}`, {
+    method: options?.method || "GET",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${ANON_KEY}`,
+    },
+    ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+  return data;
+}
+
+export async function getOrCreateReferralCode(customer_id: number, customer_name: string): Promise<{ code: string }> {
+  return callReferrals("get-or-create-code", {}, { method: "POST", body: { customer_id, customer_name } });
+}
+
+export async function lookupReferralCode(code: string): Promise<{ valid: boolean; customer_id?: number; customer_name?: string; code?: string }> {
+  return callReferrals("lookup-code", { code });
+}
+
+export interface ReferralRow {
+  id: string;
+  referrer_customer_id: number;
+  referred_customer_id: number;
+  referred_customer_name: string | null;
+  referral_code: string;
+  bonus_days: number;
+  status: "pending_payment" | "pending_referrer_renewal" | "credited" | "rejected";
+  rejection_reason: string | null;
+  credited_at: string | null;
+  created_at: string;
+}
+
+export async function listReferralsByReferrer(customer_id: number): Promise<{ referrals: ReferralRow[]; credited: number; pending: number; total_days: number }> {
+  return callReferrals("list-by-referrer", { customer_id: String(customer_id) });
+}
+

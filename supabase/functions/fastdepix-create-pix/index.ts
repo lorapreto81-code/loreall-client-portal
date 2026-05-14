@@ -14,6 +14,7 @@ interface CreateBody {
   plan_id: number;
   plan_name: string;
   amount: number;
+  referral_code?: string;
 }
 
 function parseExpiresAt(raw: string | undefined | null): string {
@@ -104,7 +105,10 @@ Deno.serve(async (req) => {
         qr_code_url: tx.qr_code,
         qr_code_text: tx.qr_code_text,
         qr_code_expires_at: expiresAt,
-        metadata: { fastdepix_raw: tx },
+        metadata: {
+          fastdepix_raw: tx,
+          referral_code: body.referral_code ? String(body.referral_code).trim().toUpperCase() : null,
+        },
       })
       .select()
       .single();

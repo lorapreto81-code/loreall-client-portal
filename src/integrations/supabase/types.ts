@@ -77,6 +77,86 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          customer_id: number
+          customer_name: string | null
+          id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          customer_id: number
+          customer_name?: string | null
+          id?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          customer_id?: number
+          customer_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          bonus_days: number
+          created_at: string
+          credited_at: string | null
+          id: string
+          referral_code: string
+          referred_customer_id: number
+          referred_customer_name: string | null
+          referred_payment_id: string | null
+          referrer_customer_id: number
+          rejection_reason: string | null
+          renewal_response: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bonus_days?: number
+          created_at?: string
+          credited_at?: string | null
+          id?: string
+          referral_code: string
+          referred_customer_id: number
+          referred_customer_name?: string | null
+          referred_payment_id?: string | null
+          referrer_customer_id: number
+          rejection_reason?: string | null
+          renewal_response?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bonus_days?: number
+          created_at?: string
+          credited_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_customer_id?: number
+          referred_customer_name?: string | null
+          referred_payment_id?: string | null
+          referrer_customer_id?: number
+          rejection_reason?: string | null
+          renewal_response?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_payment_id_fkey"
+            columns: ["referred_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
