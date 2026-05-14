@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTmdbTrending, tmdbBackdrop, type TmdbItem } from "@/hooks/useTmdbTrending";
 
 interface LaunchesBannerProps {
