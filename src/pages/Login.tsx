@@ -76,19 +76,7 @@ const Login = () => {
                 autoComplete="username"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                Senha
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Sua senha"
-                autoComplete="current-password"
-              />
-            </div>
+
             <button
               type="submit"
               disabled={loading}
