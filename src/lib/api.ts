@@ -76,6 +76,7 @@ export async function createPixPayment(body: {
   plan_id: number;
   plan_name: string;
   amount: number;
+  referral_code?: string;
 }): Promise<CreatePixResponse> {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/fastdepix-create-pix`, {
     method: "POST",
