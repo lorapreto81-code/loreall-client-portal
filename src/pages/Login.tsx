@@ -6,8 +6,10 @@ import { searchCustomer } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 const logo = "/logo.png";
 
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
+
 const Login = () => {
-  const [usuario, setUsuario] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
@@ -15,19 +17,30 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!usuario.trim() || !password.trim()) {
+    const id = identifier.trim();
+    if (!id || !password.trim()) {
       toast.error("Preencha todos os campos.");
       return;
     }
     setLoading(true);
     try {
-      const data = await searchCustomer(usuario.trim());
+      const digits = onlyDigits(id);
+      const isPhone = digits.length >= 8;
+      const query = isPhone ? digits : id;
+      const data = await searchCustomer(query);
       const customers = Array.isArray(data) ? data : data?.data ? (Array.isArray(data.data) ? data.data : [data.data]) : [data];
-      const found = customers.find(
-        (c: any) => c.usuario === usuario.trim() || c.username === usuario.trim()
-      );
+      const found = customers.find((c: any) => {
+        if (!isPhone && (c.usuario === id || c.username === id)) return true;
+        if (isPhone) {
+          const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone]
+            .filter(Boolean)
+            .map((v: string) => onlyDigits(String(v)));
+          return phoneFields.some((p) => p.endsWith(digits) || digits.endsWith(p));
+        }
+        return false;
+      });
       if (!found) {
-        toast.error("Usuário não encontrado.");
+        toast.error("Usuário ou celular não encontrado.");
         return;
       }
       if (found.password !== password) {
@@ -57,14 +70,14 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                Usuário
+                Usuário ou celular
               </label>
               <input
                 type="text"
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Seu usuário"
+                placeholder="Seu usuário ou celular"
                 autoComplete="username"
               />
             </div>
