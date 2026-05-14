@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LogOut, ChevronDown, ChevronUp,
+  LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { getCustomerInvoices } from "@/lib/api";
-import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
+import { formatDate, daysUntil } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 
@@ -49,7 +48,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
-  const [showAllInvoices, setShowAllInvoices] = useState(false);
   const [renewalOpen, setRenewalOpen] = useState(false);
   
 
@@ -67,30 +65,10 @@ const Dashboard = () => {
     return () => window.removeEventListener("auth:unauthorized", handler);
   }, [logout, navigate]);
 
-  const invoicesQuery = useQuery({
-    queryKey: ["invoices", customer?.id],
-    queryFn: () => getCustomerInvoices(customer!.id),
-    enabled: !!customer?.id,
-    staleTime: 60_000,
-  });
-
   if (!customer) return null;
 
   const days = daysUntil(customer.data_de_vencimento);
   const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
-  const invoices: any[] = invoicesQuery.data?.data || invoicesQuery.data || [];
-
-  const customerNotExpired = days >= 0;
-  const processedInvoices = invoices.map((inv: any) => {
-    const invStatus = (inv.status || "").toLowerCase();
-    const isPending = ["pendente", "pending", "em aberto"].includes(invStatus);
-    if (isPending && customerNotExpired) {
-      return { ...inv, _displayStatus: "pago", _hidePay: true };
-    }
-    return { ...inv, _displayStatus: inv.status, _hidePay: false };
-  });
-
-  const visibleInvoices = showAllInvoices ? processedInvoices.slice(0, 10) : processedInvoices.slice(0, 3);
 
   const handleLogout = () => {
     logout();
@@ -102,7 +80,7 @@ const Dashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
   };
 
-  const isLoading = invoicesQuery.isLoading;
+  const isLoading = false;
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,70 +171,6 @@ const Dashboard = () => {
 
         {/* 4.5 LANÇAMENTOS */}
         <LaunchesBanner />
-
-        {/* 5. FATURAS RECENTES */}
-        <div className="card-elevated p-5">
-          <h2 className="text-base font-bold text-foreground mb-3">Faturas recentes</h2>
-          {invoicesQuery.isLoading ? (
-            <div className="space-y-2.5">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="skeleton-bar h-14 rounded-xl" />
-              ))}
-            </div>
-          ) : invoicesQuery.isError ? (
-            <p className="text-sm text-destructive">Erro ao carregar faturas.</p>
-          ) : Array.isArray(processedInvoices) && processedInvoices.length > 0 ? (
-            <>
-              <div className="space-y-2">
-                {visibleInvoices.map((inv: any) => {
-                  const dateStr = inv.issuance_date || inv.created_at || "";
-                  const d = new Date(dateStr);
-                  const monthYear = d.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
-                  const showPay = !inv._hidePay && ["pendente", "pending", "em aberto"].includes((inv.status || "").toLowerCase()) && inv.checkout_url;
-
-                  return (
-                    <div
-                      key={inv.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-border"
-                      style={{ minHeight: 44 }}
-                    >
-                      <span className="text-sm font-medium text-foreground capitalize">{monthYear}</span>
-                      <span className="text-sm text-muted-foreground">{formatCurrency(inv.total_amount || inv.amount || 0)}</span>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={inv._displayStatus || "pendente"} />
-                        {showPay && (
-                          <a
-                            href={inv.checkout_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-primary-gradient px-3 py-1.5 text-xs inline-flex items-center gap-1"
-                          >
-                            Pagar
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {processedInvoices.length > 3 && (
-                <button
-                  onClick={() => setShowAllInvoices(!showAllInvoices)}
-                  className="mt-3 text-sm font-medium inline-flex items-center gap-1 transition-colors btn-see-all"
-                  style={{ minHeight: 44 }}
-                >
-                  {showAllInvoices ? (
-                    <><ChevronUp className="h-4 w-4" /> Mostrar menos</>
-                  ) : (
-                    <><ChevronDown className="h-4 w-4" /> Ver todas as faturas</>
-                  )}
-                </button>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma fatura encontrada.</p>
-          )}
-        </div>
 
         {/* 6. INDIQUE E GANHE — Em breve */}
         <div className="card-elevated p-5 card-referral" style={{ opacity: 0.75, cursor: "default" }}>
