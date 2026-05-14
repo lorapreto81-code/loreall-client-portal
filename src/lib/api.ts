@@ -59,3 +59,34 @@ export async function renewCustomer(
 ) {
   return callProxy("renew-customer", { id: String(customerId) }, { method: "POST", body });
 }
+
+// ----- Fast Depix (PIX) -----
+export interface CreatePixResponse {
+  payment_id: string;
+  qr_code_url: string;
+  qr_code_text: string;
+  expires_at: string;
+  amount: number;
+}
+
+export async function createPixPayment(body: {
+  customer_id: number;
+  customer_name: string;
+  customer_whatsapp?: string;
+  plan_id: number;
+  plan_name: string;
+  amount: number;
+}): Promise<CreatePixResponse> {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/fastdepix-create-pix`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${ANON_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+  return data as CreatePixResponse;
+}
