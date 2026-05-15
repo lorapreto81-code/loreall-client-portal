@@ -71,6 +71,33 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return () => clearInterval(t);
   }, [pix]);
 
+  // Retomar PIX pendente ao abrir
+  useEffect(() => {
+    if (!open || !customer || pix) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, amount, qr_code_url, qr_code_text, qr_code_expires_at, fastdepix_status")
+        .eq("customer_id", customer.id)
+        .eq("fastdepix_status", "pending")
+        .gt("qr_code_expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || error || !data || !data.qr_code_text) return;
+      setPix({
+        payment_id: data.id,
+        qr_code_url: data.qr_code_url || "",
+        qr_code_text: data.qr_code_text || "",
+        expires_at: data.qr_code_expires_at as string,
+        amount: Number(data.amount),
+      });
+      setPixStatus(data.fastdepix_status || "pending");
+    })();
+    return () => { cancelled = true; };
+  }, [open, customer, pix]);
+
   // Realtime: escuta mudança de status do payment
   useEffect(() => {
     if (!pix?.payment_id) return;
