@@ -276,51 +276,12 @@ export default function Revendedor() {
         </div>
 
 
-
-
-        {/* Mini tools row */}
-        <div className="grid grid-cols-2 gap-4">
-          <a
-            href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
-          >
-            <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
-              <img src={topgestorLogo} alt="TopGestor" className="max-h-14 object-contain" />
-            </div>
-            <div className="p-3">
-              <p className="text-[11px] text-slate-500 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
-              <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
-                7 dias grátis <ExternalLink className="h-3 w-3" />
-              </span>
-            </div>
-          </a>
-
-          <a
-            href="https://gerador.pro/link.php?ref=c6863f0f"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
-          >
-            <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
-              <img src={geradorProLogo} alt="Gerador Pro" className="max-h-16 object-contain" />
-            </div>
-            <div className="p-3">
-              <p className="text-[11px] text-slate-500 leading-tight mb-2">Banners e vídeos de divulgação.</p>
-              <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
-                Teste 1 dia <ExternalLink className="h-3 w-3" />
-              </span>
-            </div>
-          </a>
-        </div>
-
         {!pix && (
-          <div className="bg-white rounded-[2rem] p-4 border border-slate-100 shadow-xl shadow-blue-900/5">
-            <div className="bg-slate-50 rounded-[1.5rem] p-7 border border-slate-100 flex flex-col items-center">
-              <h3 className="text-[11px] font-bold text-slate-400 tracking-[0.2em] uppercase mb-6">Quantidade de Créditos</h3>
+          <div className="bg-white rounded-[2rem] p-3 border border-slate-100 shadow-xl shadow-blue-900/5">
+            <div className="bg-slate-50 rounded-[1.5rem] p-5 border border-slate-100 flex flex-col items-center">
+              <h3 className="text-[11px] font-bold text-slate-400 tracking-[0.2em] uppercase mb-4">Quantidade de Créditos</h3>
 
-              <div className="flex items-center justify-between w-full mb-5">
+              <div className="flex items-center justify-between w-full mb-4">
                 <button
                   onClick={() => stepCredits(-1)}
                   disabled={credits <= link.min_credits}
@@ -342,22 +303,22 @@ export default function Revendedor() {
                 </button>
               </div>
 
-              <div className="flex gap-2 text-slate-400 text-xs font-semibold mb-7">
+              <div className="flex gap-2 text-slate-400 text-xs font-semibold mb-4">
                 <span>Mín. {link.min_credits}</span>
                 <span className="opacity-30">•</span>
                 <span>Máx. {link.max_credits} créditos</span>
               </div>
 
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-4xl font-extrabold text-slate-900">{formatBRL(totalAmount)}</span>
-                <span className="text-sm text-slate-400 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-3xl font-extrabold text-slate-900">{formatBRL(totalAmount)}</span>
+                <span className="text-xs text-slate-400 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
               </div>
             </div>
 
             <button
               onClick={generatePix}
               disabled={generating}
-              className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-[1.5rem] text-white font-bold text-base shadow-lg shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
+              className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-[1.5rem] text-white font-bold text-base shadow-lg shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
             >
               {generating ? (
                 <span className="inline-flex items-center gap-2">
@@ -373,6 +334,47 @@ export default function Revendedor() {
             </button>
           </div>
         )}
+
+        {/* Mini tools row */}
+        {!pix && (
+          <div className="grid grid-cols-2 gap-4">
+            <a
+              href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+            >
+              <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
+                <img src={topgestorLogo} alt="TopGestor" className="max-h-14 object-contain" />
+              </div>
+              <div className="p-3">
+                <p className="text-[11px] text-slate-500 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
+                <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
+                  7 dias grátis <ExternalLink className="h-3 w-3" />
+                </span>
+              </div>
+            </a>
+
+            <a
+              href="https://gerador.pro/link.php?ref=c6863f0f"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+            >
+              <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
+                <img src={geradorProLogo} alt="Gerador Pro" className="max-h-16 object-contain" />
+              </div>
+              <div className="p-3">
+                <p className="text-[11px] text-slate-500 leading-tight mb-2">Banners e vídeos de divulgação.</p>
+                <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
+                  Teste 1 dia <ExternalLink className="h-3 w-3" />
+                </span>
+              </div>
+            </a>
+          </div>
+        )}
+
+
 
 
 
