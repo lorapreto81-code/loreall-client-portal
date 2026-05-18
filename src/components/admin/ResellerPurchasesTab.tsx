@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
 import { toast } from "sonner";
 import { Loader2, RefreshCw, RotateCcw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 
 interface Purchase {
   id: string;
