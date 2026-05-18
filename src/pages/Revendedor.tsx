@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink, Menu, Sparkles, Film, Play } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink, Menu, Sparkles, Film, Play, Sun, Moon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import loreallLogo from "@/assets/loreall-play-logo.png";
 import topgestorLogo from "@/assets/topgestor-logo.png";
@@ -73,6 +73,15 @@ export default function Revendedor() {
   // email removed — Fast Depix gets a synthetic fallback in the edge function
   const [credits, setCredits] = useState<number>(10);
   const [generating, setGenerating] = useState(false);
+
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    return (localStorage.getItem("revendedor-theme") as "light" | "dark") || "light";
+  });
+  useEffect(() => {
+    localStorage.setItem("revendedor-theme", theme);
+  }, [theme]);
+  const isDark = theme === "dark";
 
   const [pix, setPix] = useState<PixData | null>(null);
   const [status, setStatus] = useState<StatusData | null>(null);
@@ -209,7 +218,7 @@ export default function Revendedor() {
   if (notFound || !link) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
-        <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 max-w-sm text-center">
+        <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 max-w-sm text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 mb-2">Revendedor não encontrado</h1>
           <p className="text-sm text-gray-600">
@@ -225,18 +234,19 @@ export default function Revendedor() {
   )}`;
 
   return (
-    <div className="relative min-h-screen flex items-start justify-center text-slate-900 overflow-hidden bg-slate-50 font-['Inter',system-ui,sans-serif]">
+    <div className={isDark ? "dark" : ""}>
+    <div className="relative min-h-screen flex items-start justify-center text-slate-900 dark:text-slate-100 overflow-hidden bg-slate-50 dark:bg-slate-950 font-['Inter',system-ui,sans-serif] transition-colors">
       {/* Background glow */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/50 to-white" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 blur-[120px] rounded-[100%]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 dark:bg-blue-600/20 blur-[120px] rounded-[100%]" />
       </div>
 
       <div className="w-full max-w-md px-5 pt-3 pb-6 flex flex-col gap-4 relative">
-        {/* Top bar: menu + logo/name + ID — tudo alinhado */}
-        <div className="flex items-center gap-3">
+        {/* Top bar */}
+        <div className="flex items-center gap-2">
           <DropdownMenu>
-            <DropdownMenuTrigger className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+            <DropdownMenuTrigger className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30">
               <Menu className="h-5 w-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -258,46 +268,57 @@ export default function Revendedor() {
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <img src={loreallLogo} alt="Loreall Play" className="h-11 w-11 object-contain shrink-0 drop-shadow" />
             <div className="min-w-0 flex-1">
-              <h1 className="text-base font-extrabold text-slate-900 leading-tight truncate">{link.display_name}</h1>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate">
+              <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-50 leading-tight truncate">{link.display_name}</h1>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider truncate">
                 {link.warez_username}
               </p>
             </div>
           </div>
 
-          <span className="shrink-0 px-2.5 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full tracking-wider uppercase">
+          <button
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className="h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-yellow-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            aria-label={isDark ? "Modo claro" : "Modo escuro"}
+            title={isDark ? "Modo claro" : "Modo escuro"}
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+
+          <span className="shrink-0 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-[10px] font-bold rounded-full tracking-wider uppercase">
             ID {link.warez_user_id}
           </span>
         </div>
 
         <div className="flex justify-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[12px] font-bold">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-300 rounded-full text-[12px] font-bold">
             <Zap className="w-3 h-3" /> Recarga de Créditos
           </span>
         </div>
 
 
+
+
         {!pix && (
-          <div className="bg-white rounded-[2rem] p-3 border border-slate-100 shadow-xl shadow-blue-900/5">
-            <div className="bg-slate-50 rounded-[1.5rem] p-5 border border-slate-100 flex flex-col items-center">
-              <h3 className="text-[11px] font-bold text-slate-400 tracking-[0.2em] uppercase mb-4">Quantidade de Créditos</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-3 border border-slate-100 dark:border-slate-800 shadow-xl shadow-blue-900/5 dark:shadow-black/40">
+            <div className="bg-slate-50 dark:bg-slate-950/60 rounded-[1.5rem] p-5 border border-slate-100 dark:border-slate-800 flex flex-col items-center">
+              <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-[0.2em] uppercase mb-4">Quantidade de Créditos</h3>
 
               <div className="flex items-center justify-between w-full mb-4">
                 <button
                   onClick={() => stepCredits(-1)}
                   disabled={credits <= link.min_credits}
-                  className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all active:scale-95 disabled:opacity-40"
+                  className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-400 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500 transition-all active:scale-95 disabled:opacity-40"
                   aria-label="Diminuir"
                 >
                   <Minus className="w-6 h-6" />
                 </button>
 
-                <span className="text-6xl font-black text-blue-600 tabular-nums select-none tracking-tighter">{credits}</span>
+                <span className="text-6xl font-black text-blue-600 dark:text-blue-400 tabular-nums select-none tracking-tighter">{credits}</span>
 
                 <button
                   onClick={() => stepCredits(1)}
                   disabled={credits >= link.max_credits}
-                  className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-800 hover:text-blue-600 hover:border-blue-200 transition-all active:scale-95 disabled:opacity-40"
+                  className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-800 dark:text-slate-100 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500 transition-all active:scale-95 disabled:opacity-40"
                   aria-label="Aumentar"
                 >
                   <Plus className="w-6 h-6" />
@@ -312,20 +333,20 @@ export default function Revendedor() {
                 step={1}
                 value={credits}
                 onChange={(e) => setCredits(Number(e.target.value))}
-                className="w-full h-2 mb-3 rounded-full appearance-none bg-slate-200 cursor-pointer accent-blue-600
+                className="w-full h-2 mb-3 rounded-full appearance-none cursor-pointer accent-blue-600
                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5
                   [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600
-                  [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
+                  [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white dark:[&::-webkit-slider-thumb]:border-slate-900"
                 style={{
                   background: `linear-gradient(to right, hsl(217 91% 60%) 0%, hsl(217 91% 60%) ${
                     ((credits - link.min_credits) / (link.max_credits - link.min_credits)) * 100
-                  }%, rgb(226 232 240) ${
+                  }%, ${isDark ? "rgb(51 65 85)" : "rgb(226 232 240)"} ${
                     ((credits - link.min_credits) / (link.max_credits - link.min_credits)) * 100
-                  }%, rgb(226 232 240) 100%)`,
+                  }%, ${isDark ? "rgb(51 65 85)" : "rgb(226 232 240)"} 100%)`,
                 }}
               />
 
-              <div className="flex gap-2 text-slate-400 text-xs font-semibold mb-4">
+              <div className="flex gap-2 text-slate-400 dark:text-slate-500 text-xs font-semibold mb-4">
                 <span>Mín. {link.min_credits}</span>
                 <span className="opacity-30">•</span>
                 <span>Máx. {link.max_credits} créditos</span>
@@ -333,10 +354,11 @@ export default function Revendedor() {
 
 
               <div className="flex flex-col items-center gap-0.5">
-                <span className="text-3xl font-extrabold text-slate-900">{formatBRL(totalAmount)}</span>
-                <span className="text-xs text-slate-400 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
+                <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-50">{formatBRL(totalAmount)}</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
               </div>
             </div>
+
 
             <button
               onClick={generatePix}
@@ -365,13 +387,13 @@ export default function Revendedor() {
               href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
               target="_blank"
               rel="noreferrer"
-              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+              className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-500 hover:shadow-md transition-all"
             >
               <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
                 <img src={topgestorLogo} alt="TopGestor" className="max-h-14 object-contain" />
               </div>
               <div className="p-3">
-                <p className="text-[11px] text-slate-500 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
                 <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
                   7 dias grátis <ExternalLink className="h-3 w-3" />
                 </span>
@@ -382,13 +404,13 @@ export default function Revendedor() {
               href="https://gerador.pro/link.php?ref=c6863f0f"
               target="_blank"
               rel="noreferrer"
-              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+              className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-500 hover:shadow-md transition-all"
             >
               <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
                 <img src={geradorProLogo} alt="Gerador Pro" className="max-h-16 object-contain" />
               </div>
               <div className="p-3">
-                <p className="text-[11px] text-slate-500 leading-tight mb-2">Banners e vídeos de divulgação.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mb-2">Banners e vídeos de divulgação.</p>
                 <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
                   Teste 1 dia <ExternalLink className="h-3 w-3" />
                 </span>
@@ -408,7 +430,7 @@ export default function Revendedor() {
 
 
         {pix && !isRecharged && !isExpired && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-6 space-y-4">
             <div className="text-center">
               <div className="text-xs text-gray-500">Valor</div>
               <div className="text-2xl font-bold text-gray-900">{formatBRL(Number(pix.amount))}</div>
@@ -484,7 +506,7 @@ export default function Revendedor() {
 
 
         {isRecharged && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center space-y-4">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold text-gray-900">Créditos adicionados!</h2>
             <p className="text-sm text-gray-600">
@@ -498,7 +520,7 @@ export default function Revendedor() {
         )}
 
         {isExpired && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto" />
             <h2 className="text-lg font-bold text-gray-900">PIX expirado</h2>
             <button onClick={reset} className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm">
@@ -507,10 +529,11 @@ export default function Revendedor() {
           </div>
         )}
 
-        <p className="text-center text-[10px] text-slate-400">© Loreall Play</p>
+        <p className="text-center text-[10px] text-slate-400 dark:text-slate-600">© Loreall Play</p>
 
 
       </div>
+    </div>
     </div>
   );
 }
