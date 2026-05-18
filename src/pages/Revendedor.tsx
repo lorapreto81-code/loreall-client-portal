@@ -223,58 +223,56 @@ export default function Revendedor() {
   )}`;
 
   return (
-    <div className="relative min-h-screen px-4 py-8 text-gray-900 overflow-hidden bg-white">
-      {/* Animated Loreall blue rising background */}
+    <div className="relative min-h-screen flex items-start justify-center text-slate-900 overflow-hidden bg-slate-50 font-['Inter',system-ui,sans-serif]">
+      {/* Background glow */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50 to-white" />
-        <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[140%] h-[80vh] rounded-[50%] bg-gradient-to-t from-blue-600/30 via-indigo-500/15 to-transparent blur-3xl animate-loreall-rise" />
-        <div className="absolute -bottom-40 left-[20%] w-[60%] h-[70vh] rounded-[50%] bg-gradient-to-t from-indigo-600/25 to-transparent blur-3xl animate-loreall-rise-slow" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/50 to-white" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 blur-[120px] rounded-[100%]" />
       </div>
 
-      <div className="max-w-md mx-auto space-y-5 relative">
-        {/* Top bar: WAREZ button + ID — compacto no cantinho */}
-        <div className="flex items-center justify-between gap-2">
+      <div className="w-full max-w-md p-6 flex flex-col gap-7 relative">
+        {/* Header row */}
+        <div className="flex items-center justify-between">
           <a
             href={WAREZ_PANEL_URL}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/80 backdrop-blur border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs font-semibold shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-blue-700 shadow-sm hover:bg-slate-50 transition-colors"
           >
-            <ExternalLink className="h-3.5 w-3.5" /> Painel WAREZ
+            <ExternalLink className="w-4 h-4" /> Painel WAREZ
           </a>
-          <span className="text-[11px] text-gray-500 font-mono bg-white/70 backdrop-blur border border-gray-200 rounded-md px-2 py-1">
+          <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[11px] font-bold rounded-full tracking-wider uppercase">
             ID {link.warez_user_id}
           </span>
         </div>
 
-        <div className="text-center">
-          <img src={loreallLogo} alt="Loreall Play" className="h-20 w-20 mx-auto mb-2 object-contain drop-shadow-xl" />
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 text-blue-700 text-xs font-semibold">
-            <Zap className="h-3.5 w-3.5" /> Recarga de Créditos
-          </div>
-          <h1 className="text-xl font-bold mt-2">{link.display_name}</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Painel: <span className="font-mono">{link.warez_username}</span>
+        {/* Profile section */}
+        <div className="flex flex-col items-center text-center">
+          <img src={loreallLogo} alt="Loreall Play" className="h-24 w-24 mb-3 object-contain drop-shadow-xl" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[12px] font-bold">
+            <Zap className="w-3 h-3" /> Recarga de Créditos
+          </span>
+          <h1 className="text-3xl font-extrabold text-slate-900 mt-3">{link.display_name}</h1>
+          <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-widest mt-1">
+            Painel: {link.warez_username}
           </p>
         </div>
 
-        {/* Ferramentas para revendedor — grid compacto */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Mini tools row */}
+        <div className="grid grid-cols-2 gap-4">
           <a
             href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
             target="_blank"
             rel="noreferrer"
-            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl overflow-hidden"
+            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
           >
-            <div className="bg-slate-900 flex items-center justify-center h-14 px-3">
-              <img src={topgestorLogo} alt="TopGestor" className="h-9 object-contain" />
+            <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
+              <img src={topgestorLogo} alt="TopGestor" className="max-h-14 object-contain" />
             </div>
             <div className="p-3">
-              <p className="text-[11px] text-gray-600 leading-snug">
-                Gestão de clientes IPTV automática.
-              </p>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
-                7 dias grátis <ExternalLink className="h-2.5 w-2.5" />
+              <p className="text-[11px] text-slate-500 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
+              <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
+                7 dias grátis <ExternalLink className="h-3 w-3" />
               </span>
             </div>
           </a>
@@ -283,75 +281,80 @@ export default function Revendedor() {
             href="https://gerador.pro/link.php?ref=c6863f0f"
             target="_blank"
             rel="noreferrer"
-            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl overflow-hidden"
+            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
           >
-            <div className="bg-slate-900 flex items-center justify-center h-14 px-3">
-              <img src={geradorProLogo} alt="Gerador Pro" className="h-12 object-contain" />
+            <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
+              <img src={geradorProLogo} alt="Gerador Pro" className="max-h-16 object-contain" />
             </div>
             <div className="p-3">
-              <p className="text-[11px] text-gray-600 leading-snug">
-                Banners e vídeos de divulgação.
-              </p>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
-                Teste 1 dia <ExternalLink className="h-2.5 w-2.5" />
+              <p className="text-[11px] text-slate-500 leading-tight mb-2">Banners e vídeos de divulgação.</p>
+              <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
+                Teste 1 dia <ExternalLink className="h-3 w-3" />
               </span>
             </div>
           </a>
         </div>
 
-
-
-
-
-
         {!pix && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-5">
-            <div className="text-center py-5 border border-gray-200 rounded-xl bg-gray-50">
-              <div className="text-xs text-gray-500 uppercase tracking-wide">Quantidade de créditos</div>
-              <div className="flex items-center justify-center gap-4 mt-3">
+          <div className="bg-white rounded-[2rem] p-4 border border-slate-100 shadow-xl shadow-blue-900/5">
+            <div className="bg-slate-50 rounded-[1.5rem] p-7 border border-slate-100 flex flex-col items-center">
+              <h3 className="text-[11px] font-bold text-slate-400 tracking-[0.2em] uppercase mb-6">Quantidade de Créditos</h3>
+
+              <div className="flex items-center justify-between w-full mb-5">
                 <button
                   onClick={() => stepCredits(-1)}
                   disabled={credits <= link.min_credits}
-                  className="h-10 w-10 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
+                  className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all active:scale-95 disabled:opacity-40"
                   aria-label="Diminuir"
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="w-6 h-6" />
                 </button>
-                <div className="text-5xl font-bold text-blue-600 tabular-nums w-20">{credits}</div>
+
+                <span className="text-6xl font-black text-blue-600 tabular-nums select-none tracking-tighter">{credits}</span>
+
                 <button
                   onClick={() => stepCredits(1)}
                   disabled={credits >= link.max_credits}
-                  className="h-10 w-10 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
+                  className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-800 hover:text-blue-600 hover:border-blue-200 transition-all active:scale-95 disabled:opacity-40"
                   aria-label="Aumentar"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="w-6 h-6" />
                 </button>
               </div>
-              <div className="text-xs text-gray-500 mt-2">
-                Mín. {link.min_credits} • Máx. {link.max_credits} créditos
+
+              <div className="flex gap-2 text-slate-400 text-xs font-semibold mb-7">
+                <span>Mín. {link.min_credits}</span>
+                <span className="opacity-30">•</span>
+                <span>Máx. {link.max_credits} créditos</span>
               </div>
-              <div className="mt-4 text-3xl font-bold text-gray-900">{formatBRL(totalAmount)}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {formatBRL(Number(link.price_per_credit))} por crédito
+
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-4xl font-extrabold text-slate-900">{formatBRL(totalAmount)}</span>
+                <span className="text-sm text-slate-400 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
               </div>
             </div>
-
 
             <button
               onClick={generatePix}
               disabled={generating}
-              className="w-full py-3.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 disabled:opacity-60"
+              className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-[1.5rem] text-white font-bold text-base shadow-lg shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
             >
               {generating ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Gerando PIX...
                 </span>
               ) : (
-                `Recarregar painel • ${formatBRL(totalAmount)}`
+                <>
+                  Recarregar painel
+                  <span className="opacity-50 text-sm font-normal">•</span>
+                  {formatBRL(totalAmount)}
+                </>
               )}
             </button>
           </div>
         )}
+
+
 
         {pix && !isRecharged && !isExpired && (
           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-4">
