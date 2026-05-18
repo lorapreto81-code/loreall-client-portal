@@ -156,8 +156,8 @@ export default function ResellerLinksTab() {
                 <tr>
                   <th className="text-left px-4 py-3">Revendedor</th>
                   <th className="text-left px-4 py-3">Painel</th>
-                  <th className="text-right px-4 py-3">Créditos</th>
-                  <th className="text-right px-4 py-3">Valor</th>
+                  <th className="text-right px-4 py-3">R$/crédito</th>
+                  <th className="text-right px-4 py-3">Mín/Máx</th>
                   <th className="text-center px-4 py-3">Ativo</th>
                   <th className="text-right px-4 py-3">Ações</th>
                 </tr>
@@ -175,9 +175,11 @@ export default function ResellerLinksTab() {
                       <div className="font-mono text-xs text-foreground">{l.warez_username}</div>
                       <div className="text-xs text-muted-foreground">ID {l.warez_user_id}</div>
                     </td>
-                    <td className="px-4 py-3 text-right text-foreground">{l.credits}</td>
                     <td className="px-4 py-3 text-right text-foreground">
-                      {Number(l.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      {Number(l.price_per_credit ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </td>
+                    <td className="px-4 py-3 text-right text-foreground">
+                      {l.min_credits ?? 10} – {l.max_credits ?? 30}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => toggle(l)} className={`px-2 py-1 rounded-full text-xs font-medium ${l.is_active ? "bg-green-500/15 text-green-500" : "bg-muted text-muted-foreground"}`}>
