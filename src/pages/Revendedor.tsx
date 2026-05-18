@@ -218,7 +218,7 @@ export default function Revendedor() {
   if (notFound || !link) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
-        <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 max-w-sm text-center">
+        <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 max-w-sm text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 mb-2">Revendedor não encontrado</h1>
           <p className="text-sm text-gray-600">
@@ -430,7 +430,7 @@ export default function Revendedor() {
 
 
         {pix && !isRecharged && !isExpired && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-6 space-y-4">
             <div className="text-center">
               <div className="text-xs text-gray-500">Valor</div>
               <div className="text-2xl font-bold text-gray-900">{formatBRL(Number(pix.amount))}</div>
@@ -506,7 +506,7 @@ export default function Revendedor() {
 
 
         {isRecharged && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center space-y-4">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold text-gray-900">Créditos adicionados!</h2>
             <p className="text-sm text-gray-600">
@@ -520,7 +520,7 @@ export default function Revendedor() {
         )}
 
         {isExpired && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto" />
             <h2 className="text-lg font-bold text-gray-900">PIX expirado</h2>
             <button onClick={reset} className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm">
@@ -529,7 +529,7 @@ export default function Revendedor() {
           </div>
         )}
 
-        <p className="text-center text-[10px] text-slate-400">© Loreall Play</p>
+        <p className="text-center text-[10px] text-slate-400 dark:text-slate-600">© Loreall Play</p>
 
 
       </div>
