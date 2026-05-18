@@ -387,13 +387,13 @@ export default function Revendedor() {
               href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
               target="_blank"
               rel="noreferrer"
-              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+              className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-500 hover:shadow-md transition-all"
             >
               <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
                 <img src={topgestorLogo} alt="TopGestor" className="max-h-14 object-contain" />
               </div>
               <div className="p-3">
-                <p className="text-[11px] text-slate-500 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
                 <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
                   7 dias grátis <ExternalLink className="h-3 w-3" />
                 </span>
@@ -404,13 +404,13 @@ export default function Revendedor() {
               href="https://gerador.pro/link.php?ref=c6863f0f"
               target="_blank"
               rel="noreferrer"
-              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+              className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-500 hover:shadow-md transition-all"
             >
               <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
                 <img src={geradorProLogo} alt="Gerador Pro" className="max-h-16 object-contain" />
               </div>
               <div className="p-3">
-                <p className="text-[11px] text-slate-500 leading-tight mb-2">Banners e vídeos de divulgação.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mb-2">Banners e vídeos de divulgação.</p>
                 <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
                   Teste 1 dia <ExternalLink className="h-3 w-3" />
                 </span>
