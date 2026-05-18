@@ -64,8 +64,9 @@ export default function ResellerLinksTab() {
       display_name: l.display_name,
       warez_username: l.warez_username,
       warez_user_id: String(l.warez_user_id),
-      credits: String(l.credits),
-      amount: String(l.amount),
+      price_per_credit: String(l.price_per_credit ?? 11),
+      min_credits: String(l.min_credits ?? 10),
+      max_credits: String(l.max_credits ?? 30),
       is_active: l.is_active,
       notes: l.notes || "",
     });
@@ -75,13 +76,19 @@ export default function ResellerLinksTab() {
   const save = async () => {
     setSaving(true);
     try {
+      const price = Number(form.price_per_credit);
+      const minC = Number(form.min_credits);
+      const maxC = Number(form.max_credits);
       const payload = {
         slug: form.slug || form.display_name,
         display_name: form.display_name,
         warez_username: form.warez_username,
         warez_user_id: Number(form.warez_user_id),
-        credits: Number(form.credits),
-        amount: Number(form.amount),
+        price_per_credit: price,
+        min_credits: minC,
+        max_credits: maxC,
+        credits: minC,
+        amount: Number((minC * price).toFixed(2)),
         is_active: form.is_active,
         notes: form.notes,
       };
