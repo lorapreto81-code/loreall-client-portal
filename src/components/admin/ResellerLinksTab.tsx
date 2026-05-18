@@ -11,6 +11,9 @@ interface Link {
   warez_user_id: number;
   credits: number;
   amount: number;
+  price_per_credit: number;
+  min_credits: number;
+  max_credits: number;
   is_active: boolean;
   notes: string | null;
 }
@@ -20,8 +23,9 @@ const empty = {
   display_name: "",
   warez_username: "",
   warez_user_id: "",
-  credits: "10",
-  amount: "100",
+  price_per_credit: "11",
+  min_credits: "10",
+  max_credits: "30",
   is_active: true,
   notes: "",
 };
