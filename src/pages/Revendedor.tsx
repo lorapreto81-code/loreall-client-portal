@@ -303,11 +303,33 @@ export default function Revendedor() {
                 </button>
               </div>
 
+              {/* Slider para controle preciso */}
+              <input
+                type="range"
+                min={link.min_credits}
+                max={link.max_credits}
+                step={1}
+                value={credits}
+                onChange={(e) => setCredits(Number(e.target.value))}
+                className="w-full h-2 mb-3 rounded-full appearance-none bg-slate-200 cursor-pointer accent-blue-600
+                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5
+                  [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600
+                  [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
+                style={{
+                  background: `linear-gradient(to right, hsl(217 91% 60%) 0%, hsl(217 91% 60%) ${
+                    ((credits - link.min_credits) / (link.max_credits - link.min_credits)) * 100
+                  }%, rgb(226 232 240) ${
+                    ((credits - link.min_credits) / (link.max_credits - link.min_credits)) * 100
+                  }%, rgb(226 232 240) 100%)`,
+                }}
+              />
+
               <div className="flex gap-2 text-slate-400 text-xs font-semibold mb-4">
                 <span>Mín. {link.min_credits}</span>
                 <span className="opacity-30">•</span>
                 <span>Máx. {link.max_credits} créditos</span>
               </div>
+
 
               <div className="flex flex-col items-center gap-0.5">
                 <span className="text-3xl font-extrabold text-slate-900">{formatBRL(totalAmount)}</span>
@@ -441,8 +463,18 @@ export default function Revendedor() {
                 Aguardando pagamento... abra o app do banco e pague via PIX.
               </p>
             )}
+
+            {!isFailed && (
+              <button
+                onClick={reset}
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 hover:text-slate-900 transition"
+              >
+                Cancelar e alterar valor
+              </button>
+            )}
           </div>
         )}
+
 
         {isRecharged && (
           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
