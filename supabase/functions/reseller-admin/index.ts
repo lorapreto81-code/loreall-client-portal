@@ -62,17 +62,24 @@ Deno.serve(async (req) => {
       case "create-link": {
         const slug = slugify(body.slug || body.display_name || "");
         if (!slug) return ok({ error: "slug inválido" }, 400);
+        const price = Number(body.price_per_credit ?? 11);
+        const minC = Number(body.min_credits ?? 10);
+        const maxC = Number(body.max_credits ?? 30);
+        const baseCredits = Number(body.credits ?? minC);
         const payload = {
           slug,
           display_name: String(body.display_name || "").trim(),
           warez_username: String(body.warez_username || "").trim(),
           warez_user_id: Number(body.warez_user_id),
-          credits: Number(body.credits),
-          amount: Number(body.amount),
+          credits: baseCredits,
+          amount: Number(body.amount ?? baseCredits * price),
+          price_per_credit: price,
+          min_credits: minC,
+          max_credits: maxC,
           is_active: body.is_active ?? true,
           notes: body.notes || null,
         };
-        if (!payload.display_name || !payload.warez_username || !payload.warez_user_id || !payload.credits || !payload.amount) {
+        if (!payload.display_name || !payload.warez_username || !payload.warez_user_id || !payload.price_per_credit) {
           return ok({ error: "Campos obrigatórios faltando" }, 400);
         }
         const { data, error } = await supabase.from("reseller_links").insert(payload).select().single();
@@ -84,13 +91,13 @@ Deno.serve(async (req) => {
         const id = String(body.id || "");
         if (!id) return ok({ error: "id obrigatório" }, 400);
         const patch: Record<string, unknown> = {};
-        for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "is_active", "notes"]) {
+        for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "price_per_credit", "min_credits", "max_credits", "is_active", "notes"]) {
           if (k in body) patch[k] = body[k];
         }
         if (patch.slug) patch.slug = slugify(String(patch.slug));
-        if ("warez_user_id" in patch) patch.warez_user_id = Number(patch.warez_user_id);
-        if ("credits" in patch) patch.credits = Number(patch.credits);
-        if ("amount" in patch) patch.amount = Number(patch.amount);
+        for (const k of ["warez_user_id", "credits", "amount", "price_per_credit", "min_credits", "max_credits"]) {
+          if (k in patch) patch[k] = Number(patch[k]);
+        }
         const { data, error } = await supabase.from("reseller_links").update(patch).eq("id", id).select().single();
         if (error) throw error;
         return ok({ link: data });
