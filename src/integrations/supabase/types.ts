@@ -157,6 +157,185 @@ export type Database = {
           },
         ]
       }
+      reseller_credit_purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          email: string
+          error_message: string | null
+          fastdepix_transaction_id: number | null
+          id: string
+          ip_address: string | null
+          package_credits: number
+          paid_at: string | null
+          qr_code_expires_at: string | null
+          qr_code_text: string | null
+          qr_code_url: string | null
+          recharge_status: string
+          recharged_at: string | null
+          reseller_link_id: string | null
+          status: string
+          updated_at: string
+          warez_response: Json | null
+          warez_user_id: number
+          warez_username: string
+          whatsapp: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          fastdepix_transaction_id?: number | null
+          id?: string
+          ip_address?: string | null
+          package_credits: number
+          paid_at?: string | null
+          qr_code_expires_at?: string | null
+          qr_code_text?: string | null
+          qr_code_url?: string | null
+          recharge_status?: string
+          recharged_at?: string | null
+          reseller_link_id?: string | null
+          status?: string
+          updated_at?: string
+          warez_response?: Json | null
+          warez_user_id: number
+          warez_username: string
+          whatsapp?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          fastdepix_transaction_id?: number | null
+          id?: string
+          ip_address?: string | null
+          package_credits?: number
+          paid_at?: string | null
+          qr_code_expires_at?: string | null
+          qr_code_text?: string | null
+          qr_code_url?: string | null
+          recharge_status?: string
+          recharged_at?: string | null
+          reseller_link_id?: string | null
+          status?: string
+          updated_at?: string
+          warez_response?: Json | null
+          warez_user_id?: number
+          warez_username?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_credit_purchases_reseller_link_id_fkey"
+            columns: ["reseller_link_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_links: {
+        Row: {
+          amount: number
+          created_at: string
+          credits: number
+          display_name: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          slug: string
+          updated_at: string
+          warez_user_id: number
+          warez_username: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credits: number
+          display_name: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          slug: string
+          updated_at?: string
+          warez_user_id: number
+          warez_username: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credits?: number
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          slug?: string
+          updated_at?: string
+          warez_user_id?: number
+          warez_username?: string
+        }
+        Relationships: []
+      }
+      system_config: {
+        Row: {
+          config_key: string
+          config_value: string
+          updated_at: string
+        }
+        Insert: {
+          config_key: string
+          config_value: string
+          updated_at?: string
+        }
+        Update: {
+          config_key?: string
+          config_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      warez_api_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          endpoint: string
+          error: string | null
+          id: string
+          method: string
+          related_payment_id: string | null
+          request_body: Json
+          response_body: string
+          response_status: number
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number
+          endpoint: string
+          error?: string | null
+          id?: string
+          method?: string
+          related_payment_id?: string | null
+          request_body?: Json
+          response_body?: string
+          response_status?: number
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          endpoint?: string
+          error?: string | null
+          id?: string
+          method?: string
+          related_payment_id?: string | null
+          request_body?: Json
+          response_body?: string
+          response_status?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
