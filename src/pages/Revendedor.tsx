@@ -355,7 +355,6 @@ export default function Revendedor() {
         )}
 
 
-        )}
 
         {pix && !isRecharged && !isExpired && (
           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-4">
