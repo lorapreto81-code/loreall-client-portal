@@ -155,7 +155,7 @@ export default function Revendedor() {
           apikey: ANON_KEY,
           Authorization: `Bearer ${ANON_KEY}`,
         },
-        body: JSON.stringify({ slug: link.slug, email, credits }),
+        body: JSON.stringify({ slug: link.slug, credits }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || `Erro ${r.status}`);
