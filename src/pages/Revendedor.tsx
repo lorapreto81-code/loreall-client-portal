@@ -66,7 +66,7 @@ export default function Revendedor() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [email, setEmail] = useState("");
+  // email removed — Fast Depix gets a synthetic fallback in the edge function
   const [credits, setCredits] = useState<number>(10);
   const [generating, setGenerating] = useState(false);
 
