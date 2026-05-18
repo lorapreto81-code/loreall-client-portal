@@ -231,11 +231,11 @@ export default function Revendedor() {
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 blur-[120px] rounded-[100%]" />
       </div>
 
-      <div className="w-full max-w-md px-5 pt-4 pb-6 flex flex-col gap-5 relative">
-        {/* Header: hamburger menu + ID */}
-        <div className="flex items-center justify-between">
+      <div className="w-full max-w-md px-5 pt-3 pb-6 flex flex-col gap-4 relative">
+        {/* Top bar: menu + logo/name + ID — tudo alinhado */}
+        <div className="flex items-center gap-3">
           <DropdownMenu>
-            <DropdownMenuTrigger className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+            <DropdownMenuTrigger className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30">
               <Menu className="h-5 w-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -253,90 +253,35 @@ export default function Revendedor() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[11px] font-bold rounded-full tracking-wider uppercase">
+
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <img src={loreallLogo} alt="Loreall Play" className="h-11 w-11 object-contain shrink-0 drop-shadow" />
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base font-extrabold text-slate-900 leading-tight truncate">{link.display_name}</h1>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate">
+                {link.warez_username}
+              </p>
+            </div>
+          </div>
+
+          <span className="shrink-0 px-2.5 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full tracking-wider uppercase">
             ID {link.warez_user_id}
           </span>
         </div>
 
-        {/* Profile section */}
-        <div className="flex flex-col items-center text-center">
-          <img src={loreallLogo} alt="Loreall Play" className="h-20 w-20 mb-2 object-contain drop-shadow-xl" />
+        <div className="flex justify-center">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[12px] font-bold">
             <Zap className="w-3 h-3" /> Recarga de Créditos
           </span>
-          <h1 className="text-2xl font-extrabold text-slate-900 mt-2">{link.display_name}</h1>
-          <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-widest mt-0.5">
-            Painel: {link.warez_username}
-          </p>
         </div>
 
-        {/* Lançamentos banner — marquee */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white shadow-lg shadow-blue-500/30">
-          <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-blue-600 to-transparent z-10 pointer-events-none" />
-          <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blue-600 to-transparent z-10 pointer-events-none" />
-          <div className="flex items-center gap-2 px-3 py-2.5">
-            <Sparkles className="h-4 w-4 shrink-0 text-yellow-300" />
-            <div className="flex-1 overflow-hidden">
-              <div className="flex gap-8 whitespace-nowrap animate-marquee text-xs font-semibold">
-                <span>🎬 Novos lançamentos toda semana</span>
-                <span>⚡ Servidor turbinado 4K</span>
-                <span>📺 +50 mil filmes e séries</span>
-                <span>🏆 Todos os canais ao vivo</span>
-                <span>🎮 PPV de UFC e futebol incluso</span>
-                <span>🎬 Novos lançamentos toda semana</span>
-                <span>⚡ Servidor turbinado 4K</span>
-                <span>📺 +50 mil filmes e séries</span>
-                <span>🏆 Todos os canais ao vivo</span>
-                <span>🎮 PPV de UFC e futebol incluso</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-        {/* Mini tools row */}
-        <div className="grid grid-cols-2 gap-4">
-          <a
-            href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
-          >
-            <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
-              <img src={topgestorLogo} alt="TopGestor" className="max-h-14 object-contain" />
-            </div>
-            <div className="p-3">
-              <p className="text-[11px] text-slate-500 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
-              <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
-                7 dias grátis <ExternalLink className="h-3 w-3" />
-              </span>
-            </div>
-          </a>
-
-          <a
-            href="https://gerador.pro/link.php?ref=c6863f0f"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
-          >
-            <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
-              <img src={geradorProLogo} alt="Gerador Pro" className="max-h-16 object-contain" />
-            </div>
-            <div className="p-3">
-              <p className="text-[11px] text-slate-500 leading-tight mb-2">Banners e vídeos de divulgação.</p>
-              <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
-                Teste 1 dia <ExternalLink className="h-3 w-3" />
-              </span>
-            </div>
-          </a>
-        </div>
 
         {!pix && (
-          <div className="bg-white rounded-[2rem] p-4 border border-slate-100 shadow-xl shadow-blue-900/5">
-            <div className="bg-slate-50 rounded-[1.5rem] p-7 border border-slate-100 flex flex-col items-center">
-              <h3 className="text-[11px] font-bold text-slate-400 tracking-[0.2em] uppercase mb-6">Quantidade de Créditos</h3>
+          <div className="bg-white rounded-[2rem] p-3 border border-slate-100 shadow-xl shadow-blue-900/5">
+            <div className="bg-slate-50 rounded-[1.5rem] p-5 border border-slate-100 flex flex-col items-center">
+              <h3 className="text-[11px] font-bold text-slate-400 tracking-[0.2em] uppercase mb-4">Quantidade de Créditos</h3>
 
-              <div className="flex items-center justify-between w-full mb-5">
+              <div className="flex items-center justify-between w-full mb-4">
                 <button
                   onClick={() => stepCredits(-1)}
                   disabled={credits <= link.min_credits}
@@ -358,22 +303,22 @@ export default function Revendedor() {
                 </button>
               </div>
 
-              <div className="flex gap-2 text-slate-400 text-xs font-semibold mb-7">
+              <div className="flex gap-2 text-slate-400 text-xs font-semibold mb-4">
                 <span>Mín. {link.min_credits}</span>
                 <span className="opacity-30">•</span>
                 <span>Máx. {link.max_credits} créditos</span>
               </div>
 
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-4xl font-extrabold text-slate-900">{formatBRL(totalAmount)}</span>
-                <span className="text-sm text-slate-400 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-3xl font-extrabold text-slate-900">{formatBRL(totalAmount)}</span>
+                <span className="text-xs text-slate-400 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
               </div>
             </div>
 
             <button
               onClick={generatePix}
               disabled={generating}
-              className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-[1.5rem] text-white font-bold text-base shadow-lg shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
+              className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-[1.5rem] text-white font-bold text-base shadow-lg shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
             >
               {generating ? (
                 <span className="inline-flex items-center gap-2">
@@ -389,6 +334,47 @@ export default function Revendedor() {
             </button>
           </div>
         )}
+
+        {/* Mini tools row */}
+        {!pix && (
+          <div className="grid grid-cols-2 gap-4">
+            <a
+              href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+            >
+              <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
+                <img src={topgestorLogo} alt="TopGestor" className="max-h-14 object-contain" />
+              </div>
+              <div className="p-3">
+                <p className="text-[11px] text-slate-500 leading-tight mb-2">Gestão de clientes IPTV automática.</p>
+                <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
+                  7 dias grátis <ExternalLink className="h-3 w-3" />
+                </span>
+              </div>
+            </a>
+
+            <a
+              href="https://gerador.pro/link.php?ref=c6863f0f"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+            >
+              <div className="bg-slate-900 h-20 flex items-center justify-center p-3">
+                <img src={geradorProLogo} alt="Gerador Pro" className="max-h-16 object-contain" />
+              </div>
+              <div className="p-3">
+                <p className="text-[11px] text-slate-500 leading-tight mb-2">Banners e vídeos de divulgação.</p>
+                <span className="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
+                  Teste 1 dia <ExternalLink className="h-3 w-3" />
+                </span>
+              </div>
+            </a>
+          </div>
+        )}
+
+
 
 
 
