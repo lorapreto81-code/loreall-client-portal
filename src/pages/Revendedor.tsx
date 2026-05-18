@@ -266,11 +266,8 @@ export default function Revendedor() {
             rel="noreferrer"
             className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl p-3"
           >
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                TG
-              </div>
-              <span className="text-xs font-bold text-gray-900">TopGestor</span>
+            <div className="flex items-center justify-center h-10">
+              <img src={topgestorLogo} alt="TopGestor" className="h-9 object-contain" />
             </div>
             <p className="text-[11px] text-gray-600 mt-1.5 leading-snug">
               Gestão de clientes IPTV automática.
