@@ -269,16 +269,6 @@ export default function Revendedor() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-gray-600">E-mail (opcional)</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@email.com"
-                className="w-full mt-1 px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
 
             <button
               onClick={generatePix}
