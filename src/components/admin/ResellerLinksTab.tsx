@@ -116,8 +116,10 @@ export default function ResellerLinksTab() {
     }
   };
 
+  const PUBLIC_BASE_URL = "https://pagartv.online";
+
   const copyLink = (slug: string) => {
-    const url = `${window.location.origin}/revendedor/${slug}`;
+    const url = `${PUBLIC_BASE_URL}/revendedor/${slug}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copiado");
   };
