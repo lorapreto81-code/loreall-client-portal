@@ -11,6 +11,9 @@ interface Link {
   warez_user_id: number;
   credits: number;
   amount: number;
+  price_per_credit: number;
+  min_credits: number;
+  max_credits: number;
   is_active: boolean;
   notes: string | null;
 }
@@ -20,8 +23,9 @@ const empty = {
   display_name: "",
   warez_username: "",
   warez_user_id: "",
-  credits: "10",
-  amount: "100",
+  price_per_credit: "11",
+  min_credits: "10",
+  max_credits: "30",
   is_active: true,
   notes: "",
 };
@@ -60,8 +64,9 @@ export default function ResellerLinksTab() {
       display_name: l.display_name,
       warez_username: l.warez_username,
       warez_user_id: String(l.warez_user_id),
-      credits: String(l.credits),
-      amount: String(l.amount),
+      price_per_credit: String(l.price_per_credit ?? 11),
+      min_credits: String(l.min_credits ?? 10),
+      max_credits: String(l.max_credits ?? 30),
       is_active: l.is_active,
       notes: l.notes || "",
     });
@@ -71,13 +76,19 @@ export default function ResellerLinksTab() {
   const save = async () => {
     setSaving(true);
     try {
+      const price = Number(form.price_per_credit);
+      const minC = Number(form.min_credits);
+      const maxC = Number(form.max_credits);
       const payload = {
         slug: form.slug || form.display_name,
         display_name: form.display_name,
         warez_username: form.warez_username,
         warez_user_id: Number(form.warez_user_id),
-        credits: Number(form.credits),
-        amount: Number(form.amount),
+        price_per_credit: price,
+        min_credits: minC,
+        max_credits: maxC,
+        credits: minC,
+        amount: Number((minC * price).toFixed(2)),
         is_active: form.is_active,
         notes: form.notes,
       };
@@ -145,8 +156,8 @@ export default function ResellerLinksTab() {
                 <tr>
                   <th className="text-left px-4 py-3">Revendedor</th>
                   <th className="text-left px-4 py-3">Painel</th>
-                  <th className="text-right px-4 py-3">Créditos</th>
-                  <th className="text-right px-4 py-3">Valor</th>
+                  <th className="text-right px-4 py-3">R$/crédito</th>
+                  <th className="text-right px-4 py-3">Mín/Máx</th>
                   <th className="text-center px-4 py-3">Ativo</th>
                   <th className="text-right px-4 py-3">Ações</th>
                 </tr>
@@ -164,9 +175,11 @@ export default function ResellerLinksTab() {
                       <div className="font-mono text-xs text-foreground">{l.warez_username}</div>
                       <div className="text-xs text-muted-foreground">ID {l.warez_user_id}</div>
                     </td>
-                    <td className="px-4 py-3 text-right text-foreground">{l.credits}</td>
                     <td className="px-4 py-3 text-right text-foreground">
-                      {Number(l.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      {Number(l.price_per_credit ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </td>
+                    <td className="px-4 py-3 text-right text-foreground">
+                      {l.min_credits ?? 10} – {l.max_credits ?? 30}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => toggle(l)} className={`px-2 py-1 rounded-full text-xs font-medium ${l.is_active ? "bg-green-500/15 text-green-500" : "bg-muted text-muted-foreground"}`}>
@@ -199,9 +212,10 @@ export default function ResellerLinksTab() {
             <Field label="Slug (URL)" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="auto se vazio" />
             <Field label="Usuário WAREZ" value={form.warez_username} onChange={(v) => setForm({ ...form, warez_username: v })} />
             <Field label="ID WAREZ" value={form.warez_user_id} onChange={(v) => setForm({ ...form, warez_user_id: v })} type="number" />
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Créditos" value={form.credits} onChange={(v) => setForm({ ...form, credits: v })} type="number" />
-              <Field label="Valor (R$)" value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} type="number" />
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="R$/crédito" value={form.price_per_credit} onChange={(v) => setForm({ ...form, price_per_credit: v })} type="number" />
+              <Field label="Mín. créditos" value={form.min_credits} onChange={(v) => setForm({ ...form, min_credits: v })} type="number" />
+              <Field label="Máx. créditos" value={form.max_credits} onChange={(v) => setForm({ ...form, max_credits: v })} type="number" />
             </div>
             <label className="flex items-center gap-2 text-sm text-foreground">
               <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
