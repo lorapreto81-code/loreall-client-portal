@@ -234,18 +234,19 @@ export default function Revendedor() {
   )}`;
 
   return (
-    <div className="relative min-h-screen flex items-start justify-center text-slate-900 overflow-hidden bg-slate-50 font-['Inter',system-ui,sans-serif]">
+    <div className={isDark ? "dark" : ""}>
+    <div className="relative min-h-screen flex items-start justify-center text-slate-900 dark:text-slate-100 overflow-hidden bg-slate-50 dark:bg-slate-950 font-['Inter',system-ui,sans-serif] transition-colors">
       {/* Background glow */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/50 to-white" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 blur-[120px] rounded-[100%]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 dark:bg-blue-600/20 blur-[120px] rounded-[100%]" />
       </div>
 
       <div className="w-full max-w-md px-5 pt-3 pb-6 flex flex-col gap-4 relative">
-        {/* Top bar: menu + logo/name + ID — tudo alinhado */}
-        <div className="flex items-center gap-3">
+        {/* Top bar */}
+        <div className="flex items-center gap-2">
           <DropdownMenu>
-            <DropdownMenuTrigger className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+            <DropdownMenuTrigger className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30">
               <Menu className="h-5 w-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -267,23 +268,34 @@ export default function Revendedor() {
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <img src={loreallLogo} alt="Loreall Play" className="h-11 w-11 object-contain shrink-0 drop-shadow" />
             <div className="min-w-0 flex-1">
-              <h1 className="text-base font-extrabold text-slate-900 leading-tight truncate">{link.display_name}</h1>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate">
+              <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-50 leading-tight truncate">{link.display_name}</h1>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider truncate">
                 {link.warez_username}
               </p>
             </div>
           </div>
 
-          <span className="shrink-0 px-2.5 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full tracking-wider uppercase">
+          <button
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className="h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-yellow-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            aria-label={isDark ? "Modo claro" : "Modo escuro"}
+            title={isDark ? "Modo claro" : "Modo escuro"}
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+
+          <span className="shrink-0 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-[10px] font-bold rounded-full tracking-wider uppercase">
             ID {link.warez_user_id}
           </span>
         </div>
 
         <div className="flex justify-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[12px] font-bold">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-300 rounded-full text-[12px] font-bold">
             <Zap className="w-3 h-3" /> Recarga de Créditos
           </span>
         </div>
+
+
 
 
         {!pix && (
