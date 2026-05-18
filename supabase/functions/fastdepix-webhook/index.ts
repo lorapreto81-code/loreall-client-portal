@@ -246,8 +246,58 @@ Deno.serve(async (req) => {
     }
 
     if (!payment) {
-      console.warn("[fastdepix-webhook] payment not found for tx", txId);
-      return new Response(JSON.stringify({ ok: true, ignored: "payment not found" }), {
+      // Try reseller purchase flow
+      const { data: purchase } = await supabase
+        .from("reseller_credit_purchases")
+        .select("*")
+        .eq("fastdepix_transaction_id", txId)
+        .maybeSingle();
+
+      if (!purchase) {
+        console.warn("[fastdepix-webhook] payment not found for tx", txId);
+        return new Response(JSON.stringify({ ok: true, ignored: "payment not found" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let resellerNewStatus = purchase.status;
+      if (event === "transaction.paid" || event === "transaction.approved") resellerNewStatus = "paid";
+      else if (event === "transaction.expired") resellerNewStatus = "expired";
+      else if (event === "transaction.cancelled") resellerNewStatus = "cancelled";
+
+      if (resellerNewStatus === "paid" && purchase.status !== "paid") {
+        const { data: locked } = await supabase
+          .from("reseller_credit_purchases")
+          .update({ status: "paid", paid_at: new Date().toISOString() })
+          .eq("id", purchase.id)
+          .eq("status", "pending")
+          .select()
+          .maybeSingle();
+
+        if (locked) {
+          // Dispara recarga WAREZ
+          try {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/reseller-process-recharge`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({ purchase_id: purchase.id }),
+            });
+          } catch (e) {
+            console.error("[fastdepix-webhook] reseller process-recharge invoke failed", e);
+          }
+        }
+      } else if (resellerNewStatus !== purchase.status) {
+        await supabase
+          .from("reseller_credit_purchases")
+          .update({ status: resellerNewStatus })
+          .eq("id", purchase.id);
+      }
+
+      return new Response(JSON.stringify({ ok: true, kind: "reseller", status: resellerNewStatus }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
