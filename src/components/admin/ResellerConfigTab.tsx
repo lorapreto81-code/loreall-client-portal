@@ -52,7 +52,7 @@ export default function ResellerConfigTab() {
       <div className="card-elevated p-6 space-y-4">
         <Field
           label="URL da API WAREZ/WPainel"
-          hint="Base URL. Ex.: https://wpainel.exemplo.com/api"
+          hint="Base URL oficial: https://mcapi.knewcms.com:2087"
           value={config.warez_api_url || ""}
           onChange={(v) => set("warez_api_url", v)}
         />
