@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus } from "lucide-react";
+import loreallLogo from "@/assets/loreall-logo.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPPORT_WHATSAPP = "5583998551952";
 
 interface ResellerLink {
   id: string;
@@ -16,6 +18,9 @@ interface ResellerLink {
   credits: number;
   amount: number;
   is_active: boolean;
+  price_per_credit: number;
+  min_credits: number;
+  max_credits: number;
 }
 
 interface PixData {
@@ -34,9 +39,6 @@ interface StatusData {
   recharge_status: string;
   error_message: string | null;
   under_review?: boolean;
-  qr_code_url?: string;
-  qr_code_text?: string;
-  qr_code_expires_at?: string;
 }
 
 function formatBRL(v: number) {
@@ -63,8 +65,8 @@ export default function Revendedor() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
+  const [credits, setCredits] = useState<number>(10);
   const [generating, setGenerating] = useState(false);
 
   const [pix, setPix] = useState<PixData | null>(null);
@@ -74,7 +76,6 @@ export default function Revendedor() {
 
   const countdown = useCountdown(pix?.expires_at);
 
-  // Load reseller
   useEffect(() => {
     if (!slug) return;
     let cancelled = false;
@@ -88,7 +89,11 @@ export default function Revendedor() {
         .maybeSingle();
       if (cancelled) return;
       if (error || !data) setNotFound(true);
-      else setLink(data as ResellerLink);
+      else {
+        const l = data as ResellerLink;
+        setLink(l);
+        setCredits(Number(l.min_credits || 10));
+      }
       setLoading(false);
     })();
     return () => {
@@ -96,7 +101,6 @@ export default function Revendedor() {
     };
   }, [slug]);
 
-  // Polling status
   useEffect(() => {
     if (!pix) return;
     let stop = false;
@@ -128,6 +132,17 @@ export default function Revendedor() {
     };
   }, [pix]);
 
+  const totalAmount = useMemo(() => {
+    if (!link) return 0;
+    return Number((credits * Number(link.price_per_credit || 0)).toFixed(2));
+  }, [credits, link]);
+
+  const stepCredits = (delta: number) => {
+    if (!link) return;
+    const next = Math.max(link.min_credits, Math.min(link.max_credits, credits + delta));
+    setCredits(next);
+  };
+
   const generatePix = async () => {
     if (!link) return;
     setGenerating(true);
@@ -139,7 +154,7 @@ export default function Revendedor() {
           apikey: ANON_KEY,
           Authorization: `Bearer ${ANON_KEY}`,
         },
-        body: JSON.stringify({ slug: link.slug, whatsapp, email }),
+        body: JSON.stringify({ slug: link.slug, email, credits }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || `Erro ${r.status}`);
@@ -178,23 +193,21 @@ export default function Revendedor() {
   const isExpired = status?.status === "expired";
   const underReview = status?.under_review;
 
-  const headerCredits = useMemo(() => link?.credits ?? 0, [link]);
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   if (notFound || !link) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="card-elevated p-8 max-w-sm text-center">
-          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-foreground mb-2">Revendedor não encontrado</h1>
-          <p className="text-sm text-muted-foreground">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 max-w-sm text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Revendedor não encontrado</h1>
+          <p className="text-sm text-gray-600">
             O link <code className="font-mono">{slug}</code> não está ativo ou não existe.
           </p>
         </div>
@@ -202,95 +215,113 @@ export default function Revendedor() {
     );
   }
 
+  const supportUrl = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
+    `Olá, suporte Loreall Play! Preciso de ajuda com a recarga do painel ${link.warez_username} (ID ${link.warez_user_id}).`,
+  )}`;
+
   return (
-    <div className="min-h-screen bg-background px-4 py-8">
+    <div className="min-h-screen bg-white px-4 py-8 text-gray-900">
       <div className="max-w-md mx-auto space-y-6">
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-3">
+          <img src={loreallLogo} alt="Loreall Play" className="h-16 mx-auto mb-4 object-contain" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold mb-3">
             <Zap className="h-3.5 w-3.5" /> Recarga de Créditos
           </div>
-          <h1 className="text-2xl font-bold text-foreground">{link.display_name}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold">{link.display_name}</h1>
+          <p className="text-sm text-gray-600 mt-1">
             Painel: <span className="font-mono">{link.warez_username}</span>
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            ID: <span className="font-mono">{link.warez_user_id}</span>
           </p>
         </div>
 
         {!pix && (
-          <div className="card-elevated p-6 space-y-5">
-            <div className="text-center py-4 border border-border rounded-xl bg-card">
-              <div className="text-5xl font-bold text-primary">{headerCredits}</div>
-              <div className="text-sm text-muted-foreground mt-1">créditos por recarga</div>
-              <div className="text-2xl font-semibold text-foreground mt-3">
-                {formatBRL(Number(link.amount))}
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-5">
+            <div className="text-center py-5 border border-gray-200 rounded-xl bg-gray-50">
+              <div className="text-xs text-gray-500 uppercase tracking-wide">Quantidade de créditos</div>
+              <div className="flex items-center justify-center gap-4 mt-3">
+                <button
+                  onClick={() => stepCredits(-1)}
+                  disabled={credits <= link.min_credits}
+                  className="h-10 w-10 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
+                  aria-label="Diminuir"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <div className="text-5xl font-bold text-blue-600 tabular-nums w-20">{credits}</div>
+                <button
+                  onClick={() => stepCredits(1)}
+                  disabled={credits >= link.max_credits}
+                  className="h-10 w-10 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
+                  aria-label="Aumentar"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="text-xs text-gray-500 mt-2">
+                Mín. {link.min_credits} • Máx. {link.max_credits} créditos
+              </div>
+              <div className="mt-4 text-3xl font-bold text-gray-900">{formatBRL(totalAmount)}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {formatBRL(Number(link.price_per_credit))} por crédito
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">WhatsApp (opcional)</label>
-                <input
-                  type="tel"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="(11) 99999-9999"
-                  className="w-full mt-1 px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">E-mail (opcional)</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="voce@email.com"
-                  className="w-full mt-1 px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600">E-mail (opcional)</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="voce@email.com"
+                className="w-full mt-1 px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
 
             <button
               onClick={generatePix}
               disabled={generating}
-              className="w-full py-3.5 btn-primary-gradient font-semibold text-sm disabled:opacity-60"
+              className="w-full py-3.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 disabled:opacity-60"
             >
               {generating ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Gerando PIX...
                 </span>
               ) : (
-                "Gerar PIX"
+                `Recarregar painel • ${formatBRL(totalAmount)}`
               )}
             </button>
           </div>
         )}
 
         {pix && !isRecharged && !isExpired && (
-          <div className="card-elevated p-6 space-y-4">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-4">
             <div className="text-center">
-              <div className="text-xs text-muted-foreground">Valor</div>
-              <div className="text-2xl font-bold text-foreground">{formatBRL(Number(pix.amount))}</div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-gray-500">Valor</div>
+              <div className="text-2xl font-bold text-gray-900">{formatBRL(Number(pix.amount))}</div>
+              <div className="text-xs text-gray-500 mt-1">
                 {pix.package_credits} créditos para {pix.warez_username}
               </div>
             </div>
 
             {pix.qr_code_url && (
-              <div className="flex justify-center bg-white p-4 rounded-xl">
+              <div className="flex justify-center bg-white p-4 rounded-xl border border-gray-200">
                 <img src={pix.qr_code_url} alt="QR Code PIX" className="w-56 h-56" />
               </div>
             )}
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Código copia-e-cola</label>
+              <label className="text-xs font-medium text-gray-600">Código copia-e-cola</label>
               <div className="mt-1 flex gap-2">
                 <input
                   readOnly
                   value={pix.qr_code_text || ""}
-                  className="flex-1 px-3 py-2 rounded-lg border border-input bg-muted text-foreground text-xs font-mono truncate"
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 text-xs font-mono truncate"
                 />
                 <button
                   onClick={copyCode}
-                  className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition"
+                  className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:opacity-90 transition"
                 >
                   {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </button>
@@ -298,32 +329,32 @@ export default function Revendedor() {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Expira em</span>
-              <span className="font-mono font-semibold text-foreground">{countdown ?? "--:--"}</span>
+              <span className="text-gray-600">Expira em</span>
+              <span className="font-mono font-semibold text-gray-900">{countdown ?? "--:--"}</span>
             </div>
 
             {underReview && (
-              <div className="text-xs text-center text-amber-500 bg-amber-500/10 rounded-lg py-2 px-3">
+              <div className="text-xs text-center text-amber-700 bg-amber-50 rounded-lg py-2 px-3">
                 Pagamento em análise pela Fast Depix...
               </div>
             )}
             {status?.status === "paid" && !isRecharged && !isFailed && (
-              <div className="text-xs text-center text-primary bg-primary/10 rounded-lg py-2 px-3 inline-flex items-center justify-center gap-2 w-full">
+              <div className="text-xs text-center text-blue-700 bg-blue-50 rounded-lg py-2 px-3 inline-flex items-center justify-center gap-2 w-full">
                 <Loader2 className="h-3 w-3 animate-spin" /> Pagamento confirmado, processando recarga...
               </div>
             )}
             {isFailed && (
               <div className="space-y-2">
-                <div className="text-xs text-destructive bg-destructive/10 rounded-lg py-2 px-3">
+                <div className="text-xs text-red-700 bg-red-50 rounded-lg py-2 px-3">
                   Erro na recarga: {status?.error_message || "desconhecido"}
                 </div>
-                <button onClick={retryRecharge} className="w-full py-2 rounded-lg bg-secondary text-foreground text-sm font-medium hover:bg-secondary/80 inline-flex items-center justify-center gap-2">
+                <button onClick={retryRecharge} className="w-full py-2 rounded-lg bg-gray-100 text-gray-900 text-sm font-medium hover:bg-gray-200 inline-flex items-center justify-center gap-2">
                   <RefreshCw className="h-4 w-4" /> Tentar novamente
                 </button>
               </div>
             )}
             {!status && (
-              <p className="text-xs text-center text-muted-foreground">
+              <p className="text-xs text-center text-gray-500">
                 Aguardando pagamento... abra o app do banco e pague via PIX.
               </p>
             )}
@@ -331,28 +362,38 @@ export default function Revendedor() {
         )}
 
         {isRecharged && (
-          <div className="card-elevated p-8 text-center space-y-4">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-            <h2 className="text-xl font-bold text-foreground">Créditos adicionados!</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl font-bold text-gray-900">Créditos adicionados!</h2>
+            <p className="text-sm text-gray-600">
               +{pix?.package_credits} créditos no painel{" "}
-              <span className="font-mono text-foreground">{pix?.warez_username}</span>.
+              <span className="font-mono text-gray-900">{pix?.warez_username}</span>.
             </p>
-            <button onClick={reset} className="w-full py-3 btn-primary-gradient font-semibold text-sm">
+            <button onClick={reset} className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm">
               Recarregar novamente
             </button>
           </div>
         )}
 
         {isExpired && (
-          <div className="card-elevated p-8 text-center space-y-4">
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto" />
-            <h2 className="text-lg font-bold text-foreground">PIX expirado</h2>
-            <button onClick={reset} className="w-full py-3 btn-primary-gradient font-semibold text-sm">
+            <h2 className="text-lg font-bold text-gray-900">PIX expirado</h2>
+            <button onClick={reset} className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm">
               Gerar novo PIX
             </button>
           </div>
         )}
+
+        <a
+          href={supportUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border border-green-500 text-green-600 hover:bg-green-50 text-sm font-medium"
+        >
+          <MessageCircle className="h-4 w-4" /> Suporte Loreall Play
+        </a>
+        <p className="text-center text-xs text-gray-400">© Loreall Play</p>
       </div>
     </div>
   );
