@@ -355,59 +355,6 @@ export default function Revendedor() {
         )}
 
 
-
-
-
-
-
-
-        {!pix && (
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-5">
-            <div className="text-center py-5 border border-gray-200 rounded-xl bg-gray-50">
-              <div className="text-xs text-gray-500 uppercase tracking-wide">Quantidade de créditos</div>
-              <div className="flex items-center justify-center gap-4 mt-3">
-                <button
-                  onClick={() => stepCredits(-1)}
-                  disabled={credits <= link.min_credits}
-                  className="h-10 w-10 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
-                  aria-label="Diminuir"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <div className="text-5xl font-bold text-blue-600 tabular-nums w-20">{credits}</div>
-                <button
-                  onClick={() => stepCredits(1)}
-                  disabled={credits >= link.max_credits}
-                  className="h-10 w-10 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
-                  aria-label="Aumentar"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="text-xs text-gray-500 mt-2">
-                Mín. {link.min_credits} • Máx. {link.max_credits} créditos
-              </div>
-              <div className="mt-4 text-3xl font-bold text-gray-900">{formatBRL(totalAmount)}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {formatBRL(Number(link.price_per_credit))} por crédito
-              </div>
-            </div>
-
-
-            <button
-              onClick={generatePix}
-              disabled={generating}
-              className="w-full py-3.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 disabled:opacity-60"
-            >
-              {generating ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Gerando PIX...
-                </span>
-              ) : (
-                `Recarregar painel • ${formatBRL(totalAmount)}`
-              )}
-            </button>
-          </div>
         )}
 
         {pix && !isRecharged && !isExpired && (
