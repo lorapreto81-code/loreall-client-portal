@@ -62,19 +62,14 @@ export default function ResellerPurchasesTab() {
     load();
   }, [filter]);
 
-  // Realtime
+  // Auto-refresh a cada 10s
   useEffect(() => {
-    const ch = supabase
-      .channel("reseller-purchases-admin")
-      .on("postgres_changes", { event: "*", schema: "public", table: "reseller_credit_purchases" }, () => {
-        load();
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+    const i = setInterval(() => {
+      load();
+    }, 10000);
+    return () => clearInterval(i);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filter]);
 
   const reprocess = async (id: string) => {
     setReprocessing(id);
