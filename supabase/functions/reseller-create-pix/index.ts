@@ -73,7 +73,12 @@ Deno.serve(async (req) => {
       req.headers.get("cf-connecting-ip") ||
       null;
 
-    const amount = Number(Number(link.amount).toFixed(2));
+    const minC = Number(link.min_credits ?? 10);
+    const maxC = Number(link.max_credits ?? 30);
+    const price = Number(link.price_per_credit ?? link.amount / (link.credits || 1));
+    const requested = Number.isFinite(Number(body.credits)) ? Math.floor(Number(body.credits)) : Number(link.credits);
+    const credits = Math.max(minC, Math.min(maxC, requested));
+    const amount = Number((credits * price).toFixed(2));
 
     // Create Fast Depix transaction
     const fdRes = await fetch(`${FAST_BASE}/transactions`, {
@@ -85,7 +90,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         amount,
-        description: `Recarga ${link.credits} créditos - ${link.warez_username}`,
+        description: `Recarga ${credits} créditos - ${link.warez_username}`,
         user: { name: link.warez_username, email: finalEmail },
       }),
     });
