@@ -463,8 +463,18 @@ export default function Revendedor() {
                 Aguardando pagamento... abra o app do banco e pague via PIX.
               </p>
             )}
+
+            {!isFailed && (
+              <button
+                onClick={reset}
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 hover:text-slate-900 transition"
+              >
+                Cancelar e alterar valor
+              </button>
+            )}
           </div>
         )}
+
 
         {isRecharged && (
           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8 text-center space-y-4">
