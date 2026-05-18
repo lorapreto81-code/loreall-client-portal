@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink } from "lucide-react";
 import loreallLogo from "@/assets/loreall-play-logo.png";
+import topgestorLogo from "@/assets/topgestor-logo.png";
+import geradorProLogo from "@/assets/gerador-pro-logo.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
