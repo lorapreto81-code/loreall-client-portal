@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { Megaphone, Save, Lock } from "lucide-react";
+import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings } from "lucide-react";
+import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
+import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
+import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
+import ResellerConfigTab from "@/components/admin/ResellerConfigTab";
 
 const ADMIN_PASSWORD = "loreall2025";
 
@@ -9,9 +13,21 @@ interface Notice {
   atualizado_em: string;
 }
 
+type Tab = "avisos" | "links" | "recargas" | "dashboard" | "config";
+
+const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
+  { id: "avisos", label: "Avisos", icon: Megaphone },
+  { id: "links", label: "Revendedores", icon: Link2 },
+  { id: "recargas", label: "Recargas", icon: ListChecks },
+  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+  { id: "config", label: "Configurações", icon: Settings },
+];
+
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
+  const [tab, setTab] = useState<Tab>("avisos");
+
   const [ativo, setAtivo] = useState(false);
   const [mensagem, setMensagem] = useState("");
 
@@ -22,25 +38,27 @@ const Admin = () => {
         const parsed: Notice = JSON.parse(stored);
         setAtivo(parsed.ativo);
         setMensagem(parsed.mensagem || "");
-      } catch {}
+      } catch {
+        /* ignore */
+      }
+    }
+    if (sessionStorage.getItem("admin_password") === ADMIN_PASSWORD) {
+      setAuthenticated(true);
     }
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
+      sessionStorage.setItem("admin_password", password);
       setAuthenticated(true);
     } else {
       alert("Senha incorreta.");
     }
   };
 
-  const handleSave = () => {
-    const notice: Notice = {
-      ativo,
-      mensagem,
-      atualizado_em: new Date().toISOString(),
-    };
+  const handleSaveAviso = () => {
+    const notice: Notice = { ativo, mensagem, atualizado_em: new Date().toISOString() };
     localStorage.setItem("admin_aviso", JSON.stringify(notice));
     alert("Aviso salvo com sucesso!");
   };
@@ -71,66 +89,63 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-8">
-      <div className="max-w-[480px] mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">Painel de avisos</h1>
+    <div className="min-h-screen bg-background">
+      <div className="border-b border-border bg-card/50 sticky top-0 z-30 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <h1 className="text-lg font-bold text-foreground">Painel Admin</h1>
+          <div className="flex flex-wrap gap-1">
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
-        <div className="card-elevated p-6 space-y-5">
-          {/* Toggle */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-foreground">Aviso ativo</span>
-            <button
-              onClick={() => setAtivo(!ativo)}
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                ativo ? "bg-primary" : "bg-muted"
-              }`}
-            >
-              <span
-                className={`inline-block h-5 w-5 rounded-full bg-background shadow-lg transition-transform ${
-                  ativo ? "translate-x-6" : "translate-x-1"
-                }`}
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        {tab === "avisos" && (
+          <div className="max-w-xl mx-auto card-elevated p-6 space-y-5">
+            <h2 className="text-xl font-bold text-foreground">Painel de avisos</h2>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">Aviso ativo</span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
+                <div className="w-11 h-6 bg-muted peer-checked:bg-primary rounded-full transition" />
+                <div className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition ${ativo ? "translate-x-5" : ""}`} />
+              </label>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Mensagem</label>
+              <textarea
+                value={mensagem}
+                onChange={(e) => setMensagem(e.target.value)}
+                rows={4}
+                className="w-full mt-1 px-3 py-2 rounded-lg border border-input bg-card text-foreground text-sm"
               />
+            </div>
+            <button onClick={handleSaveAviso} className="w-full py-3 btn-primary-gradient font-semibold text-sm inline-flex items-center justify-center gap-2">
+              <Save className="h-4 w-4" /> Salvar
             </button>
           </div>
-
-          {/* Textarea */}
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-              Mensagem do aviso
-            </label>
-            <textarea
-              value={mensagem}
-              onChange={(e) => setMensagem(e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm resize-none"
-              placeholder="Ex: Estamos com instabilidade no servidor. Previsão de retorno: 30 minutos."
-            />
-          </div>
-
-          {/* Save */}
-          <button
-            onClick={handleSave}
-            className="w-full py-3 btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            Salvar aviso
-          </button>
-        </div>
-
-        {/* Preview */}
-        <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-2">Preview do banner</h2>
-          {ativo && mensagem ? (
-            <div className="notice-banner rounded-xl border p-3">
-              <div className="flex items-center gap-2.5">
-                <Megaphone className="h-5 w-5 shrink-0" />
-                <p className="text-sm font-medium flex-1">{mensagem}</p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">Nenhum aviso ativo para exibir.</p>
-          )}
-        </div>
+        )}
+        {tab === "links" && <ResellerLinksTab />}
+        {tab === "recargas" && <ResellerPurchasesTab />}
+        {tab === "dashboard" && <ResellerDashboardTab />}
+        {tab === "config" && <ResellerConfigTab />}
       </div>
     </div>
   );
