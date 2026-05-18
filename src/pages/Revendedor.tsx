@@ -254,6 +254,36 @@ export default function Revendedor() {
           <ExternalLink className="h-4 w-4" /> Abrir painel WAREZ
         </a>
 
+        {/* TopGestor — gestão de clientes IPTV */}
+        <a
+          href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
+          target="_blank"
+          rel="noreferrer"
+          className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-2xl p-4"
+        >
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-lg font-bold shrink-0">
+              TG
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-bold text-gray-900">TopGestor</span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                  Recomendado
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 mt-0.5 leading-snug">
+                Gerencie seus clientes IPTV: renovação, pagamento e lembretes — tudo automático.
+              </p>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 mt-2">
+                Cadastrar grátis <ExternalLink className="h-3 w-3" />
+              </span>
+            </div>
+          </div>
+        </a>
+
+
+
 
         {!pix && (
           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-5">
