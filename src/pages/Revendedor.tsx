@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink, Menu, Sparkles } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import loreallLogo from "@/assets/loreall-play-logo.png";
 import topgestorLogo from "@/assets/topgestor-logo.png";
 import geradorProLogo from "@/assets/gerador-pro-logo.png";
@@ -230,17 +231,28 @@ export default function Revendedor() {
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 blur-[120px] rounded-[100%]" />
       </div>
 
-      <div className="w-full max-w-md p-6 flex flex-col gap-7 relative">
-        {/* Header row */}
+      <div className="w-full max-w-md px-5 pt-4 pb-6 flex flex-col gap-5 relative">
+        {/* Header: hamburger menu + ID */}
         <div className="flex items-center justify-between">
-          <a
-            href={WAREZ_PANEL_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-blue-700 shadow-sm hover:bg-slate-50 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" /> Painel WAREZ
-          </a>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+              <Menu className="h-5 w-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Menu</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <a href={WAREZ_PANEL_URL} target="_blank" rel="noreferrer" className="cursor-pointer">
+                  <ExternalLink className="h-4 w-4 mr-2 text-blue-600" /> Painel WAREZ
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={supportUrl} target="_blank" rel="noreferrer" className="cursor-pointer">
+                  <MessageCircle className="h-4 w-4 mr-2 text-green-600" /> Suporte Loreall Play
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[11px] font-bold rounded-full tracking-wider uppercase">
             ID {link.warez_user_id}
           </span>
@@ -248,15 +260,39 @@ export default function Revendedor() {
 
         {/* Profile section */}
         <div className="flex flex-col items-center text-center">
-          <img src={loreallLogo} alt="Loreall Play" className="h-24 w-24 mb-3 object-contain drop-shadow-xl" />
+          <img src={loreallLogo} alt="Loreall Play" className="h-20 w-20 mb-2 object-contain drop-shadow-xl" />
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[12px] font-bold">
             <Zap className="w-3 h-3" /> Recarga de Créditos
           </span>
-          <h1 className="text-3xl font-extrabold text-slate-900 mt-3">{link.display_name}</h1>
-          <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-widest mt-1">
+          <h1 className="text-2xl font-extrabold text-slate-900 mt-2">{link.display_name}</h1>
+          <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-widest mt-0.5">
             Painel: {link.warez_username}
           </p>
         </div>
+
+        {/* Lançamentos banner — marquee */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white shadow-lg shadow-blue-500/30">
+          <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-blue-600 to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blue-600 to-transparent z-10 pointer-events-none" />
+          <div className="flex items-center gap-2 px-3 py-2.5">
+            <Sparkles className="h-4 w-4 shrink-0 text-yellow-300" />
+            <div className="flex-1 overflow-hidden">
+              <div className="flex gap-8 whitespace-nowrap animate-marquee text-xs font-semibold">
+                <span>🎬 Novos lançamentos toda semana</span>
+                <span>⚡ Servidor turbinado 4K</span>
+                <span>📺 +50 mil filmes e séries</span>
+                <span>🏆 Todos os canais ao vivo</span>
+                <span>🎮 PPV de UFC e futebol incluso</span>
+                <span>🎬 Novos lançamentos toda semana</span>
+                <span>⚡ Servidor turbinado 4K</span>
+                <span>📺 +50 mil filmes e séries</span>
+                <span>🏆 Todos os canais ao vivo</span>
+                <span>🎮 PPV de UFC e futebol incluso</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
         {/* Mini tools row */}
         <div className="grid grid-cols-2 gap-4">
@@ -446,15 +482,8 @@ export default function Revendedor() {
           </div>
         )}
 
-        <a
-          href={supportUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 text-xs text-gray-500 hover:text-green-600 transition"
-        >
-          <MessageCircle className="h-3 w-3" /> Suporte Loreall Play
-        </a>
-        <p className="text-center text-[10px] text-gray-400">© Loreall Play</p>
+        <p className="text-center text-[10px] text-slate-400">© Loreall Play</p>
+
 
       </div>
     </div>
