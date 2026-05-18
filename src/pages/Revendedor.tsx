@@ -229,58 +229,77 @@ export default function Revendedor() {
         <div className="absolute -bottom-40 left-[20%] w-[60%] h-[70vh] rounded-[50%] bg-gradient-to-t from-indigo-600/25 to-transparent blur-3xl animate-loreall-rise-slow" />
       </div>
 
-      <div className="max-w-md mx-auto space-y-6 relative">
+      <div className="max-w-md mx-auto space-y-5 relative">
+        {/* Top bar: WAREZ button + ID — compacto no cantinho */}
+        <div className="flex items-center justify-between gap-2">
+          <a
+            href={WAREZ_PANEL_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/80 backdrop-blur border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs font-semibold shadow-sm"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Painel WAREZ
+          </a>
+          <span className="text-[11px] text-gray-500 font-mono bg-white/70 backdrop-blur border border-gray-200 rounded-md px-2 py-1">
+            ID {link.warez_user_id}
+          </span>
+        </div>
+
         <div className="text-center">
-          <img src={loreallLogo} alt="Loreall Play" className="h-24 w-24 mx-auto mb-3 object-contain drop-shadow-xl" />
-          <div className="text-xl font-bold tracking-tight text-gray-900">Loreall Play</div>
-          <div className="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-blue-600/10 text-blue-700 text-xs font-semibold">
+          <img src={loreallLogo} alt="Loreall Play" className="h-20 w-20 mx-auto mb-2 object-contain drop-shadow-xl" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 text-blue-700 text-xs font-semibold">
             <Zap className="h-3.5 w-3.5" /> Recarga de Créditos
           </div>
-          <h1 className="text-2xl font-bold mt-3">{link.display_name}</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Painel: <span className="font-mono">{link.warez_username}</span>
-          </p>
+          <h1 className="text-xl font-bold mt-2">{link.display_name}</h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            ID: <span className="font-mono">{link.warez_user_id}</span>
+            Painel: <span className="font-mono">{link.warez_username}</span>
           </p>
         </div>
 
-        <a
-          href={WAREZ_PANEL_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 text-sm font-semibold shadow-sm"
-        >
-          <ExternalLink className="h-4 w-4" /> Abrir painel WAREZ
-        </a>
-
-        {/* TopGestor — gestão de clientes IPTV */}
-        <a
-          href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
-          target="_blank"
-          rel="noreferrer"
-          className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-2xl p-4"
-        >
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-lg font-bold shrink-0">
-              TG
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-bold text-gray-900">TopGestor</span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700">
-                  Recomendado
-                </span>
+        {/* Ferramentas para revendedor — grid compacto */}
+        <div className="grid grid-cols-2 gap-3">
+          <a
+            href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
+            target="_blank"
+            rel="noreferrer"
+            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl p-3"
+          >
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                TG
               </div>
-              <p className="text-xs text-gray-600 mt-0.5 leading-snug">
-                Gerencie seus clientes IPTV: renovação, pagamento e lembretes — tudo automático.
-              </p>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 mt-2">
-                Cadastrar grátis <ExternalLink className="h-3 w-3" />
-              </span>
+              <span className="text-xs font-bold text-gray-900">TopGestor</span>
             </div>
-          </div>
-        </a>
+            <p className="text-[11px] text-gray-600 mt-1.5 leading-snug">
+              Gestão de clientes IPTV automática.
+            </p>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
+              Cadastrar <ExternalLink className="h-2.5 w-2.5" />
+            </span>
+          </a>
+
+          <a
+            href="https://gerador.pro/link.php?ref=c6863f0f"
+            target="_blank"
+            rel="noreferrer"
+            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl p-3"
+          >
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-sm shrink-0">
+                🚀
+              </div>
+              <span className="text-xs font-bold text-gray-900">Gerador Pro</span>
+            </div>
+            <p className="text-[11px] text-gray-600 mt-1.5 leading-snug">
+              Banners e vídeos de divulgação.
+            </p>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
+              Teste 1 dia <ExternalLink className="h-2.5 w-2.5" />
+            </span>
+          </a>
+        </div>
+
+
 
 
 
