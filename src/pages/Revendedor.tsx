@@ -289,29 +289,31 @@ export default function Revendedor() {
 
 
         {!pix && (
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-3 border border-slate-100 dark:border-slate-800 shadow-xl shadow-blue-900/5 dark:shadow-black/40">
-            <div className="bg-slate-50 dark:bg-slate-950/60 rounded-[1.5rem] p-5 border border-slate-100 dark:border-slate-800 flex flex-col items-center">
-              <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-[0.2em] uppercase mb-4">Quantidade de Créditos</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-100 dark:border-slate-800 shadow-md shadow-blue-900/5 dark:shadow-black/40">
+            <div className="bg-slate-50 dark:bg-slate-950/60 rounded-xl px-3 py-3 border border-slate-100 dark:border-slate-800 flex flex-col items-center">
+              <h3 className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-[0.18em] uppercase mb-2 inline-flex items-center gap-1.5">
+                <Zap className="w-3 h-3" /> Recarga de Créditos
+              </h3>
 
-              <div className="flex items-center justify-between w-full mb-4">
+              <div className="flex items-center justify-between w-full mb-2">
                 <button
                   onClick={() => stepCredits(-1)}
                   disabled={credits <= link.min_credits}
-                  className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-400 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500 transition-all active:scale-95 disabled:opacity-40"
+                  className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-400 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500 transition-all active:scale-95 disabled:opacity-40"
                   aria-label="Diminuir"
                 >
-                  <Minus className="w-6 h-6" />
+                  <Minus className="w-4 h-4" />
                 </button>
 
-                <span className="text-6xl font-black text-blue-600 dark:text-blue-400 tabular-nums select-none tracking-tighter">{credits}</span>
+                <span className="text-4xl font-black text-blue-600 dark:text-blue-400 tabular-nums select-none tracking-tighter">{credits}</span>
 
                 <button
                   onClick={() => stepCredits(1)}
                   disabled={credits >= link.max_credits}
-                  className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-800 dark:text-slate-100 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500 transition-all active:scale-95 disabled:opacity-40"
+                  className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-800 dark:text-slate-100 hover:text-blue-600 hover:border-blue-200 dark:hover:border-blue-500 transition-all active:scale-95 disabled:opacity-40"
                   aria-label="Aumentar"
                 >
-                  <Plus className="w-6 h-6" />
+                  <Plus className="w-4 h-4" />
                 </button>
               </div>
 
@@ -323,8 +325,8 @@ export default function Revendedor() {
                 step={1}
                 value={credits}
                 onChange={(e) => setCredits(Number(e.target.value))}
-                className="w-full h-2 mb-3 rounded-full appearance-none cursor-pointer accent-blue-600
-                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5
+                className="w-full h-1.5 mb-2 rounded-full appearance-none cursor-pointer accent-blue-600
+                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4
                   [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600
                   [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white dark:[&::-webkit-slider-thumb]:border-slate-900"
                 style={{
@@ -336,16 +338,11 @@ export default function Revendedor() {
                 }}
               />
 
-              <div className="flex gap-2 text-slate-400 dark:text-slate-500 text-xs font-semibold mb-4">
-                <span>Mín. {link.min_credits}</span>
-                <span className="opacity-30">•</span>
-                <span>Máx. {link.max_credits} créditos</span>
-              </div>
-
-
-              <div className="flex flex-col items-center gap-0.5">
-                <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-50">{formatBRL(totalAmount)}</span>
-                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{formatBRL(Number(link.price_per_credit))} por crédito</span>
+              <div className="flex items-center justify-between w-full">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                  {link.min_credits}–{link.max_credits} · {formatBRL(Number(link.price_per_credit))}/cr
+                </span>
+                <span className="text-xl font-extrabold text-slate-900 dark:text-slate-50">{formatBRL(totalAmount)}</span>
               </div>
             </div>
 
