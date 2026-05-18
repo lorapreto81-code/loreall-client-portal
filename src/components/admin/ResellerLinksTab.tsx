@@ -212,9 +212,10 @@ export default function ResellerLinksTab() {
             <Field label="Slug (URL)" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="auto se vazio" />
             <Field label="Usuário WAREZ" value={form.warez_username} onChange={(v) => setForm({ ...form, warez_username: v })} />
             <Field label="ID WAREZ" value={form.warez_user_id} onChange={(v) => setForm({ ...form, warez_user_id: v })} type="number" />
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Créditos" value={form.credits} onChange={(v) => setForm({ ...form, credits: v })} type="number" />
-              <Field label="Valor (R$)" value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} type="number" />
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="R$/crédito" value={form.price_per_credit} onChange={(v) => setForm({ ...form, price_per_credit: v })} type="number" />
+              <Field label="Mín. créditos" value={form.min_credits} onChange={(v) => setForm({ ...form, min_credits: v })} type="number" />
+              <Field label="Máx. créditos" value={form.max_credits} onChange={(v) => setForm({ ...form, max_credits: v })} type="number" />
             </div>
             <label className="flex items-center gap-2 text-sm text-foreground">
               <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
