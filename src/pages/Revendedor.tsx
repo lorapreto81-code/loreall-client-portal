@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import loreallLogo from "@/assets/loreall-play-logo.png";
 import topgestorLogo from "@/assets/topgestor-logo.png";
 import geradorProLogo from "@/assets/gerador-pro-logo.png";
-import LancamentosCarousel from "@/components/LancamentosCarousel";
+import LaunchesBanner from "@/components/LaunchesBanner";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
