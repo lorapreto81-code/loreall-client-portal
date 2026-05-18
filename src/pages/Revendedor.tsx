@@ -221,14 +221,22 @@ export default function Revendedor() {
   )}`;
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8 text-gray-900">
-      <div className="max-w-md mx-auto space-y-6">
+    <div className="relative min-h-screen px-4 py-8 text-gray-900 overflow-hidden bg-white">
+      {/* Animated Loreall blue rising background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50 to-white" />
+        <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[140%] h-[80vh] rounded-[50%] bg-gradient-to-t from-blue-600/30 via-indigo-500/15 to-transparent blur-3xl animate-loreall-rise" />
+        <div className="absolute -bottom-40 left-[20%] w-[60%] h-[70vh] rounded-[50%] bg-gradient-to-t from-indigo-600/25 to-transparent blur-3xl animate-loreall-rise-slow" />
+      </div>
+
+      <div className="max-w-md mx-auto space-y-6 relative">
         <div className="text-center">
-          <img src={loreallLogo} alt="Loreall Play" className="h-16 mx-auto mb-4 object-contain" />
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold mb-3">
+          <img src={loreallLogo} alt="Loreall Play" className="h-24 w-24 mx-auto mb-3 object-contain drop-shadow-xl" />
+          <div className="text-xl font-bold tracking-tight text-gray-900">Loreall Play</div>
+          <div className="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-blue-600/10 text-blue-700 text-xs font-semibold">
             <Zap className="h-3.5 w-3.5" /> Recarga de Créditos
           </div>
-          <h1 className="text-2xl font-bold">{link.display_name}</h1>
+          <h1 className="text-2xl font-bold mt-3">{link.display_name}</h1>
           <p className="text-sm text-gray-600 mt-1">
             Painel: <span className="font-mono">{link.warez_username}</span>
           </p>
@@ -236,6 +244,16 @@ export default function Revendedor() {
             ID: <span className="font-mono">{link.warez_user_id}</span>
           </p>
         </div>
+
+        <a
+          href={WAREZ_PANEL_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 text-sm font-semibold shadow-sm"
+        >
+          <ExternalLink className="h-4 w-4" /> Abrir painel WAREZ
+        </a>
+
 
         {!pix && (
           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-5">
