@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus } from "lucide-react";
-import loreallLogo from "@/assets/loreall-logo.png";
+import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink } from "lucide-react";
+import loreallLogo from "@/assets/loreall-play-logo.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const SUPPORT_WHATSAPP = "5583998551952";
+const WAREZ_PANEL_URL = "https://wwpanel.link/";
 
 interface ResellerLink {
   id: string;
