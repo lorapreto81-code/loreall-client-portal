@@ -264,37 +264,38 @@ export default function Revendedor() {
             href="https://topgestor.com/register?referralCode=8e486037-dd89-4ca3-89a7-3672cd47b59b"
             target="_blank"
             rel="noreferrer"
-            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl p-3"
+            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl overflow-hidden"
           >
-            <div className="flex items-center justify-center h-10">
+            <div className="bg-slate-900 flex items-center justify-center h-14 px-3">
               <img src={topgestorLogo} alt="TopGestor" className="h-9 object-contain" />
             </div>
-            <p className="text-[11px] text-gray-600 mt-1.5 leading-snug">
-              Gestão de clientes IPTV automática.
-            </p>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
-              7 dias grátis <ExternalLink className="h-2.5 w-2.5" />
-            </span>
+            <div className="p-3">
+              <p className="text-[11px] text-gray-600 leading-snug">
+                Gestão de clientes IPTV automática.
+              </p>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
+                7 dias grátis <ExternalLink className="h-2.5 w-2.5" />
+              </span>
+            </div>
           </a>
 
           <a
             href="https://gerador.pro/link.php?ref=c6863f0f"
             target="_blank"
             rel="noreferrer"
-            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl p-3"
+            className="block bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md transition rounded-xl overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-sm shrink-0">
-                🚀
-              </div>
-              <span className="text-xs font-bold text-gray-900">Gerador Pro</span>
+            <div className="bg-slate-900 flex items-center justify-center h-14 px-3">
+              <img src={geradorProLogo} alt="Gerador Pro" className="h-12 object-contain" />
             </div>
-            <p className="text-[11px] text-gray-600 mt-1.5 leading-snug">
-              Banners e vídeos de divulgação.
-            </p>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
-              Teste 1 dia <ExternalLink className="h-2.5 w-2.5" />
-            </span>
+            <div className="p-3">
+              <p className="text-[11px] text-gray-600 leading-snug">
+                Banners e vídeos de divulgação.
+              </p>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
+                Teste 1 dia <ExternalLink className="h-2.5 w-2.5" />
+              </span>
+            </div>
           </a>
         </div>
 
