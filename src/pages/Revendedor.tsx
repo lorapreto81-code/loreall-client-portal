@@ -398,48 +398,9 @@ export default function Revendedor() {
         )}
 
         {/* Banner Lançamentos Loreall Play */}
-        {!pix && (
-          <a
-            href="https://loreallplay.com"
-            target="_blank"
-            rel="noreferrer"
-            className="relative block overflow-hidden rounded-2xl shadow-xl shadow-blue-900/20 group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900" />
-            {/* poster grid decorativo */}
-            <div className="absolute inset-0 opacity-20 grid grid-cols-6 gap-1 p-1">
-              {Array.from({ length: 18 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-md bg-gradient-to-br from-white/30 to-white/5"
-                  style={{ aspectRatio: "2/3" }}
-                />
-              ))}
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/70 to-transparent" />
+        {/* Banner Lançamentos Loreall Play */}
+        {!pix && <LancamentosCarousel />}
 
-            <div className="relative p-4 flex items-center gap-3">
-              <div className="h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/40">
-                <Film className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-yellow-300" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-300">Loreall Play</span>
-                </div>
-                <h3 className="text-white font-extrabold text-sm leading-tight mt-0.5">
-                  Lançamentos, filmes & séries
-                </h3>
-                <p className="text-blue-100/80 text-[11px] mt-0.5">
-                  Acesse a área do usuário
-                </p>
-              </div>
-              <div className="shrink-0 h-9 w-9 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <Play className="h-4 w-4 text-blue-600 fill-blue-600 ml-0.5" />
-              </div>
-            </div>
-          </a>
-        )}
 
 
 
