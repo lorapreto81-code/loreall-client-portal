@@ -482,15 +482,8 @@ export default function Revendedor() {
           </div>
         )}
 
-        <a
-          href={supportUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 text-xs text-gray-500 hover:text-green-600 transition"
-        >
-          <MessageCircle className="h-3 w-3" /> Suporte Loreall Play
-        </a>
-        <p className="text-center text-[10px] text-gray-400">© Loreall Play</p>
+        <p className="text-center text-[10px] text-slate-400">© Loreall Play</p>
+
 
       </div>
     </div>
