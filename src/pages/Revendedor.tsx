@@ -399,7 +399,7 @@ export default function Revendedor() {
 
         {/* Banner Lançamentos Loreall Play */}
         {/* Banner Lançamentos Loreall Play */}
-        {!pix && <LancamentosCarousel />}
+        {!pix && <LaunchesBanner />}
 
 
 
