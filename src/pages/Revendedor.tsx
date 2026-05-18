@@ -350,7 +350,7 @@ export default function Revendedor() {
             <button
               onClick={generatePix}
               disabled={generating}
-              className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-[1.5rem] text-white font-bold text-base shadow-lg shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
+              className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 rounded-xl text-white font-bold text-sm shadow-md shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:hover:scale-100"
             >
               {generating ? (
                 <span className="inline-flex items-center gap-2">
