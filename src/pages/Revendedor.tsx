@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink, Menu, Sparkles, Film, Play } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink, Menu, Sparkles, Film, Play, Sun, Moon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import loreallLogo from "@/assets/loreall-play-logo.png";
 import topgestorLogo from "@/assets/topgestor-logo.png";
