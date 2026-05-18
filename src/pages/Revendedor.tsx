@@ -266,33 +266,23 @@ export default function Revendedor() {
           </DropdownMenu>
 
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <img src={loreallLogo} alt="Loreall Play" className="h-11 w-11 object-contain shrink-0 drop-shadow" />
+            <img src={loreallLogo} alt="Loreall Play" className="h-10 w-10 object-contain shrink-0 drop-shadow" />
             <div className="min-w-0 flex-1">
               <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-50 leading-tight truncate">{link.display_name}</h1>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider truncate">
-                {link.warez_username}
+                {link.warez_username} · ID {link.warez_user_id}
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-yellow-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            className="h-9 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-300 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             aria-label={isDark ? "Modo claro" : "Modo escuro"}
             title={isDark ? "Modo claro" : "Modo escuro"}
           >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
           </button>
-
-          <span className="shrink-0 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-[10px] font-bold rounded-full tracking-wider uppercase">
-            ID {link.warez_user_id}
-          </span>
-        </div>
-
-        <div className="flex justify-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-300 rounded-full text-[12px] font-bold">
-            <Zap className="w-3 h-3" /> Recarga de Créditos
-          </span>
         </div>
 
 
