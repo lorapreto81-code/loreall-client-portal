@@ -533,5 +533,6 @@ export default function Revendedor() {
 
       </div>
     </div>
+    </div>
   );
 }
