@@ -245,7 +245,10 @@ export type Database = {
           display_name: string
           id: string
           is_active: boolean
+          max_credits: number
+          min_credits: number
           notes: string | null
+          price_per_credit: number
           slug: string
           updated_at: string
           warez_user_id: number
@@ -258,7 +261,10 @@ export type Database = {
           display_name: string
           id?: string
           is_active?: boolean
+          max_credits?: number
+          min_credits?: number
           notes?: string | null
+          price_per_credit?: number
           slug: string
           updated_at?: string
           warez_user_id: number
@@ -271,7 +277,10 @@ export type Database = {
           display_name?: string
           id?: string
           is_active?: boolean
+          max_credits?: number
+          min_credits?: number
           notes?: string | null
+          price_per_credit?: number
           slug?: string
           updated_at?: string
           warez_user_id?: number
