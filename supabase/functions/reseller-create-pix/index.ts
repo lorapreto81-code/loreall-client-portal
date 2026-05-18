@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         warez_user_id: link.warez_user_id,
         whatsapp,
         email: finalEmail,
-        package_credits: link.credits,
+        package_credits: credits,
         amount,
         fastdepix_transaction_id: tx.id,
         qr_code_url: tx.qr_code,
