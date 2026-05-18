@@ -274,7 +274,7 @@ export default function Revendedor() {
               Gestão de clientes IPTV automática.
             </p>
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 mt-1.5">
-              Cadastrar <ExternalLink className="h-2.5 w-2.5" />
+              7 dias grátis <ExternalLink className="h-2.5 w-2.5" />
             </span>
           </a>
 
