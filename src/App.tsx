@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Welcome from "./pages/Welcome";
+import Revendedor from "./pages/Revendedor";
 
 const queryClient = new QueryClient();
 
