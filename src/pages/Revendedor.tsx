@@ -74,6 +74,15 @@ export default function Revendedor() {
   const [credits, setCredits] = useState<number>(10);
   const [generating, setGenerating] = useState(false);
 
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    return (localStorage.getItem("revendedor-theme") as "light" | "dark") || "light";
+  });
+  useEffect(() => {
+    localStorage.setItem("revendedor-theme", theme);
+  }, [theme]);
+  const isDark = theme === "dark";
+
   const [pix, setPix] = useState<PixData | null>(null);
   const [status, setStatus] = useState<StatusData | null>(null);
   const [copied, setCopied] = useState(false);
