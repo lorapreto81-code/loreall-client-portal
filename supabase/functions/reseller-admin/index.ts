@@ -1,0 +1,231 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-password",
+};
+
+const ADMIN_PASSWORD = "loreall2025";
+
+function unauthorized() {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function ok(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function slugify(s: string): string {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const pwd = req.headers.get("x-admin-password");
+    if (pwd !== ADMIN_PASSWORD) return unauthorized();
+
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action") || "";
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+
+    switch (action) {
+      // -------- Links --------
+      case "list-links": {
+        const { data, error } = await supabase
+          .from("reseller_links")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return ok({ links: data || [] });
+      }
+
+      case "create-link": {
+        const slug = slugify(body.slug || body.display_name || "");
+        if (!slug) return ok({ error: "slug inválido" }, 400);
+        const payload = {
+          slug,
+          display_name: String(body.display_name || "").trim(),
+          warez_username: String(body.warez_username || "").trim(),
+          warez_user_id: Number(body.warez_user_id),
+          credits: Number(body.credits),
+          amount: Number(body.amount),
+          is_active: body.is_active ?? true,
+          notes: body.notes || null,
+        };
+        if (!payload.display_name || !payload.warez_username || !payload.warez_user_id || !payload.credits || !payload.amount) {
+          return ok({ error: "Campos obrigatórios faltando" }, 400);
+        }
+        const { data, error } = await supabase.from("reseller_links").insert(payload).select().single();
+        if (error) throw error;
+        return ok({ link: data });
+      }
+
+      case "update-link": {
+        const id = String(body.id || "");
+        if (!id) return ok({ error: "id obrigatório" }, 400);
+        const patch: Record<string, unknown> = {};
+        for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "is_active", "notes"]) {
+          if (k in body) patch[k] = body[k];
+        }
+        if (patch.slug) patch.slug = slugify(String(patch.slug));
+        if ("warez_user_id" in patch) patch.warez_user_id = Number(patch.warez_user_id);
+        if ("credits" in patch) patch.credits = Number(patch.credits);
+        if ("amount" in patch) patch.amount = Number(patch.amount);
+        const { data, error } = await supabase.from("reseller_links").update(patch).eq("id", id).select().single();
+        if (error) throw error;
+        return ok({ link: data });
+      }
+
+      case "delete-link": {
+        const id = String(body.id || "");
+        if (!id) return ok({ error: "id obrigatório" }, 400);
+        const { error } = await supabase.from("reseller_links").delete().eq("id", id);
+        if (error) throw error;
+        return ok({ success: true });
+      }
+
+      // -------- Purchases --------
+      case "list-purchases": {
+        const limit = Math.min(Number(url.searchParams.get("limit") || 200), 500);
+        const status = url.searchParams.get("status");
+        const since = url.searchParams.get("since");
+        let q = supabase.from("reseller_credit_purchases").select("*").order("created_at", { ascending: false }).limit(limit);
+        if (status) q = q.eq("status", status);
+        if (since) q = q.gte("created_at", since);
+        const { data, error } = await q;
+        if (error) throw error;
+        return ok({ purchases: data || [] });
+      }
+
+      case "reprocess-purchase": {
+        const id = String(body.id || "");
+        if (!id) return ok({ error: "id obrigatório" }, 400);
+        const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/reseller-process-recharge`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ purchase_id: id }),
+        });
+        const data = await r.json().catch(() => ({}));
+        return ok({ result: data }, r.ok ? 200 : 400);
+      }
+
+      // -------- Config --------
+      case "get-config": {
+        const { data, error } = await supabase.from("system_config").select("*");
+        if (error) throw error;
+        const obj: Record<string, string> = {};
+        (data || []).forEach((r: { config_key: string; config_value: string }) => {
+          obj[r.config_key] = r.config_value;
+        });
+        return ok({ config: obj });
+      }
+
+      case "update-config": {
+        const entries = body.entries as Record<string, string> | undefined;
+        if (!entries || typeof entries !== "object") return ok({ error: "entries obrigatório" }, 400);
+        const rows = Object.entries(entries).map(([config_key, config_value]) => ({
+          config_key,
+          config_value: String(config_value),
+          updated_at: new Date().toISOString(),
+        }));
+        const { error } = await supabase.from("system_config").upsert(rows);
+        if (error) throw error;
+        return ok({ success: true });
+      }
+
+      // -------- Dashboard --------
+      case "dashboard": {
+        const { data: purchases, error } = await supabase
+          .from("reseller_credit_purchases")
+          .select("id, warez_username, warez_user_id, package_credits, amount, status, recharge_status, recharged_at, created_at, reseller_link_id");
+        if (error) throw error;
+
+        const { data: cfg } = await supabase.from("system_config").select("config_value").eq("config_key", "credit_cost_brl").maybeSingle();
+        const costPerCredit = Number(cfg?.config_value || 0);
+
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const isRecharged = (p: { recharge_status: string }) => p.recharge_status === "recharged";
+
+        const monthRecharged = (purchases || []).filter((p) => isRecharged(p) && p.recharged_at && p.recharged_at >= monthStart);
+        const revenueMonth = monthRecharged.reduce((s, p) => s + Number(p.amount), 0);
+        const costMonth = monthRecharged.reduce((s, p) => s + Number(p.package_credits) * costPerCredit, 0);
+        const profitMonth = revenueMonth - costMonth;
+        const margin = revenueMonth > 0 ? (profitMonth / revenueMonth) * 100 : 0;
+        const ticket = monthRecharged.length > 0 ? revenueMonth / monthRecharged.length : 0;
+
+        // Per reseller (all-time)
+        const byReseller = new Map<string, { warez_username: string; count: number; credits: number; revenue: number; cost: number }>();
+        (purchases || []).filter(isRecharged).forEach((p) => {
+          const key = p.warez_username;
+          const cur = byReseller.get(key) || { warez_username: key, count: 0, credits: 0, revenue: 0, cost: 0 };
+          cur.count++;
+          cur.credits += Number(p.package_credits);
+          cur.revenue += Number(p.amount);
+          cur.cost += Number(p.package_credits) * costPerCredit;
+          byReseller.set(key, cur);
+        });
+        const perReseller = Array.from(byReseller.values())
+          .map((r) => ({ ...r, profit: r.revenue - r.cost, margin: r.revenue > 0 ? ((r.revenue - r.cost) / r.revenue) * 100 : 0 }))
+          .sort((a, b) => b.revenue - a.revenue);
+
+        // Last 30 days series
+        const series: { date: string; revenue: number; cost: number; profit: number }[] = [];
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+          const dateStr = d.toISOString().slice(0, 10);
+          const dayRecharged = (purchases || []).filter(
+            (p) => isRecharged(p) && p.recharged_at && p.recharged_at.slice(0, 10) === dateStr,
+          );
+          const rev = dayRecharged.reduce((s, p) => s + Number(p.amount), 0);
+          const cst = dayRecharged.reduce((s, p) => s + Number(p.package_credits) * costPerCredit, 0);
+          series.push({ date: dateStr, revenue: rev, cost: cst, profit: rev - cst });
+        }
+
+        return ok({
+          kpis: {
+            revenue_month: revenueMonth,
+            cost_month: costMonth,
+            profit_month: profitMonth,
+            margin_pct: margin,
+            count_month: monthRecharged.length,
+            ticket_avg: ticket,
+            cost_per_credit: costPerCredit,
+          },
+          per_reseller: perReseller,
+          series_30d: series,
+        });
+      }
+
+      default:
+        return ok({ error: "ação inválida" }, 400);
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[reseller-admin] error", message);
+    return ok({ error: message }, 500);
+  }
+});

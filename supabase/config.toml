@@ -2,3 +2,15 @@ project_id = "qknlbgpesxirghlvalty"
 
 [functions.fastdepix-webhook]
 verify_jwt = false
+
+[functions.reseller-create-pix]
+verify_jwt = false
+
+[functions.reseller-check-status]
+verify_jwt = false
+
+[functions.reseller-process-recharge]
+verify_jwt = false
+
+[functions.reseller-admin]
+verify_jwt = false

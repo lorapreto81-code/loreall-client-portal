@@ -1,0 +1,234 @@
+import { useEffect, useState } from "react";
+import { resellerAdmin } from "@/lib/resellerAdmin";
+import { toast } from "sonner";
+import { Loader2, Plus, Pencil, Trash2, Copy, ExternalLink } from "lucide-react";
+
+interface Link {
+  id: string;
+  slug: string;
+  display_name: string;
+  warez_username: string;
+  warez_user_id: number;
+  credits: number;
+  amount: number;
+  is_active: boolean;
+  notes: string | null;
+}
+
+const empty = {
+  slug: "",
+  display_name: "",
+  warez_username: "",
+  warez_user_id: "",
+  credits: "10",
+  amount: "100",
+  is_active: true,
+  notes: "",
+};
+
+export default function ResellerLinksTab() {
+  const [links, setLinks] = useState<Link[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Link | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<typeof empty>(empty);
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { links } = await resellerAdmin.listLinks();
+      setLinks(links);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+    setLoading(false);
+  };
+  useEffect(() => {
+    load();
+  }, []);
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm(empty);
+    setShowForm(true);
+  };
+  const openEdit = (l: Link) => {
+    setEditing(l);
+    setForm({
+      slug: l.slug,
+      display_name: l.display_name,
+      warez_username: l.warez_username,
+      warez_user_id: String(l.warez_user_id),
+      credits: String(l.credits),
+      amount: String(l.amount),
+      is_active: l.is_active,
+      notes: l.notes || "",
+    });
+    setShowForm(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        slug: form.slug || form.display_name,
+        display_name: form.display_name,
+        warez_username: form.warez_username,
+        warez_user_id: Number(form.warez_user_id),
+        credits: Number(form.credits),
+        amount: Number(form.amount),
+        is_active: form.is_active,
+        notes: form.notes,
+      };
+      if (editing) {
+        await resellerAdmin.updateLink({ id: editing.id, ...payload });
+        toast.success("Atualizado");
+      } else {
+        await resellerAdmin.createLink(payload);
+        toast.success("Criado");
+      }
+      setShowForm(false);
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+    setSaving(false);
+  };
+
+  const toggle = async (l: Link) => {
+    try {
+      await resellerAdmin.updateLink({ id: l.id, is_active: !l.is_active });
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+  };
+
+  const remove = async (l: Link) => {
+    if (!confirm(`Excluir revendedor ${l.display_name}?`)) return;
+    try {
+      await resellerAdmin.deleteLink(l.id);
+      toast.success("Excluído");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+  };
+
+  const copyLink = (slug: string) => {
+    const url = `${window.location.origin}/revendedor/${slug}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Link copiado");
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-foreground">Revendedores</h2>
+        <button onClick={openCreate} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg btn-primary-gradient text-sm font-semibold">
+          <Plus className="h-4 w-4" /> Novo
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="card-elevated overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="text-left px-4 py-3">Revendedor</th>
+                  <th className="text-left px-4 py-3">Painel</th>
+                  <th className="text-right px-4 py-3">Créditos</th>
+                  <th className="text-right px-4 py-3">Valor</th>
+                  <th className="text-center px-4 py-3">Ativo</th>
+                  <th className="text-right px-4 py-3">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {links.map((l) => (
+                  <tr key={l.id} className="border-t border-border">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-foreground">{l.display_name}</div>
+                      <a href={`/revendedor/${l.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1">
+                        /{l.slug} <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-mono text-xs text-foreground">{l.warez_username}</div>
+                      <div className="text-xs text-muted-foreground">ID {l.warez_user_id}</div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-foreground">{l.credits}</td>
+                    <td className="px-4 py-3 text-right text-foreground">
+                      {Number(l.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button onClick={() => toggle(l)} className={`px-2 py-1 rounded-full text-xs font-medium ${l.is_active ? "bg-green-500/15 text-green-500" : "bg-muted text-muted-foreground"}`}>
+                        {l.is_active ? "Ativo" : "Inativo"}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex gap-1">
+                        <button onClick={() => copyLink(l.slug)} className="p-1.5 rounded hover:bg-muted" title="Copiar link"><Copy className="h-4 w-4" /></button>
+                        <button onClick={() => openEdit(l)} className="p-1.5 rounded hover:bg-muted" title="Editar"><Pencil className="h-4 w-4" /></button>
+                        <button onClick={() => remove(l)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive" title="Excluir"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {links.length === 0 && (
+                  <tr><td colSpan={6} className="text-center text-sm text-muted-foreground py-8">Nenhum revendedor cadastrado.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="card-elevated p-6 max-w-md w-full space-y-3" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-foreground">{editing ? "Editar" : "Novo"} revendedor</h3>
+            <Field label="Nome de exibição" value={form.display_name} onChange={(v) => setForm({ ...form, display_name: v })} />
+            <Field label="Slug (URL)" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="auto se vazio" />
+            <Field label="Usuário WAREZ" value={form.warez_username} onChange={(v) => setForm({ ...form, warez_username: v })} />
+            <Field label="ID WAREZ" value={form.warez_user_id} onChange={(v) => setForm({ ...form, warez_user_id: v })} type="number" />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Créditos" value={form.credits} onChange={(v) => setForm({ ...form, credits: v })} type="number" />
+              <Field label="Valor (R$)" value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} type="number" />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
+              Ativo
+            </label>
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-lg border border-border text-sm">Cancelar</button>
+              <button onClick={save} disabled={saving} className="flex-1 py-2 rounded-lg btn-primary-gradient text-sm font-semibold disabled:opacity-60">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Salvar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, type = "text", placeholder }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+  return (
+    <div>
+      <label className="text-xs text-muted-foreground">{label}</label>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full mt-1 px-3 py-2 rounded-lg border border-input bg-card text-foreground text-sm"
+      />
+    </div>
+  );
+}
