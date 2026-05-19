@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-password",
 };
 
-const ADMIN_PASSWORD = "loreall2025";
+const ADMIN_PASSWORD = "@996157342Slyj";
 
 function unauthorized() {
   return new Response(JSON.stringify({ error: "Unauthorized" }), {
