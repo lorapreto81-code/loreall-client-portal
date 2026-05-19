@@ -50,7 +50,10 @@ const ReferralSheet = ({ open, onClose }: Props) => {
   };
 
   const share = async () => {
-    const text = `🎬 Te indiquei o Loreall Play TV! Use meu código *${code}* ao renovar e me ajude a ganhar mais 1 mês grátis. Acesse: ${shareUrl}`;
+    const text =
+      `🎬 *Loreall Play TV* — filmes, séries e canais ao vivo no seu celular, TV e PC.\n\n` +
+      `Use meu código de indicação *${code}* ao renovar e ganhe acesso premium.\n\n` +
+      `👉 Acesse: ${shareUrl}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: "Loreall Play TV", text, url: shareUrl });
