@@ -39,7 +39,7 @@ const ReferralSheet = ({ open, onClose }: Props) => {
   if (!open || !customer) return null;
 
   const code = codeQuery.data?.code || "";
-  const shareUrl = code ? `${window.location.origin}/login?ref=${code}` : "";
+  const shareUrl = code ? `https://pagartv.online/login?ref=${code}` : "";
   const stats = listQuery.data;
 
   const copy = async (text: string, kind: "code" | "link") => {
