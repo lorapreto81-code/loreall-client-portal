@@ -49,18 +49,18 @@ const ReferralSheet = ({ open, onClose }: Props) => {
     setTimeout(() => setCopied(null), 1500);
   };
 
-  const share = async () => {
-    const text =
-      `🎬 *Loreall Play TV* — filmes, séries e canais ao vivo no seu celular, TV e PC.\n\n` +
-      `Use meu código de indicação *${code}* ao renovar e ganhe acesso premium.\n\n` +
-      `👉 Acesse: ${shareUrl}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "Loreall Play TV", text, url: shareUrl });
-        return;
-      } catch { /* user cancelled */ }
-    }
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  const share = () => {
+    if (!shareUrl) return;
+    const lines = [
+      "🎬 *Loreall Play TV* — filmes, séries e canais ao vivo no seu celular, TV e PC.",
+      "",
+      `Use meu código de indicação *${code}* ao renovar e ganhe acesso premium.`,
+      "",
+      `👉 Acesse: ${shareUrl}`,
+    ];
+    // WhatsApp espera quebras como %0A — encodeURIComponent converte \n corretamente.
+    const text = encodeURIComponent(lines.join("\n"));
+    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
   return (
