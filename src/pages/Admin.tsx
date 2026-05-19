@@ -5,7 +5,7 @@ import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
 import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
 import ResellerConfigTab from "@/components/admin/ResellerConfigTab";
 
-const ADMIN_PASSWORD = "loreall2025";
+const ADMIN_PASSWORD = "@996157342Slyj";
 
 interface Notice {
   ativo: boolean;
