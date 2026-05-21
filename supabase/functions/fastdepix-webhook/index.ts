@@ -71,7 +71,7 @@ async function tgGetCustomer(tgToken: string, customerId: number) {
 async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDate: Date, days: number, messageId?: number) {
   const newDate = addDays(currentDueDate, days);
   const body: Record<string, unknown> = { data_de_vencimento: newDate };
-  if (messageId) body.message_id = messageId;
+  if (messageId) { body.message_id = messageId; body.send_whatsapp = true; }
   const res = await fetch(`${TG_BASE}/customers/${customerId}`, {
     method: "PUT",
     headers: {
