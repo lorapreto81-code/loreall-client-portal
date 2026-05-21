@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ plan_id: payment.plan_id, invoice_status: "pago" }),
+      body: JSON.stringify({ plan_id: payment.plan_id }),
     });
     const renewalResponse = await tgRes.json().catch(() => ({}));
 
