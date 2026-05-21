@@ -149,6 +149,8 @@ const Admin = () => {
         {tab === "links" && <ResellerLinksTab />}
         {tab === "recargas" && <ResellerPurchasesTab />}
         {tab === "dashboard" && <ResellerDashboardTab />}
+        {tab === "clientes" && <CustomersPaymentsTab />}
+        {tab === "clientes-dash" && <CustomersDashboardTab />}
         {tab === "config" && <ResellerConfigTab />}
       </div>
     </div>
