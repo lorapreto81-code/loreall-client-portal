@@ -64,6 +64,13 @@ export default function ResellerConfigTab() {
           type="password"
         />
         <Field
+          label="ID do usuário admin no WPainel"
+          hint="ID numérico da conta master usada para consultar o saldo de créditos antes de cada recarga. Se não tiver saldo suficiente, a compra fica como 'aguardando saldo'."
+          value={config.warez_admin_user_id || ""}
+          onChange={(v) => set("warez_admin_user_id", v)}
+          type="number"
+        />
+        <Field
           label="Custo por crédito (R$)"
           hint="Usado para calcular o lucro no dashboard"
           value={config.credit_cost_brl || ""}

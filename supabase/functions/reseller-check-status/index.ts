@@ -102,8 +102,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Caminho de recuperação: pago mas ainda não recarregado
-    if (liveStatus === "paid" && p.recharge_status !== "recharged" && p.recharge_status !== "processing") {
+    // Caminho de recuperação: pago mas ainda não recarregado (inclui awaiting_credits/failed)
+    if (
+      liveStatus === "paid" &&
+      p.recharge_status !== "recharged" &&
+      p.recharge_status !== "processing"
+    ) {
       await callProcessRecharge(p.id);
     }
 

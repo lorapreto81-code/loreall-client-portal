@@ -26,6 +26,7 @@ export async function processRecharge(
 
   const baseUrl = await getConfig(supabase, "warez_api_url");
   const token = await getConfig(supabase, "warez_api_token");
+  const adminUserId = await getConfig(supabase, "warez_admin_user_id");
   if (!baseUrl || !token || token === "COLE_SEU_TOKEN_AQUI") {
     const msg = "WAREZ API não configurada (warez_api_url / warez_api_token)";
     await supabase
@@ -33,6 +34,60 @@ export async function processRecharge(
       .update({ recharge_status: "failed", error_message: msg })
       .eq("id", purchaseId);
     return { ok: false, error: msg };
+  }
+
+  // ---- Pré-checagem: saldo do painel admin ----
+  if (adminUserId && /^\d+$/.test(String(adminUserId).trim())) {
+    const balanceUrl = `${baseUrl.replace(/\/+$/, "")}/users/${String(adminUserId).trim()}`;
+    const tBal = Date.now();
+    let balanceStatus = 0;
+    let balanceText = "";
+    let balanceErr: string | null = null;
+    let availableCredits: number | null = null;
+    try {
+      const controller = new AbortController();
+      const to = setTimeout(() => controller.abort(), 15000);
+      const r = await fetch(balanceUrl, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        signal: controller.signal,
+      });
+      clearTimeout(to);
+      balanceStatus = r.status;
+      balanceText = await r.text();
+      if (r.ok) {
+        try {
+          const j = JSON.parse(balanceText);
+          const c = j?.credits ?? j?.data?.credits ?? j?.user?.credits;
+          if (typeof c === "number") availableCredits = c;
+          else if (typeof c === "string" && /^\d+$/.test(c)) availableCredits = Number(c);
+        } catch { /* ignore */ }
+      } else {
+        balanceErr = `HTTP ${r.status}`;
+      }
+    } catch (e) {
+      balanceErr = e instanceof Error ? e.message : "erro";
+    }
+
+    await supabase.from("warez_api_logs").insert({
+      endpoint: balanceUrl,
+      method: "GET",
+      request_body: {},
+      response_status: balanceStatus,
+      response_body: balanceText.slice(0, 2000),
+      duration_ms: Date.now() - tBal,
+      error: balanceErr,
+      related_payment_id: purchaseId,
+    });
+
+    if (availableCredits !== null && availableCredits < purchase.package_credits) {
+      const msg = `Saldo insuficiente no painel: ${availableCredits} disponíveis, ${purchase.package_credits} necessários. Aguardando recarga do painel.`;
+      await supabase
+        .from("reseller_credit_purchases")
+        .update({ recharge_status: "awaiting_credits", error_message: msg })
+        .eq("id", purchaseId);
+      return { ok: false, error: msg };
+    }
   }
 
   // Lock: marca processing antes de chamar, evita double-charge
@@ -97,15 +152,30 @@ export async function processRecharge(
   });
 
   if (errorMsg) {
+    // Detecta saldo insuficiente na resposta do painel
+    const lower = (respText + " " + errorMsg).toLowerCase();
+    const insufficient =
+      lower.includes("insufficient") ||
+      lower.includes("saldo insuficiente") ||
+      lower.includes("créditos insuficientes") ||
+      lower.includes("creditos insuficientes") ||
+      lower.includes("not enough credit") ||
+      lower.includes("no credits");
+
+    const newStatus = insufficient ? "awaiting_credits" : "failed";
+    const friendlyMsg = insufficient
+      ? "Saldo insuficiente no painel WPainel. Pagamento confirmado — aguardando recarga do painel para liberar os créditos."
+      : errorMsg;
+
     await supabase
       .from("reseller_credit_purchases")
       .update({
-        recharge_status: "failed",
-        error_message: errorMsg.slice(0, 500),
+        recharge_status: newStatus,
+        error_message: friendlyMsg.slice(0, 500),
         warez_response: respJson as Record<string, unknown>,
       })
       .eq("id", purchaseId);
-    return { ok: false, error: errorMsg, status, data: respJson };
+    return { ok: false, error: friendlyMsg, status, data: respJson };
   }
 
   await supabase
