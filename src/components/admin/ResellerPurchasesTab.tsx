@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, RotateCcw, Check, X } from "lucide-react";
+import { Loader2, RefreshCw, RotateCcw, Check, Trash2 } from "lucide-react";
 
 
 interface Purchase {
