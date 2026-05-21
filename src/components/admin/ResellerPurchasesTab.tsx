@@ -97,7 +97,7 @@ export default function ResellerPurchasesTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl font-bold text-foreground">Histórico de recargas</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-input bg-card text-foreground text-sm">
             <option value="">Todos os status</option>
             <option value="pending">Pendente</option>
@@ -107,6 +107,21 @@ export default function ResellerPurchasesTab() {
           </select>
           <button onClick={load} className="px-3 py-2 rounded-lg border border-border text-sm inline-flex items-center gap-1.5">
             <RefreshCw className="h-4 w-4" /> Atualizar
+          </button>
+          <button
+            onClick={async () => {
+              const pendentes = items.filter((p) => p.status === "paid" && p.recharge_status !== "recharged" && p.recharge_status !== "processing");
+              if (pendentes.length === 0) { toast.info("Nenhuma compra paga aguardando recarga"); return; }
+              toast.info(`Reprocessando ${pendentes.length} compra(s)...`);
+              for (const p of pendentes) {
+                try { await resellerAdmin.reprocess(p.id); } catch { /* segue */ }
+              }
+              await load();
+              toast.success("Reprocessamento concluído");
+            }}
+            className="px-3 py-2 rounded-lg bg-orange-500/10 text-orange-500 text-sm inline-flex items-center gap-1.5 hover:bg-orange-500/20"
+          >
+            <RotateCcw className="h-4 w-4" /> Reprocessar pendentes
           </button>
         </div>
       </div>
