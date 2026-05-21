@@ -170,12 +170,48 @@ export default function ResellerPurchasesTab() {
                       <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.recharged_at)}</td>
                       <td className="px-3 py-2 text-xs text-destructive max-w-[200px] truncate" title={p.error_message || ""}>{p.error_message || "—"}</td>
                       <td className="px-3 py-2 text-right">
-                        {canReprocess && (
-                          <button onClick={() => reprocess(p.id)} disabled={reprocessing === p.id} className="px-2 py-1 rounded bg-primary/10 text-primary text-xs inline-flex items-center gap-1 hover:bg-primary/20 disabled:opacity-60">
-                            {reprocessing === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
-                            Reprocessar
-                          </button>
-                        )}
+                        <div className="flex items-center justify-end gap-1 flex-wrap">
+                          {p.status === "pending" && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Marcar essa compra de ${p.warez_username} como PAGA e disparar a recarga?`)) return;
+                                try {
+                                  await resellerAdmin.markPaid(p.id);
+                                  toast.success("Compra marcada como paga");
+                                  await load();
+                                } catch (e) {
+                                  toast.error(e instanceof Error ? e.message : "Erro");
+                                }
+                              }}
+                              className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-xs inline-flex items-center gap-1 hover:bg-green-500/20"
+                            >
+                              <Check className="h-3 w-3" /> Pagar
+                            </button>
+                          )}
+                          {canReprocess && (
+                            <button onClick={() => reprocess(p.id)} disabled={reprocessing === p.id} className="px-2 py-1 rounded bg-primary/10 text-primary text-xs inline-flex items-center gap-1 hover:bg-primary/20 disabled:opacity-60">
+                              {reprocessing === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                              Reprocessar
+                            </button>
+                          )}
+                          {p.status !== "cancelled" && p.recharge_status !== "recharged" && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Fechar/cancelar essa compra de ${p.warez_username}? Isso NÃO devolve dinheiro nem mexe no painel.`)) return;
+                                try {
+                                  await resellerAdmin.closePurchase(p.id);
+                                  toast.success("Compra fechada");
+                                  await load();
+                                } catch (e) {
+                                  toast.error(e instanceof Error ? e.message : "Erro");
+                                }
+                              }}
+                              className="px-2 py-1 rounded bg-destructive/10 text-destructive text-xs inline-flex items-center gap-1 hover:bg-destructive/20"
+                            >
+                              <X className="h-3 w-3" /> Fechar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
