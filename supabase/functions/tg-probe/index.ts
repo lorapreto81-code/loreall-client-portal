@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     body: payload ? JSON.stringify(payload) : undefined,
   });
   const text = await res.text();
-  return new Response(JSON.stringify({ status: res.status, body: text.slice(0, 2000) }), {
+  return new Response(JSON.stringify({ status: res.status, body: text }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
