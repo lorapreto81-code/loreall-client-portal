@@ -139,6 +139,43 @@ Deno.serve(async (req) => {
         return ok({ result: data }, r.ok ? 200 : 400);
       }
 
+      case "mark-paid": {
+        const id = String(body.id || "");
+        if (!id) return ok({ error: "id obrigatório" }, 400);
+        const { data: upd, error } = await supabase
+          .from("reseller_credit_purchases")
+          .update({ status: "paid", paid_at: new Date().toISOString() })
+          .eq("id", id)
+          .eq("status", "pending")
+          .select()
+          .maybeSingle();
+        if (error) throw error;
+        if (!upd) return ok({ error: "Compra não está pendente" }, 400);
+        // dispara recarga
+        const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/reseller-process-recharge`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ purchase_id: id }),
+        });
+        const data = await r.json().catch(() => ({}));
+        return ok({ success: true, recharge: data });
+      }
+
+      case "close-purchase": {
+        const id = String(body.id || "");
+        if (!id) return ok({ error: "id obrigatório" }, 400);
+        const { error } = await supabase
+          .from("reseller_credit_purchases")
+          .update({ status: "cancelled" })
+          .eq("id", id);
+        if (error) throw error;
+        return ok({ success: true });
+      }
+
+
       // -------- Config --------
       case "get-config": {
         const { data, error } = await supabase.from("system_config").select("*");
