@@ -35,4 +35,8 @@ export const resellerAdmin = {
   getConfig: () => call("get-config"),
   updateConfig: (entries: Record<string, string>) => call("update-config", { method: "POST", body: { entries } }),
   dashboard: () => call("dashboard"),
+  // Customers
+  listPayments: (params?: Record<string, string>) => call("list-payments", { params }),
+  deletePayment: (id: string) => call("delete-payment", { method: "POST", body: { id } }),
+  customersDashboard: () => call("customers-dashboard"),
 };
