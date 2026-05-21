@@ -364,8 +364,11 @@ Deno.serve(async (req) => {
         return ok({ error: "ação inválida" }, 400);
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[reseller-admin] error", message);
-    return ok({ error: message }, 500);
+    const anyErr = err as { message?: string; details?: string; hint?: string; code?: string };
+    const message =
+      (anyErr && (anyErr.message || anyErr.details || anyErr.hint)) ||
+      (typeof err === "string" ? err : JSON.stringify(err));
+    console.error("[reseller-admin] error", message, anyErr?.code || "", anyErr?.details || "", anyErr?.hint || "");
+    return ok({ error: message || "Erro desconhecido" }, 500);
   }
 });
