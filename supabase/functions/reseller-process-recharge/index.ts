@@ -152,15 +152,30 @@ export async function processRecharge(
   });
 
   if (errorMsg) {
+    // Detecta saldo insuficiente na resposta do painel
+    const lower = (respText + " " + errorMsg).toLowerCase();
+    const insufficient =
+      lower.includes("insufficient") ||
+      lower.includes("saldo insuficiente") ||
+      lower.includes("créditos insuficientes") ||
+      lower.includes("creditos insuficientes") ||
+      lower.includes("not enough credit") ||
+      lower.includes("no credits");
+
+    const newStatus = insufficient ? "awaiting_credits" : "failed";
+    const friendlyMsg = insufficient
+      ? "Saldo insuficiente no painel WPainel. Pagamento confirmado — aguardando recarga do painel para liberar os créditos."
+      : errorMsg;
+
     await supabase
       .from("reseller_credit_purchases")
       .update({
-        recharge_status: "failed",
-        error_message: errorMsg.slice(0, 500),
+        recharge_status: newStatus,
+        error_message: friendlyMsg.slice(0, 500),
         warez_response: respJson as Record<string, unknown>,
       })
       .eq("id", purchaseId);
-    return { ok: false, error: errorMsg, status, data: respJson };
+    return { ok: false, error: friendlyMsg, status, data: respJson };
   }
 
   await supabase
