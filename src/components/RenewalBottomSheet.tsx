@@ -7,8 +7,7 @@ import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixRespon
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
-  Plan, PERIOD_MAP, getPlanName, getPlanValue,
-  matchesScreenCount, hasAnyScreenTag, matchesPeriod,
+  Plan, getPlanName, getPlanValue, computeRenewalCards,
 } from "@/lib/planUtils";
 const logo = "/logo.png";
 
@@ -47,17 +46,14 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     ? plansQuery.data
     : plansQuery.data?.data || [];
 
-  const periodCards = useMemo(() => {
-    return PERIOD_MAP.map((period) => {
-      const plan = allPlans.find((p) => {
-        const name = getPlanName(p);
-        return hasAnyScreenTag(name) &&
-          matchesScreenCount(name, currentTelas) &&
-          matchesPeriod(name, period.keyword);
-      });
-      return { ...period, plan };
-    }).filter((t) => t.plan != null);
-  }, [allPlans, currentTelas]);
+  const currentPlanId =
+    (customer?.plan?.id as number | undefined) ??
+    (customer?.plan_id as number | undefined);
+
+  const periodCards = useMemo(
+    () => computeRenewalCards(allPlans, currentPlanId, currentTelas),
+    [allPlans, currentPlanId, currentTelas],
+  );
 
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;

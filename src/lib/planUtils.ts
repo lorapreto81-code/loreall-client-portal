@@ -44,3 +44,68 @@ export const detectCurrentPeriod = (planName: string): string | null => {
 };
 
 export const screenLabel = (n: number) => (n === 1 ? "1 Tela" : `${n} Telas`);
+
+// Nome "padrão" (tabela oficial): "Mensal 2 telas", "Anual 1 tela", etc.
+// Aceita emoji/símbolo no início e ignora.
+export const isStandardPlanName = (planName: string): boolean => {
+  const cleaned = planName
+    .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F]/gu, "")
+    .trim()
+    .toLowerCase();
+  return /^(mensal|trimestral|semestral|anual)\s+\d+\s+tela(s)?$/.test(cleaned);
+};
+
+export interface PeriodCard {
+  months: number;
+  label: string;
+  keyword: string;
+  plan?: Plan;
+}
+
+// Decide quais cards de renovação mostrar com base no plano atual do cliente.
+// - Se o plano atual é um plano "padrão" da tabela (ex: Mensal 2 telas R$30),
+//   mostra os 4 períodos padrão para a mesma quantidade de telas.
+// - Se o plano atual é fora da tabela (Uniplay Mensal, Mensal 2 telas R$50,
+//   planos sem indicação de telas, etc.), mostra APENAS o plano atual,
+//   sem oferecer upgrades.
+export const computeRenewalCards = (
+  allPlans: Plan[],
+  currentPlanId: number | undefined,
+  currentTelas: number,
+): PeriodCard[] => {
+  // Conjunto padrão para as telas do cliente: 1 plano padrão por período (mais barato).
+  const standardSet: Record<string, Plan> = {};
+  for (const period of PERIOD_MAP) {
+    const candidates = allPlans.filter((p) => {
+      const name = getPlanName(p);
+      return isStandardPlanName(name)
+        && matchesScreenCount(name, currentTelas)
+        && matchesPeriod(name, period.keyword);
+    });
+    if (candidates.length > 0) {
+      candidates.sort((a, b) => getPlanValue(a) - getPlanValue(b));
+      standardSet[period.keyword] = candidates[0];
+    }
+  }
+
+  const standardIds = new Set(Object.values(standardSet).map((p) => p.id));
+  const isStandardCustomer = currentPlanId != null && standardIds.has(currentPlanId);
+
+  if (isStandardCustomer) {
+    return PERIOD_MAP
+      .map((p) => ({ ...p, plan: standardSet[p.keyword] }))
+      .filter((c) => c.plan != null);
+  }
+
+  // Plano fora da tabela: oferecer somente o plano atual.
+  const currentPlan = allPlans.find((p) => p.id === currentPlanId);
+  if (!currentPlan) return [];
+  const name = getPlanName(currentPlan);
+  const periodKey = detectCurrentPeriod(name);
+  const period = PERIOD_MAP.find((p) => p.keyword === periodKey) || {
+    months: 1,
+    label: "Renovar",
+    keyword: "renovar",
+  };
+  return [{ ...period, plan: currentPlan }];
+};
