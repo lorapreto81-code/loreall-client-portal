@@ -68,8 +68,10 @@ async function tgGetCustomer(tgToken: string, customerId: number) {
   return res.ok ? (data.data || data) : null;
 }
 
-async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDate: Date, days: number) {
+async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDate: Date, days: number, messageId?: number) {
   const newDate = addDays(currentDueDate, days);
+  const body: Record<string, unknown> = { data_de_vencimento: newDate };
+  if (messageId) body.message_id = messageId;
   const res = await fetch(`${TG_BASE}/customers/${customerId}`, {
     method: "PUT",
     headers: {
@@ -77,11 +79,13 @@ async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDat
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({ data_de_vencimento: newDate }),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   return { ok: res.ok, status: res.status, data, newDate };
 }
+
+const REFERRAL_MESSAGE_ID = 58861;
 
 async function processReferralOnPayment(
   supabase: ReturnType<typeof createClient>,
@@ -128,7 +132,7 @@ async function processReferralOnPayment(
   let rejection: string | null = null;
 
   if (isActive && daysLeft >= MIN_DAYS_REMAINING_TO_CREDIT && dueDate) {
-    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, BONUS_DAYS);
+    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, BONUS_DAYS, REFERRAL_MESSAGE_ID);
     renewalResp = result.data;
     if (result.ok) {
       status = "credited";
@@ -178,7 +182,7 @@ async function releasePendingReferrals(
   if (!dueDate) return;
 
   for (const ref of pending) {
-    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, ref.bonus_days || BONUS_DAYS);
+    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, ref.bonus_days || BONUS_DAYS, REFERRAL_MESSAGE_ID);
     if (result.ok) {
       dueDate = new Date(dueDate.getTime() + (ref.bonus_days || BONUS_DAYS) * 86400000);
       await supabase.from("referrals").update({
