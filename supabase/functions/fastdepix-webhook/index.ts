@@ -182,7 +182,7 @@ async function releasePendingReferrals(
   if (!dueDate) return;
 
   for (const ref of pending) {
-    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, ref.bonus_days || BONUS_DAYS);
+    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, ref.bonus_days || BONUS_DAYS, REFERRAL_MESSAGE_ID);
     if (result.ok) {
       dueDate = new Date(dueDate.getTime() + (ref.bonus_days || BONUS_DAYS) * 86400000);
       await supabase.from("referrals").update({
