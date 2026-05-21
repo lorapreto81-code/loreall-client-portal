@@ -193,7 +193,7 @@ export default function ResellerPurchasesTab() {
                       </td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.paid_at)}</td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.recharged_at)}</td>
-                      <td className="px-3 py-2 text-xs text-destructive max-w-[200px] truncate" title={p.error_message || ""}>{p.error_message || "—"}</td>
+                      <td className="px-3 py-2 text-xs text-destructive max-w-[220px] truncate" title={p.error_message || ""}>{friendlyError(p.error_message)}</td>
                       <td className="px-3 py-2 text-right">
                         <div className="flex items-center justify-end gap-1 flex-wrap">
                           {p.status === "pending" && (
