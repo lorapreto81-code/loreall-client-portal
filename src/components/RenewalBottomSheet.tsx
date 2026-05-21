@@ -7,8 +7,7 @@ import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixRespon
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
-  Plan, PERIOD_MAP, getPlanName, getPlanValue,
-  matchesScreenCount, hasAnyScreenTag, matchesPeriod,
+  Plan, getPlanName, getPlanValue, computeRenewalCards,
 } from "@/lib/planUtils";
 const logo = "/logo.png";
 
