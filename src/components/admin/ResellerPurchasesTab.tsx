@@ -149,7 +149,7 @@ export default function ResellerPurchasesTab() {
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadge[p.status] || "bg-muted"}`}>{p.status}</span>
                       </td>
                       <td className="px-3 py-2 text-center">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${rechargeBadge[p.recharge_status] || "bg-muted"}`}>{p.recharge_status}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${rechargeBadge[p.recharge_status] || "bg-muted"}`}>{rechargeLabel[p.recharge_status] || p.recharge_status}</span>
                       </td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.paid_at)}</td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.recharged_at)}</td>
