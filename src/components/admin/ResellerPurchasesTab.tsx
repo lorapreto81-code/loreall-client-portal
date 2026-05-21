@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, RotateCcw, Check, X } from "lucide-react";
+import { Loader2, RefreshCw, RotateCcw, Check, Trash2 } from "lucide-react";
 
 
 interface Purchase {
@@ -194,23 +194,22 @@ export default function ResellerPurchasesTab() {
                               Reprocessar
                             </button>
                           )}
-                          {p.status !== "cancelled" && p.recharge_status !== "recharged" && (
-                            <button
-                              onClick={async () => {
-                                if (!confirm(`Fechar/cancelar essa compra de ${p.warez_username}? Isso NÃO devolve dinheiro nem mexe no painel.`)) return;
-                                try {
-                                  await resellerAdmin.closePurchase(p.id);
-                                  toast.success("Compra fechada");
-                                  await load();
-                                } catch (e) {
-                                  toast.error(e instanceof Error ? e.message : "Erro");
-                                }
-                              }}
-                              className="px-2 py-1 rounded bg-destructive/10 text-destructive text-xs inline-flex items-center gap-1 hover:bg-destructive/20"
-                            >
-                              <X className="h-3 w-3" /> Fechar
-                            </button>
-                          )}
+                          <button
+                            title="Apagar do histórico"
+                            onClick={async () => {
+                              if (!confirm(`APAGAR definitivamente essa compra de ${p.warez_username}? Isso remove o registro do histórico (não devolve dinheiro nem mexe no painel).`)) return;
+                              try {
+                                await resellerAdmin.deletePurchase(p.id);
+                                toast.success("Registro apagado");
+                                await load();
+                              } catch (e) {
+                                toast.error(e instanceof Error ? e.message : "Erro");
+                              }
+                            }}
+                            className="p-1.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
