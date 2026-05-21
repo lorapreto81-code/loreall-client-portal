@@ -68,8 +68,10 @@ async function tgGetCustomer(tgToken: string, customerId: number) {
   return res.ok ? (data.data || data) : null;
 }
 
-async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDate: Date, days: number) {
+async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDate: Date, days: number, messageId?: number) {
   const newDate = addDays(currentDueDate, days);
+  const body: Record<string, unknown> = { data_de_vencimento: newDate };
+  if (messageId) body.message_id = messageId;
   const res = await fetch(`${TG_BASE}/customers/${customerId}`, {
     method: "PUT",
     headers: {
@@ -77,11 +79,13 @@ async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDat
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({ data_de_vencimento: newDate }),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   return { ok: res.ok, status: res.status, data, newDate };
 }
+
+const REFERRAL_MESSAGE_ID = 58861;
 
 async function processReferralOnPayment(
   supabase: ReturnType<typeof createClient>,
