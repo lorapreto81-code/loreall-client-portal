@@ -34,17 +34,14 @@ const RenewalSection = () => {
     ? plansQuery.data
     : plansQuery.data?.data || [];
 
-  const availableTabs = useMemo(() => {
-    return PERIOD_MAP.map((period) => {
-      const plan = allPlans.find((p) => {
-        const name = getPlanName(p);
-        return hasAnyScreenTag(name) &&
-          matchesScreenCount(name, currentTelas) &&
-          matchesPeriod(name, period.keyword);
-      });
-      return { ...period, plan };
-    }).filter((t) => t.plan != null);
-  }, [allPlans, currentTelas]);
+  const currentPlanId =
+    (customer?.plan?.id as number | undefined) ??
+    (customer?.plan_id as number | undefined);
+
+  const availableTabs = useMemo(
+    () => computeRenewalCards(allPlans, currentPlanId, currentTelas),
+    [allPlans, currentPlanId, currentTelas],
+  );
 
   const activeTab = availableTabs[selectedPeriodIdx] || availableTabs[0];
   const selectedPlan = activeTab?.plan;
