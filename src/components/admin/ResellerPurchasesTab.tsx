@@ -186,7 +186,7 @@ export default function ResellerPurchasesTab() {
                       <td className="px-3 py-2 text-right text-foreground">{p.package_credits}</td>
                       <td className="px-3 py-2 text-right text-foreground">{fmtBRL(p.amount)}</td>
                       <td className="px-3 py-2 text-center">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadge[p.status] || "bg-muted"}`}>{p.status}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadge[p.status] || "bg-muted"}`}>{statusLabel[p.status] || p.status}</span>
                       </td>
                       <td className="px-3 py-2 text-center">
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${rechargeBadge[p.recharge_status] || "bg-muted"}`}>{rechargeLabel[p.recharge_status] || p.recharge_status}</span>
