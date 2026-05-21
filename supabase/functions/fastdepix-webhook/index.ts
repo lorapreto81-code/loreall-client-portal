@@ -218,10 +218,24 @@ Deno.serve(async (req) => {
     }
 
     const payload = JSON.parse(rawBody);
-    console.log("[fastdepix-webhook] received", payload?.event, payload?.transaction_id);
+    console.log("[fastdepix-webhook] payload", JSON.stringify(payload));
 
-    const event: string = payload.event || "";
-    const txId: number | undefined = payload.transaction_id ?? payload.data?.id;
+    // Fast Depix pode mandar evento como "event", "type" ou só status
+    const rawEvent: string = String(payload.event || payload.type || "").toLowerCase();
+    const rawStatus: string = String(
+      payload.status || payload.data?.status || payload.transaction?.status || ""
+    ).toLowerCase();
+
+    let event = rawEvent;
+    if (!event && rawStatus) {
+      if (["paid", "approved", "confirmed", "completed"].includes(rawStatus)) event = "transaction.paid";
+      else if (rawStatus === "expired") event = "transaction.expired";
+      else if (["cancelled", "canceled"].includes(rawStatus)) event = "transaction.cancelled";
+    }
+    console.log("[fastdepix-webhook] resolved event", event, "rawStatus", rawStatus);
+
+    const txId: number | undefined =
+      payload.transaction_id ?? payload.data?.id ?? payload.transaction?.id ?? payload.id;
 
     if (!txId) {
       return new Response(JSON.stringify({ ok: true, ignored: "no transaction_id" }), {
