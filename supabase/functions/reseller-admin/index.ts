@@ -275,6 +275,91 @@ Deno.serve(async (req) => {
         });
       }
 
+      // -------- Customers (payments) --------
+      case "list-payments": {
+        const limit = Math.min(Number(url.searchParams.get("limit") || 300), 500);
+        const status = url.searchParams.get("status");
+        let q = supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(limit);
+        if (status) q = q.eq("fastdepix_status", status);
+        const { data, error } = await q;
+        if (error) throw error;
+        return ok({ payments: data || [] });
+      }
+
+      case "delete-payment": {
+        const id = String(body.id || "");
+        if (!id) return ok({ error: "id obrigatório" }, 400);
+        const { error } = await supabase.from("payments").delete().eq("id", id);
+        if (error) throw error;
+        return ok({ success: true });
+      }
+
+      case "customers-dashboard": {
+        const { data: payments, error } = await supabase
+          .from("payments")
+          .select("id, customer_id, customer_name, plan_id, plan_name, amount, fastdepix_status, paid_at, created_at");
+        if (error) throw error;
+
+        const { data: cfg } = await supabase
+          .from("system_config")
+          .select("config_value")
+          .eq("config_key", "customer_cost_pct")
+          .maybeSingle();
+        const costPct = Number(cfg?.config_value || 0);
+
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const isPaid = (p: { fastdepix_status: string; paid_at: string | null }) =>
+          (p.fastdepix_status === "paid" || p.fastdepix_status === "PAID" || !!p.paid_at);
+
+        const allPaid = (payments || []).filter(isPaid);
+        const monthPaid = allPaid.filter((p) => (p.paid_at || p.created_at) >= monthStart);
+
+        const revenueMonth = monthPaid.reduce((s, p) => s + Number(p.amount), 0);
+        const costMonth = revenueMonth * (costPct / 100);
+        const profitMonth = revenueMonth - costMonth;
+        const margin = revenueMonth > 0 ? (profitMonth / revenueMonth) * 100 : 0;
+        const ticket = monthPaid.length > 0 ? revenueMonth / monthPaid.length : 0;
+
+        // Por plano (acumulado)
+        const byPlan = new Map<string, { plan_name: string; count: number; revenue: number }>();
+        allPaid.forEach((p) => {
+          const key = p.plan_name || `Plano ${p.plan_id}`;
+          const cur = byPlan.get(key) || { plan_name: key, count: 0, revenue: 0 };
+          cur.count++;
+          cur.revenue += Number(p.amount);
+          byPlan.set(key, cur);
+        });
+        const perPlan = Array.from(byPlan.values())
+          .map((r) => ({ ...r, cost: r.revenue * (costPct / 100), profit: r.revenue * (1 - costPct / 100) }))
+          .sort((a, b) => b.revenue - a.revenue);
+
+        // Série 30d
+        const series: { date: string; revenue: number; cost: number; profit: number }[] = [];
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+          const dateStr = d.toISOString().slice(0, 10);
+          const dayPaid = allPaid.filter((p) => (p.paid_at || p.created_at).slice(0, 10) === dateStr);
+          const rev = dayPaid.reduce((s, p) => s + Number(p.amount), 0);
+          const cst = rev * (costPct / 100);
+          series.push({ date: dateStr, revenue: rev, cost: cst, profit: rev - cst });
+        }
+
+        return ok({
+          kpis: {
+            revenue_month: revenueMonth,
+            cost_month: costMonth,
+            profit_month: profitMonth,
+            margin_pct: margin,
+            count_month: monthPaid.length,
+            ticket_avg: ticket,
+            cost_pct: costPct,
+          },
+          per_plan: perPlan,
+          series_30d: series,
+        });
+      }
+
       default:
         return ok({ error: "ação inválida" }, 400);
     }
