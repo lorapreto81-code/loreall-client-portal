@@ -71,7 +71,7 @@ async function tgGetCustomer(tgToken: string, customerId: number) {
 async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDate: Date, days: number, messageId?: number) {
   const newDate = addDays(currentDueDate, days);
   const body: Record<string, unknown> = { data_de_vencimento: newDate };
-  if (messageId) body.message_id = messageId;
+  if (messageId) { body.message_id = messageId; body.send_whatsapp = true; }
   const res = await fetch(`${TG_BASE}/customers/${customerId}`, {
     method: "PUT",
     headers: {
@@ -350,7 +350,7 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
               Accept: "application/json",
             },
-            body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282 }),
+            body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282, send_whatsapp: true }),
           });
           renewalResponse = await tgRes.json().catch(() => ({}));
           if (tgRes.ok) {
