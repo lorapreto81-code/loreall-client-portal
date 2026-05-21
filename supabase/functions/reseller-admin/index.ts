@@ -175,6 +175,17 @@ Deno.serve(async (req) => {
         return ok({ success: true });
       }
 
+      case "delete-purchase": {
+        const id = String(body.id || "");
+        if (!id) return ok({ error: "id obrigatório" }, 400);
+        const { error } = await supabase
+          .from("reseller_credit_purchases")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return ok({ success: true });
+      }
+
 
       // -------- Config --------
       case "get-config": {
