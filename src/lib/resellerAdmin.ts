@@ -31,6 +31,7 @@ export const resellerAdmin = {
   reprocess: (id: string) => call("reprocess-purchase", { method: "POST", body: { id } }),
   markPaid: (id: string) => call("mark-paid", { method: "POST", body: { id } }),
   closePurchase: (id: string) => call("close-purchase", { method: "POST", body: { id } }),
+  deletePurchase: (id: string) => call("delete-purchase", { method: "POST", body: { id } }),
   getConfig: () => call("get-config"),
   updateConfig: (entries: Record<string, string>) => call("update-config", { method: "POST", body: { entries } }),
   dashboard: () => call("dashboard"),
