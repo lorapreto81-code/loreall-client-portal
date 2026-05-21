@@ -37,6 +37,15 @@ const rechargeBadge: Record<string, string> = {
   processing: "bg-amber-500/15 text-amber-500",
   recharged: "bg-green-500/15 text-green-500",
   failed: "bg-destructive/15 text-destructive",
+  awaiting_credits: "bg-orange-500/15 text-orange-500",
+};
+
+const rechargeLabel: Record<string, string> = {
+  pending: "pendente",
+  processing: "processando",
+  recharged: "recarregado",
+  failed: "falhou",
+  awaiting_credits: "aguardando saldo",
 };
 
 export default function ResellerPurchasesTab() {
