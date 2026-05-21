@@ -132,7 +132,7 @@ async function processReferralOnPayment(
   let rejection: string | null = null;
 
   if (isActive && daysLeft >= MIN_DAYS_REMAINING_TO_CREDIT && dueDate) {
-    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, BONUS_DAYS);
+    const result = await tgAddBonusDays(tgToken, referrerId, dueDate, BONUS_DAYS, REFERRAL_MESSAGE_ID);
     renewalResp = result.data;
     if (result.ok) {
       status = "credited";
