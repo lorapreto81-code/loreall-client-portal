@@ -31,6 +31,23 @@ function slugify(s: string): string {
     .slice(0, 60);
 }
 
+async function getUniqueSlug(supabase: ReturnType<typeof createClient>, baseSlug: string) {
+  let candidate = baseSlug;
+  for (let attempt = 2; attempt <= 50; attempt++) {
+    const { data, error } = await supabase
+      .from("reseller_links")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return candidate;
+
+    const suffix = `-${attempt}`;
+    candidate = `${baseSlug.slice(0, 60 - suffix.length)}${suffix}`;
+  }
+  throw new Error("Não foi possível gerar um link único para este revendedor");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -60,8 +77,19 @@ Deno.serve(async (req) => {
       }
 
       case "create-link": {
-        const slug = slugify(body.slug || body.display_name || "");
-        if (!slug) return ok({ error: "slug inválido" }, 400);
+        const baseSlug = slugify(body.slug || body.display_name || "");
+        if (!baseSlug) return ok({ error: "slug inválido" }, 400);
+        const customSlug = Boolean(String(body.slug || "").trim());
+        const slug = customSlug ? baseSlug : await getUniqueSlug(supabase, baseSlug);
+        if (customSlug) {
+          const { data: existing, error: existingError } = await supabase
+            .from("reseller_links")
+            .select("id")
+            .eq("slug", slug)
+            .maybeSingle();
+          if (existingError) throw existingError;
+          if (existing) return ok({ error: `Já existe um revendedor com o link "${slug}". Use outro slug.` }, 400);
+        }
         const price = Number(body.price_per_credit ?? 11);
         const minC = Number(body.min_credits ?? 10);
         const maxC = Number(body.max_credits ?? 30);
@@ -83,7 +111,12 @@ Deno.serve(async (req) => {
           return ok({ error: "Campos obrigatórios faltando" }, 400);
         }
         const { data, error } = await supabase.from("reseller_links").insert(payload).select().single();
-        if (error) throw error;
+        if (error) {
+          if (error.code === "23505" && error.message.includes("reseller_links_slug_key")) {
+            return ok({ error: `Já existe um revendedor com o link "${payload.slug}". Use outro slug.` }, 400);
+          }
+          throw error;
+        }
         return ok({ link: data });
       }
 
