@@ -32,6 +32,31 @@ const statusBadge: Record<string, string> = {
   expired: "bg-muted text-muted-foreground",
   cancelled: "bg-muted text-muted-foreground",
 };
+const statusLabel: Record<string, string> = {
+  pending: "pendente",
+  paid: "pago",
+  expired: "expirado",
+  cancelled: "cancelado",
+};
+
+function friendlyError(msg: string | null): string {
+  if (!msg) return "—";
+  const low = msg.toLowerCase();
+  if (low.includes("insufficient") || low.includes("saldo insuficiente") || low.includes("créditos insuficientes") || low.includes("creditos insuficientes") || low.includes("not enough credit") || low.includes("no credits")) {
+    return "Créditos insuficientes no painel";
+  }
+  if (low.includes("warez http 401") || low.includes("unauthorized")) return "Token do painel inválido";
+  if (low.includes("warez http 404")) return "Usuário não encontrado no painel";
+  if (low.includes("warez http 5")) return "Painel WPainel indisponível";
+  if (low.includes("warez http 400")) {
+    // tenta extrair "message"
+    const m = msg.match(/"message"\s*:\s*"([^"]+)"/i);
+    if (m) return m[1];
+    return "Requisição rejeitada pelo painel";
+  }
+  if (low.includes("aborted") || low.includes("timeout")) return "Tempo esgotado ao falar com o painel";
+  return msg.length > 80 ? msg.slice(0, 80) + "…" : msg;
+}
 const rechargeBadge: Record<string, string> = {
   pending: "bg-muted text-muted-foreground",
   processing: "bg-amber-500/15 text-amber-500",
@@ -161,14 +186,14 @@ export default function ResellerPurchasesTab() {
                       <td className="px-3 py-2 text-right text-foreground">{p.package_credits}</td>
                       <td className="px-3 py-2 text-right text-foreground">{fmtBRL(p.amount)}</td>
                       <td className="px-3 py-2 text-center">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadge[p.status] || "bg-muted"}`}>{p.status}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadge[p.status] || "bg-muted"}`}>{statusLabel[p.status] || p.status}</span>
                       </td>
                       <td className="px-3 py-2 text-center">
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${rechargeBadge[p.recharge_status] || "bg-muted"}`}>{rechargeLabel[p.recharge_status] || p.recharge_status}</span>
                       </td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.paid_at)}</td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.recharged_at)}</td>
-                      <td className="px-3 py-2 text-xs text-destructive max-w-[200px] truncate" title={p.error_message || ""}>{p.error_message || "—"}</td>
+                      <td className="px-3 py-2 text-xs text-destructive max-w-[220px] truncate" title={p.error_message || ""}>{friendlyError(p.error_message)}</td>
                       <td className="px-3 py-2 text-right">
                         <div className="flex items-center justify-end gap-1 flex-wrap">
                           {p.status === "pending" && (
