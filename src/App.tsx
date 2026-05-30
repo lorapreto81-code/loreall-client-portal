@@ -28,6 +28,8 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/revendedor/:slug" element={<Revendedor />} />
           <Route path="/indicacao/:code" element={<IndicacaoTeste />} />
+          <Route path="/links" element={<Links />} />
+          <Route path="/bio" element={<Links />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
