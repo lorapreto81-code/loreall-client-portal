@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Gift, User, Calendar, Package, ArrowLeft } from "lucide-react";
+import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle } from "lucide-react";
 import { searchCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 const logo = "/logo.png";
