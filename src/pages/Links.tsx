@@ -1,4 +1,5 @@
-import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv } from "lucide-react";
+import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv, Popcorn } from "lucide-react";
+import LaunchesBanner from "@/components/LaunchesBanner";
 
 const logo = "/logo.png";
 
