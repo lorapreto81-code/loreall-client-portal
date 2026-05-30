@@ -1,4 +1,5 @@
-import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv } from "lucide-react";
+import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv, Popcorn } from "lucide-react";
+import LaunchesBanner from "@/components/LaunchesBanner";
 
 const logo = "/logo.png";
 
@@ -109,6 +110,18 @@ const Links = () => {
               </a>
             );
           })}
+        </div>
+
+
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <Popcorn className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-semibold text-foreground">Atualizações de Filmes e Séries</h2>
+          </div>
+          <LaunchesBanner />
+          <p className="text-[11px] text-muted-foreground mt-2 text-center">
+            Novidades atualizadas diariamente
+          </p>
         </div>
 
         <p className="text-center text-[11px] text-muted-foreground mt-8">
