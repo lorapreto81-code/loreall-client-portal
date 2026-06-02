@@ -67,64 +67,70 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return () => clearInterval(t);
   }, [pix]);
 
-  // Retomar PIX pendente ao abrir
+  // Retomar PIX pendente ao abrir (via edge function — RLS bloqueia leitura direta)
   useEffect(() => {
     if (!open || !customer || pix) return;
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select("id, amount, qr_code_url, qr_code_text, qr_code_expires_at, fastdepix_status")
-        .eq("customer_id", customer.id)
-        .eq("fastdepix_status", "pending")
-        .gt("qr_code_expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled || error || !data || !data.qr_code_text) return;
-      setPix({
-        payment_id: data.id,
-        qr_code_url: data.qr_code_url || "",
-        qr_code_text: data.qr_code_text || "",
-        expires_at: data.qr_code_expires_at as string,
-        amount: Number(data.amount),
-      });
-      setPixStatus(data.fastdepix_status || "pending");
+      try {
+        const { data, error } = await supabase.functions.invoke("payment-status", {
+          body: { action: "pending", customer_id: customer.id },
+        });
+        if (cancelled || error) return;
+        const p = (data as { payment?: { id: string; amount: number; qr_code_url: string | null; qr_code_text: string | null; qr_code_expires_at: string; fastdepix_status: string } })?.payment;
+        if (!p || !p.qr_code_text) return;
+        setPix({
+          payment_id: p.id,
+          qr_code_url: p.qr_code_url || "",
+          qr_code_text: p.qr_code_text || "",
+          expires_at: p.qr_code_expires_at,
+          amount: Number(p.amount),
+        });
+        setPixStatus(p.fastdepix_status || "pending");
+      } catch (e) {
+        if (!cancelled) console.error("[payment-status pending]", e);
+      }
     })();
     return () => { cancelled = true; };
   }, [open, customer, pix]);
 
-  // Realtime: escuta mudança de status do payment
+  // Polling: verifica status do pagamento a cada 3s
   useEffect(() => {
-    if (!pix?.payment_id) return;
-    const channel = supabase
-      .channel(`payment-${pix.payment_id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "payments", filter: `id=eq.${pix.payment_id}` },
-        async (payload) => {
-          const newStatus = (payload.new as { fastdepix_status?: string })?.fastdepix_status;
-          if (!newStatus) return;
-          setPixStatus(newStatus);
-          if (newStatus === "paid" && customer) {
-            toast.success("Pagamento confirmado! Renovando seu acesso...");
-            // Consumiu indicação pendente
-            localStorage.removeItem("loreall_pending_ref");
-            try {
-              const cust = await getCustomer(customer.id);
-              login((cust.data || cust) as Customer);
-            } catch (e) {
-              console.error("refresh customer failed", e);
-            }
-            queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
+    if (!pix?.payment_id || !customer) return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("payment-status", {
+          body: { action: "status", payment_id: pix.payment_id, customer_id: customer.id },
+        });
+        if (stop || error) return;
+        const newStatus = (data as { fastdepix_status?: string })?.fastdepix_status;
+        if (!newStatus) return;
+        setPixStatus(newStatus);
+        if (newStatus === "paid") {
+          stop = true;
+          toast.success("Pagamento confirmado! Renovando seu acesso...");
+          localStorage.removeItem("loreall_pending_ref");
+          try {
+            const cust = await getCustomer(customer.id);
+            login((cust.data || cust) as Customer);
+          } catch (e) {
+            console.error("refresh customer failed", e);
           }
-        },
-      )
-      .subscribe();
+          queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
+        }
+      } catch (e) {
+        if (!stop) console.error("[payment-status poll]", e);
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 3000);
     return () => {
-      supabase.removeChannel(channel);
+      stop = true;
+      clearInterval(interval);
     };
   }, [pix?.payment_id, customer, login, queryClient]);
+
 
   if (!customer) return null;
 
