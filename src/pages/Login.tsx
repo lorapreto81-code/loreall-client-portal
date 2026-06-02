@@ -199,11 +199,10 @@ const Login = () => {
                 href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 w-full py-2 md:py-3 flex items-center justify-center gap-2 rounded-lg border border-input bg-background text-xs md:text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                className="mt-4 w-full py-2.5 flex items-center justify-center gap-2 rounded-lg border border-input bg-background text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <MessageCircle className="h-4 w-4" />
-                <span className="md:hidden">Criar minha conta</span>
-                <span className="hidden md:inline">Não tenho acesso — quero criar minha conta</span>
+                Criar minha conta
               </a>
             </>
           )}
