@@ -16,6 +16,25 @@ const formatDate = (s?: string) => {
   return d.toLocaleDateString("pt-BR");
 };
 
+// Mostra apenas as 2 primeiras e 1 última letra de cada palavra do nome.
+// Ex.: "João Pedro Silva" -> "Jo••o P••••o S••••a"
+const maskName = (raw?: string) => {
+  if (!raw) return "—";
+  return raw
+    .trim()
+    .split(/\s+/)
+    .map((word) => {
+      if (word.length <= 2) return word;
+      if (word.length === 3) return word[0] + "•" + word[2];
+      const start = word.slice(0, 2);
+      const end = word.slice(-1);
+      const middle = "•".repeat(Math.max(2, word.length - 3));
+      return start + middle + end;
+    })
+    .join(" ");
+};
+
+
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
@@ -116,8 +135,9 @@ const Login = () => {
                       <div className="flex items-center gap-2 mb-1.5">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="font-semibold text-foreground text-sm truncate">
-                          {c.usuario || c.name}
+                          {maskName(c.usuario || c.name)}
                         </span>
+
                         {c.status && (
                           <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
                             {c.status}
