@@ -55,8 +55,13 @@ const Links = () => {
         <div className="flex flex-col items-center text-center mb-8">
           <img src={logo} alt="Loreall Play TV" style={{ width: 96, height: "auto" }} className="mb-4" />
           <h1 className="text-xl font-bold text-foreground">Loreall Play TV</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Filmes, séries, esportes e canais ao vivo em alta qualidade.
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            🎬 Filmes de todas as plataformas <br/>
+            📺 Séries completas | ⚽ Esportes ao vivo <br/>
+            📡 Canais abertos e fechados em alta qualidade
+          </p>
+          <p className="text-xs font-semibold text-accent mt-2">
+            +200 mil conteúdos disponíveis 24h 🔥
           </p>
           <div className="flex items-center gap-2 mt-3 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
