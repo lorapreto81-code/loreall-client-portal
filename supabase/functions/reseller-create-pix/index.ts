@@ -30,6 +30,20 @@ function onlyDigits(s: string | undefined | null): string {
   return String(s || "").replace(/\D+/g, "");
 }
 
+function generateValidCpf(): string {
+  const n: number[] = [];
+  for (let i = 0; i < 9; i++) n.push(Math.floor(Math.random() * 10));
+  const calc = (arr: number[]) => {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) sum += arr[i] * (arr.length + 1 - i);
+    const r = (sum * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  n.push(calc(n));
+  n.push(calc(n));
+  return n.join("");
+}
+
 let syncToken: { token: string; expiresAt: number } | null = null;
 let cachedBase: string | null = null;
 async function getSyncBaseUrl(supabase: ReturnType<typeof createClient>): Promise<string> {
@@ -103,13 +117,9 @@ Deno.serve(async (req) => {
 
     // ============ SyncPay ============
     if (provider === "syncpay") {
-      const cpf = onlyDigits(body.cpf);
-      if (!cpf || cpf.length !== 11) {
-        return new Response(JSON.stringify({ error: "CPF obrigatório (11 dígitos) para PIX via SyncPay" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const phone = onlyDigits(whatsapp) || "00000000000";
+      // CPF é opcional: se não informado, gera um CPF válido automaticamente
+      const cpf = onlyDigits(body.cpf) || generateValidCpf();
+      const phone = onlyDigits(whatsapp) || "11999999999";
       const token = await getSyncToken(supabase);
       const base = (await getSyncBaseUrl(supabase)).replace(/\/+$/, "");
       const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`;
