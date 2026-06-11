@@ -18,6 +18,14 @@ function parseExpiresAt(raw: string | undefined | null): string {
     return new Date(Date.now() + 15 * 60 * 1000).toISOString();
   }
 }
+function normalizePhone(raw: string | undefined): string {
+  if (!raw) return "";
+  let d = String(raw).replace(/\D+/g, "");
+  if (d.startsWith("55") && d.length > 11) d = d.slice(2);
+  if (d.length >= 10 && d.length <= 11) return d;
+  if (d.length === 9) return "11" + d;
+  return "";
+}
 function normalizeWhatsapp(raw: string | undefined): string {
   if (!raw) return "";
   const digits = String(raw).replace(/\D+/g, "");
@@ -119,7 +127,7 @@ Deno.serve(async (req) => {
     if (provider === "syncpay") {
       // CPF é opcional: se não informado, gera um CPF válido automaticamente
       const cpf = onlyDigits(body.cpf) || generateValidCpf();
-      const phone = normalizeWhatsapp(whatsapp) || "11999999999";
+      const phone = normalizePhone(whatsapp) || "11999999999";
       const token = await getSyncToken(supabase);
       const base = (await getSyncBaseUrl(supabase)).replace(/\/+$/, "");
       const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`;
