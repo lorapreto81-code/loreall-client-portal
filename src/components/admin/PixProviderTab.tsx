@@ -15,7 +15,7 @@ export default function PixProviderTab() {
   const [saving, setSaving] = useState(false);
   const [customers, setCustomers] = useState<Provider>("fastdepix");
   const [resellers, setResellers] = useState<Provider>("fastdepix");
-  const [syncpayUrl, setSyncpayUrl] = useState("https://api.syncpay.pro");
+  const [syncpayUrl, setSyncpayUrl] = useState("https://api.syncpayments.com.br");
   const [copied, setCopied] = useState(false);
 
   const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/syncpay-webhook`;
@@ -26,7 +26,7 @@ export default function PixProviderTab() {
       const { config } = await resellerAdmin.getConfig();
       setCustomers((config.pix_provider_customers as Provider) || "fastdepix");
       setResellers((config.pix_provider_resellers as Provider) || "fastdepix");
-      setSyncpayUrl(config.syncpay_api_url || "https://api.syncpay.pro");
+      setSyncpayUrl(config.syncpay_api_url || "https://api.syncpayments.com.br");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao carregar");
     }
@@ -116,7 +116,7 @@ export default function PixProviderTab() {
               <Save className="h-3.5 w-3.5" /> Salvar
             </button>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Padrão: https://api.syncpay.pro</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Padrão: https://api.syncpayments.com.br</p>
         </div>
         <div>
           <label className="text-xs text-muted-foreground">Webhook URL (configure no painel SyncPay)</label>

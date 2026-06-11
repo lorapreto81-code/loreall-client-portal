@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
           const clientSecret = Deno.env.get("SYNCPAY_CLIENT_SECRET");
           if (clientId && clientSecret) {
             const { data: cfg } = await supabase.from("system_config").select("config_value").eq("config_key", "syncpay_api_url").maybeSingle();
-            const base = ((cfg?.config_value as string) || "https://api.syncpay.pro").replace(/\/+$/, "");
+            const base = ((cfg?.config_value as string) || "https://api.syncpayments.com.br").replace(/\/+$/, "");
             const tokRes = await fetch(`${base}/api/partner/v1/auth-token`, {
               method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
