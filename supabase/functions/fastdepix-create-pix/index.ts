@@ -36,6 +36,15 @@ function onlyDigits(s: string | undefined | null): string {
   return String(s || "").replace(/\D+/g, "");
 }
 
+function normalizePhone(raw: string | undefined | null): string {
+  let d = onlyDigits(raw);
+  if (!d) return "11999999999";
+  if (d.startsWith("55") && d.length > 11) d = d.slice(2);
+  if (d.length >= 10 && d.length <= 11) return d;
+  if (d.length === 9) return "11" + d; // assume DDD 11
+  return "11999999999";
+}
+
 // Gera um CPF matematicamente válido (apenas para passar validação de gateways
 // que exigem CPF mas não validam identidade — ex.: SyncPay para clientes sem CPF cadastrado).
 function generateValidCpf(): string {
@@ -129,7 +138,7 @@ Deno.serve(async (req) => {
       // CPF: usa o cadastrado; se não houver, gera um CPF válido (apenas para passar validação do SyncPay)
       const cpf = (onlyDigits(body.customer_cpf) || tgInfo?.cpf || generateValidCpf());
       const email = (body.customer_email || tgInfo?.email || `cliente_${body.customer_id}@topgestor.me`).trim();
-      const phone = onlyDigits(body.customer_whatsapp) || tgInfo?.phone || "11999999999";
+      const phone = normalizePhone(body.customer_whatsapp || tgInfo?.phone);
       const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`;
       const token = await getSyncToken();
       const base = await getSyncBaseUrl();
