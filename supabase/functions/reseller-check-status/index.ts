@@ -56,49 +56,65 @@ Deno.serve(async (req) => {
 
     let underReview = false;
     let liveStatus = p.status;
+    const provider: string = String(p.provider || "fastdepix");
 
-    // Polling ao vivo no Fast Depix se ainda está pendente
-    if (p.status === "pending" && p.fastdepix_transaction_id) {
-      const apiKey =
-        Deno.env.get("FASTDEPIX_RESELLER_API_KEY") || Deno.env.get("FASTDEPIX_API_KEY");
-      if (apiKey) {
-        try {
-          const r = await fetch(`${FAST_BASE}/transactions/${p.fastdepix_transaction_id}`, {
-            headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-          });
-          if (r.ok) {
-            const data = await r.json().catch(() => ({}));
-            const tx = data?.data || data;
-            const s = String(tx.status || "").toLowerCase();
-            const paidStates = ["paid", "approved", "completed", "success", "succeeded"];
-            const expiredStates = ["expired", "cancelled", "canceled"];
-            const reviewStates = ["under_review", "processing", "in_review", "analyzing", "analysis"];
+    // Polling ao vivo conforme o provedor
+    if (p.status === "pending") {
+      const paidStates = ["paid", "approved", "completed", "success", "succeeded"];
+      const expiredStates = ["expired", "cancelled", "canceled", "failed", "refunded"];
+      const reviewStates = ["under_review", "processing", "in_review", "analyzing", "analysis", "pending"];
+      let liveStr = "";
 
-            if (paidStates.includes(s)) {
-              const { data: upd } = await supabase
-                .from("reseller_credit_purchases")
-                .update({ status: "paid", paid_at: new Date().toISOString() })
-                .eq("id", p.id)
-                .eq("status", "pending")
-                .select()
-                .maybeSingle();
-              if (upd) {
-                liveStatus = "paid";
-                await callProcessRecharge(p.id);
+      try {
+        if (provider === "syncpay" && p.provider_transaction_id) {
+          const clientId = Deno.env.get("SYNCPAY_CLIENT_ID");
+          const clientSecret = Deno.env.get("SYNCPAY_CLIENT_SECRET");
+          if (clientId && clientSecret) {
+            const { data: cfg } = await supabase.from("system_config").select("config_value").eq("config_key", "syncpay_api_url").maybeSingle();
+            const base = ((cfg?.config_value as string) || "https://api.syncpay.pro").replace(/\/+$/, "");
+            const tokRes = await fetch(`${base}/api/partner/v1/auth-token`, {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
+            });
+            const tok = await tokRes.json().catch(() => ({}));
+            if (tokRes.ok && tok.access_token) {
+              const r = await fetch(`${base}/api/partner/v1/transaction/${p.provider_transaction_id}`, {
+                headers: { Authorization: `Bearer ${tok.access_token}`, Accept: "application/json" },
+              });
+              if (r.ok) {
+                const data = await r.json().catch(() => ({}));
+                liveStr = String((data?.data || data)?.status || "").toLowerCase();
               }
-            } else if (expiredStates.includes(s)) {
-              await supabase
-                .from("reseller_credit_purchases")
-                .update({ status: "expired" })
-                .eq("id", p.id);
-              liveStatus = "expired";
-            } else if (reviewStates.includes(s)) {
-              underReview = true;
             }
           }
-        } catch (e) {
-          console.error("[reseller-check-status] FD poll error", e);
+        } else if (p.fastdepix_transaction_id) {
+          const apiKey = Deno.env.get("FASTDEPIX_RESELLER_API_KEY") || Deno.env.get("FASTDEPIX_API_KEY");
+          if (apiKey) {
+            const r = await fetch(`${FAST_BASE}/transactions/${p.fastdepix_transaction_id}`, {
+              headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+            });
+            if (r.ok) {
+              const data = await r.json().catch(() => ({}));
+              liveStr = String((data?.data || data)?.status || "").toLowerCase();
+            }
+          }
         }
+      } catch (e) {
+        console.error("[reseller-check-status] poll error", e);
+      }
+
+      if (paidStates.includes(liveStr)) {
+        const { data: upd } = await supabase
+          .from("reseller_credit_purchases")
+          .update({ status: "paid", paid_at: new Date().toISOString() })
+          .eq("id", p.id).eq("status", "pending")
+          .select().maybeSingle();
+        if (upd) { liveStatus = "paid"; await callProcessRecharge(p.id); }
+      } else if (expiredStates.includes(liveStr) && liveStr !== "pending") {
+        await supabase.from("reseller_credit_purchases").update({ status: "expired" }).eq("id", p.id);
+        liveStatus = "expired";
+      } else if (reviewStates.includes(liveStr) && liveStr !== "pending") {
+        underReview = true;
       }
     }
 
