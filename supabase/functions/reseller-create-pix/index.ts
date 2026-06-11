@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
     if (provider === "syncpay") {
       // CPF é opcional: se não informado, gera um CPF válido automaticamente
       const cpf = onlyDigits(body.cpf) || generateValidCpf();
-      const phone = onlyDigits(whatsapp) || "11999999999";
+      const phone = normalizeWhatsapp(whatsapp) || "11999999999";
       const token = await getSyncToken(supabase);
       const base = (await getSyncBaseUrl(supabase)).replace(/\/+$/, "");
       const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`;
