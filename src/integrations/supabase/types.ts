@@ -28,6 +28,7 @@ export type Database = {
           paid_at: string | null
           plan_id: number
           plan_name: string
+          provider: string
           qr_code_expires_at: string | null
           qr_code_text: string | null
           qr_code_url: string | null
@@ -48,6 +49,7 @@ export type Database = {
           paid_at?: string | null
           plan_id: number
           plan_name: string
+          provider?: string
           qr_code_expires_at?: string | null
           qr_code_text?: string | null
           qr_code_url?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           paid_at?: string | null
           plan_id?: number
           plan_name?: string
+          provider?: string
           qr_code_expires_at?: string | null
           qr_code_text?: string | null
           qr_code_url?: string | null
@@ -168,6 +171,7 @@ export type Database = {
           ip_address: string | null
           package_credits: number
           paid_at: string | null
+          provider: string
           qr_code_expires_at: string | null
           qr_code_text: string | null
           qr_code_url: string | null
@@ -191,6 +195,7 @@ export type Database = {
           ip_address?: string | null
           package_credits: number
           paid_at?: string | null
+          provider?: string
           qr_code_expires_at?: string | null
           qr_code_text?: string | null
           qr_code_url?: string | null
@@ -214,6 +219,7 @@ export type Database = {
           ip_address?: string | null
           package_credits?: number
           paid_at?: string | null
+          provider?: string
           qr_code_expires_at?: string | null
           qr_code_text?: string | null
           qr_code_url?: string | null
