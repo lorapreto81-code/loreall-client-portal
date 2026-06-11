@@ -117,13 +117,9 @@ Deno.serve(async (req) => {
 
     // ============ SyncPay ============
     if (provider === "syncpay") {
-      const cpf = onlyDigits(body.cpf);
-      if (!cpf || cpf.length !== 11) {
-        return new Response(JSON.stringify({ error: "CPF obrigatório (11 dígitos) para PIX via SyncPay" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const phone = onlyDigits(whatsapp) || "00000000000";
+      // CPF é opcional: se não informado, gera um CPF válido automaticamente
+      const cpf = onlyDigits(body.cpf) || generateValidCpf();
+      const phone = onlyDigits(whatsapp) || "11999999999";
       const token = await getSyncToken(supabase);
       const base = (await getSyncBaseUrl(supabase)).replace(/\/+$/, "");
       const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`;
