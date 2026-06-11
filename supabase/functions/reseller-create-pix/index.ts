@@ -49,7 +49,7 @@ let cachedBase: string | null = null;
 async function getSyncBaseUrl(supabase: ReturnType<typeof createClient>): Promise<string> {
   if (cachedBase) return cachedBase;
   const { data } = await supabase.from("system_config").select("config_value").eq("config_key", "syncpay_api_url").maybeSingle();
-  cachedBase = (data?.config_value || "https://api.syncpay.pro").trim();
+  cachedBase = (data?.config_value || "https://api.syncpayments.com.br").trim();
   return cachedBase!;
 }
 async function getSyncToken(supabase: ReturnType<typeof createClient>): Promise<string> {

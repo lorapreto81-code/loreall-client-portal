@@ -76,7 +76,7 @@ async function getSyncBaseUrl(): Promise<string> {
   if (cachedBase) return cachedBase;
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data } = await supabase.from("system_config").select("config_value").eq("config_key", "syncpay_api_url").maybeSingle();
-  cachedBase = (data?.config_value || "https://api.syncpay.pro").trim();
+  cachedBase = (data?.config_value || "https://api.syncpayments.com.br").trim();
   return cachedBase!;
 }
 
