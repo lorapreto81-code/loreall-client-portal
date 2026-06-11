@@ -36,6 +36,22 @@ function onlyDigits(s: string | undefined | null): string {
   return String(s || "").replace(/\D+/g, "");
 }
 
+// Gera um CPF matematicamente válido (apenas para passar validação de gateways
+// que exigem CPF mas não validam identidade — ex.: SyncPay para clientes sem CPF cadastrado).
+function generateValidCpf(): string {
+  const n: number[] = [];
+  for (let i = 0; i < 9; i++) n.push(Math.floor(Math.random() * 10));
+  const calc = (arr: number[]) => {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) sum += arr[i] * (arr.length + 1 - i);
+    const r = (sum * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  n.push(calc(n));
+  n.push(calc(n));
+  return n.join("");
+}
+
 // ----- SyncPay token cache -----
 let syncToken: { token: string; expiresAt: number } | null = null;
 async function getSyncToken(): Promise<string> {
