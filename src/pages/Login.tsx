@@ -106,12 +106,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="flex justify-center mb-8">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
+      {/* Ambient glow background */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-sm relative z-10">
+        <div className="flex justify-center mb-6">
           <img src={logo} alt="Loreall Play TV" style={{ width: 120, height: "auto" }} />
         </div>
-        <div className="card-elevated p-8">
+
+        <div className="card-elevated p-6 shadow-xl" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
           {matches.length > 1 ? (
             <>
               <button
@@ -162,9 +166,13 @@ const Login = () => {
             </>
           ) : (
             <>
-              <h1 className="text-xl font-bold text-foreground text-center mb-6">
-                Minha Conta
-              </h1>
+              <div className="flex items-center justify-center gap-2 mb-5">
+                <Crown className="h-5 w-5 text-primary" />
+                <h1 className="text-lg font-bold text-foreground text-center">
+                  Minha Conta
+                </h1>
+              </div>
+
               {refCode && (
                 <div className="mb-4 p-3 rounded-lg flex items-start gap-2.5" style={{ background: "rgba(123, 47, 212, 0.08)", border: "1px solid rgba(123, 47, 212, 0.2)" }}>
                   <Gift className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#7B2FD4" }} />
@@ -173,6 +181,7 @@ const Login = () => {
                   </div>
                 </div>
               )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-1.5">
@@ -182,7 +191,7 @@ const Login = () => {
                     type="text"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
                     placeholder="Seu usuário ou celular"
                     autoComplete="username"
                   />
@@ -194,7 +203,7 @@ const Login = () => {
                   className="w-full py-3 btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin-slow" />}
-                  {loading ? "Entrando..." : "Entrar"}
+                  {loading ? "Entrando..." : "Entrar na conta"}
                 </button>
               </form>
 
