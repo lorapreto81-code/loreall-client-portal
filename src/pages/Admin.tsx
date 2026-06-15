@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight } from "lucide-react";
+import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database } from "lucide-react";
 import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
 import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
 import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
@@ -8,6 +8,7 @@ import CustomersPaymentsTab from "@/components/admin/CustomersPaymentsTab";
 import CustomersDashboardTab from "@/components/admin/CustomersDashboardTab";
 import ReferralTrialConfigTab from "@/components/admin/ReferralTrialConfigTab";
 import PixProviderTab from "@/components/admin/PixProviderTab";
+import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
 
 const ADMIN_PASSWORD = "@996157342Slyj";
 
@@ -17,7 +18,7 @@ interface Notice {
   atualizado_em: string;
 }
 
-type Tab = "avisos" | "links" | "recargas" | "dashboard" | "clientes" | "clientes-dash" | "config" | "indicacao" | "pix-provider";
+type Tab = "avisos" | "links" | "recargas" | "dashboard" | "clientes" | "clientes-dash" | "tg-clientes" | "config" | "indicacao" | "pix-provider";
 
 const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "avisos", label: "Avisos", icon: Megaphone },
@@ -26,6 +27,7 @@ const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "dashboard", label: "Dashboard rev.", icon: BarChart3 },
   { id: "clientes", label: "Clientes", icon: Users },
   { id: "clientes-dash", label: "Dashboard cli.", icon: LineChart },
+  { id: "tg-clientes", label: "Clientes TG", icon: Database },
   { id: "indicacao", label: "Indicação", icon: Gift },
   { id: "pix-provider", label: "Provedor PIX", icon: ArrowLeftRight },
   { id: "config", label: "Configurações", icon: Settings },
@@ -155,6 +157,7 @@ const Admin = () => {
         {tab === "dashboard" && <ResellerDashboardTab />}
         {tab === "clientes" && <CustomersPaymentsTab />}
         {tab === "clientes-dash" && <CustomersDashboardTab />}
+        {tab === "tg-clientes" && <TopGestorCustomersTab />}
         {tab === "indicacao" && <ReferralTrialConfigTab />}
         {tab === "pix-provider" && <PixProviderTab />}
         {tab === "config" && <ResellerConfigTab />}
