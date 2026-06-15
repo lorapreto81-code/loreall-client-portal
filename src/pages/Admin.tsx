@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight } from "lucide-react";
+import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database } from "lucide-react";
 import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
 import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
 import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
@@ -8,6 +8,7 @@ import CustomersPaymentsTab from "@/components/admin/CustomersPaymentsTab";
 import CustomersDashboardTab from "@/components/admin/CustomersDashboardTab";
 import ReferralTrialConfigTab from "@/components/admin/ReferralTrialConfigTab";
 import PixProviderTab from "@/components/admin/PixProviderTab";
+import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
 
 const ADMIN_PASSWORD = "@996157342Slyj";
 
