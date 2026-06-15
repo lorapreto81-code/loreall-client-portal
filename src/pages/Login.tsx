@@ -76,13 +76,16 @@ const Login = () => {
       const query = isPhone ? digits : id;
       const data = await searchCustomer(query);
       const customers = Array.isArray(data) ? data : data?.data ? (Array.isArray(data.data) ? data.data : [data.data]) : [data];
+      const tail8 = digits.slice(-8);
       const filtered = customers.filter((c: any) => {
         if (!isPhone && (c.usuario === id || c.username === id)) return true;
         if (isPhone) {
           const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone]
             .filter(Boolean)
             .map((v: string) => onlyDigits(String(v)));
-          return phoneFields.some((p) => p.endsWith(digits) || digits.endsWith(p));
+          // Compara pelos últimos 8 dígitos — tolera DDD ausente, dígito 9 faltando,
+          // código do país (55) e espaços/formatação no telefone cadastrado.
+          return phoneFields.some((p) => p.slice(-8) === tail8);
         }
         return false;
       });
