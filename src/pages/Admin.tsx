@@ -18,7 +18,7 @@ interface Notice {
   atualizado_em: string;
 }
 
-type Tab = "avisos" | "links" | "recargas" | "dashboard" | "clientes" | "clientes-dash" | "config" | "indicacao" | "pix-provider";
+type Tab = "avisos" | "links" | "recargas" | "dashboard" | "clientes" | "clientes-dash" | "tg-clientes" | "config" | "indicacao" | "pix-provider";
 
 const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "avisos", label: "Avisos", icon: Megaphone },
@@ -27,6 +27,7 @@ const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "dashboard", label: "Dashboard rev.", icon: BarChart3 },
   { id: "clientes", label: "Clientes", icon: Users },
   { id: "clientes-dash", label: "Dashboard cli.", icon: LineChart },
+  { id: "tg-clientes", label: "Clientes TG", icon: Database },
   { id: "indicacao", label: "Indicação", icon: Gift },
   { id: "pix-provider", label: "Provedor PIX", icon: ArrowLeftRight },
   { id: "config", label: "Configurações", icon: Settings },
