@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   LogOut,
-  AlertTriangle, Sun, Moon, Gift, MessageCircle, Film
+  AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
+  Crown, Clock, Monitor, Zap
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
