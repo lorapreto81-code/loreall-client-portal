@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   LogOut,
-  AlertTriangle, Sun, Moon, Gift, MessageCircle, Film
+  AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
+  Crown, Clock, Monitor, Zap
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -87,20 +88,23 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <NoticeBanner />
+
       {/* 1. HEADER */}
-      <header className="bg-card sticky top-0 z-10" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+      <header className="bg-card/80 backdrop-blur-md sticky top-0 z-10 border-b border-border">
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
-          <img src={logo} alt="Loreall Play TV" style={{ height: 36, width: "auto" }} />
-          <div className="flex items-center gap-1.5">
-            {/* AJUSTE 5 — Greeting */}
-            <span className="text-[13px] text-muted-foreground hidden min-[320px]:inline">
-              Olá, {firstName(customer.name)}!
-            </span>
+          <div className="flex items-center gap-2.5">
+            <img src={logo} alt="Loreall Play TV" style={{ height: 32, width: "auto" }} />
+            <div className="hidden min-[360px]:block">
+              <div className="text-[11px] text-muted-foreground leading-tight">Área do Cliente</div>
+              <div className="text-[13px] font-semibold text-foreground leading-tight">Olá, {firstName(customer.name)}!</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
             <StatusBadge status={status} />
             <button
               onClick={toggleTheme}
               className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
-              style={{ minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
               title={theme === "dark" ? "Modo claro" : "Modo escuro"}
             >
               {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
@@ -108,7 +112,7 @@ const Dashboard = () => {
             <button
               onClick={handleLogout}
               className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
-              style={{ minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               <LogOut className="h-[18px] w-[18px]" />
             </button>
@@ -116,8 +120,8 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="px-4 py-3 max-w-[480px] mx-auto" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {/* 2. CARD DE STATUS */}
+      <main className="px-4 py-4 max-w-[480px] mx-auto" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* 2. CARD DE STATUS PRINCIPAL */}
         {isLoading ? (
           <div className="card-elevated p-5 space-y-3">
             <div className="skeleton-bar h-3 w-32" />
@@ -129,55 +133,85 @@ const Dashboard = () => {
             </div>
           </div>
         ) : (
-          <div className="card-elevated p-5">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Próximo vencimento</p>
-            <p className="text-2xl font-bold text-foreground">{formatDate(customer.data_de_vencimento)}</p>
+          <div className="card-elevated p-5 relative overflow-hidden">
+            {/* Decorative gradient top */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
+
+            <div className="flex items-center gap-2 mb-3">
+              <Crown className="h-4 w-4 text-primary" />
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Plano Ativo</p>
+              <span
+                className="ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+                style={{
+                  background: days < 0 ? "rgba(226,75,74,0.12)" : days < 7 ? "rgba(250,199,117,0.15)" : "rgba(93,202,165,0.12)",
+                  color: getDaysColor(days),
+                }}
+              >
+                {status === "ativo" ? "ATIVO" : status.toUpperCase()}
+              </span>
+            </div>
+
+            <p className="text-2xl font-bold text-foreground">{customer.plan?.name || "—"}</p>
             <p className="text-sm font-medium mt-0.5" style={{ color: getDaysColor(days) }}>
               {getDaysText(days)}
             </p>
+
             <div className="grid grid-cols-2 gap-3 mt-4 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Plano</p>
-                <p className="text-sm font-semibold text-foreground">{customer.plan?.name || "—"}</p>
+              <div className="flex items-start gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground mb-0.5">Vencimento</p>
+                  <p className="text-sm font-semibold text-foreground">{formatDate(customer.data_de_vencimento)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Telas</p>
-                <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
+              <div className="flex items-start gap-2">
+                <Monitor className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground mb-0.5">Telas</p>
+                  <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* 3. BANNER DE ALERTA */}
+        {/* 3. ALERTAS */}
         {days < 0 && (
-          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-destructive/10 text-destructive-foreground">
+          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-destructive/10 text-destructive-foreground border border-destructive/20">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             Seu acesso está vencido. Renove para continuar assistindo.
           </div>
         )}
         {days >= 0 && days < 7 && (
-          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning-foreground">
+          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning-foreground border border-warning/20">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             Seu acesso vence em {days === 1 ? "1 dia" : `${days} dias`}. Renove agora!
           </div>
         )}
 
-        {/* 4. DOIS BOTÕES DE AÇÃO */}
+        {/* 4. BOTÃO RENOVAR */}
         <button
           onClick={() => setRenewalOpen(true)}
-          className="btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 w-full"
+          className="group btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 w-full relative overflow-hidden"
           style={{ minHeight: 64, borderRadius: 16 }}
         >
+          <Zap className="h-5 w-5 group-hover:scale-110 transition-transform" />
           Renovar acesso
         </button>
 
-        {/* 4.5 LANÇAMENTOS */}
-        <LaunchesBanner />
+        {/* 5. LANÇAMENTOS */}
+        <div>
+          <div className="flex items-center gap-2 mb-2.5 px-1">
+            <Film className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-semibold text-foreground">Lançamentos</h2>
+          </div>
+          <LaunchesBanner />
+        </div>
 
         {/* 6. INDIQUE E GANHE */}
         <button
           onClick={() => setReferralOpen(true)}
-          className="card-elevated p-5 card-referral text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+          className="card-elevated p-5 card-referral text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden"
         >
           <div className="flex items-center gap-2 mb-1">
             <Gift className="h-5 w-5 referral-icon" />
@@ -215,7 +249,7 @@ const Dashboard = () => {
           </a>
         </div>
 
-        <div className="h-4" />
+        <div className="h-2" />
       </main>
 
       <ExpirationPopup
@@ -226,7 +260,6 @@ const Dashboard = () => {
       />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
-      
     </div>
   );
 };

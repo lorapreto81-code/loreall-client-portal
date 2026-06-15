@@ -1,4 +1,4 @@
-import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv, Popcorn } from "lucide-react";
+import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv, Popcorn, User, Crown } from "lucide-react";
 import LaunchesBanner from "@/components/LaunchesBanner";
 
 const logo = "/logo.png";
@@ -15,9 +15,17 @@ type LinkItem = {
   subtitle: string;
   highlight?: boolean;
   external?: boolean;
+  featured?: boolean;
 };
 
 const items: LinkItem[] = [
+  {
+    href: "/login",
+    icon: User,
+    title: "Minha Conta",
+    subtitle: "Acessar / renovar seu plano",
+    featured: true,
+  },
   {
     href: TRIAL_WA,
     icon: Gift,
@@ -40,20 +48,17 @@ const items: LinkItem[] = [
     subtitle: "Atualizações de jogos, filmes e séries",
     external: true,
   },
-  {
-    href: "/login",
-    icon: LogIn,
-    title: "Minha Conta",
-    subtitle: "Acessar / renovar seu plano",
-  },
 ];
 
 const Links = () => {
   return (
-    <div className="min-h-screen bg-background px-4 py-10 flex flex-col items-center">
+    <div className="min-h-screen bg-background px-4 py-8 flex flex-col items-center">
       <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center text-center mb-8">
-          <img src={logo} alt="Loreall Play TV" style={{ width: 96, height: "auto" }} className="mb-4" />
+        {/* Profile / Logo area */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="relative mb-4">
+            <img src={logo} alt="Loreall Play TV" style={{ width: 100, height: "auto" }} />
+          </div>
           <h1 className="text-xl font-bold text-foreground">Loreall Play TV</h1>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             🎬 Filmes de todas as plataformas <br/>
@@ -74,10 +79,41 @@ const Links = () => {
           </div>
         </div>
 
-        <div className="space-y-3">
-          {items.map(({ href, icon: Icon, title, subtitle, highlight, external }) => {
+        {/* Minha Conta — Destaque Especial */}
+        <div className="mb-4">
+          <a
+            href="/login"
+            className="group w-full flex items-center gap-3.5 p-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 hover:border-primary/60 transition-all duration-300 shadow-[0_0_20px_rgba(0,200,255,0.08)] hover:shadow-[0_0_30px_rgba(0,200,255,0.15)]"
+          >
+            <div className="h-11 w-11 shrink-0 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md">
+              <Crown className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-bold text-foreground">Minha Conta</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary text-white uppercase tracking-wider">
+                  Área Cliente
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Acessar ou renovar seu plano
+              </div>
+            </div>
+            <LogIn className="h-5 w-5 text-primary group-hover:translate-x-0.5 transition-transform" />
+          </a>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Links Rápidos</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <div className="space-y-2.5">
+          {items.filter(i => !i.featured).map(({ href, icon: Icon, title, subtitle, highlight, external }) => {
             const baseClasses =
-              "w-full flex items-center gap-3 p-4 rounded-xl transition-all active:scale-[0.99]";
+              "w-full flex items-center gap-3 p-3.5 rounded-xl transition-all active:scale-[0.99]";
             const styleClasses = highlight
               ? "btn-primary-gradient text-white shadow-md"
               : "card-elevated hover:border-ring";
@@ -116,7 +152,6 @@ const Links = () => {
             );
           })}
         </div>
-
 
         <div className="mt-6">
           <div className="flex items-center gap-2 mb-3 px-1">
