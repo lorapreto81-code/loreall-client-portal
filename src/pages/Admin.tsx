@@ -157,6 +157,7 @@ const Admin = () => {
         {tab === "dashboard" && <ResellerDashboardTab />}
         {tab === "clientes" && <CustomersPaymentsTab />}
         {tab === "clientes-dash" && <CustomersDashboardTab />}
+        {tab === "tg-clientes" && <TopGestorCustomersTab />}
         {tab === "indicacao" && <ReferralTrialConfigTab />}
         {tab === "pix-provider" && <PixProviderTab />}
         {tab === "config" && <ResellerConfigTab />}
