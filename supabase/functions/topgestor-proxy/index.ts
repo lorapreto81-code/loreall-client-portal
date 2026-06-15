@@ -43,8 +43,84 @@ Deno.serve(async (req) => {
       case "search-customer": {
         const query = url.searchParams.get("query");
         if (!query) return new Response(JSON.stringify({ error: "query required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        apiRes = await fetch(`${API_BASE}/customers/search/${encodeURIComponent(query)}`, { headers: apiHeaders(token) });
-        break;
+
+        const digits = query.replace(/\D/g, "");
+        const isPhone = digits.length >= 8;
+
+        // Para telefones, tentamos várias variações em paralelo para tolerar
+        // formatos errados (espaços, com/sem DDD, com/sem 9, com/sem 55).
+        const buildPhoneVariants = (d: string): string[] => {
+          const set = new Set<string>();
+          set.add(d);
+          // remove código país 55 se vier com 12-13 dígitos
+          let local = d;
+          if ((local.length === 12 || local.length === 13) && local.startsWith("55")) {
+            local = local.slice(2);
+            set.add(local);
+          }
+          // últimos N dígitos
+          if (local.length >= 11) set.add(local.slice(-11));
+          if (local.length >= 10) set.add(local.slice(-10));
+          if (local.length >= 9) set.add(local.slice(-9));
+          if (local.length >= 8) set.add(local.slice(-8));
+
+          // Sem DDD: número puro (8 ou 9 dígitos)
+          const tail8 = local.slice(-8);
+          const tail9 = local.length >= 9 ? local.slice(-9) : "";
+
+          // Se temos DDD (>=10), gerar variantes com/sem o 9 após o DDD
+          if (local.length >= 10) {
+            const ddd = local.slice(0, 2);
+            const rest = local.slice(2);
+            // com 9 (celular)
+            if (rest.length === 8) set.add(ddd + "9" + rest);
+            // sem 9 (caso tenha sido digitado errado)
+            if (rest.length === 9 && rest.startsWith("9")) set.add(ddd + rest.slice(1));
+          }
+
+          set.add(tail8);
+          if (tail9) set.add(tail9);
+
+          // Limitar a 6 variantes para não estourar rate limit
+          return Array.from(set).filter((v) => v.length >= 8).slice(0, 6);
+        };
+
+        if (!isPhone) {
+          apiRes = await fetch(`${API_BASE}/customers/search/${encodeURIComponent(query)}`, { headers: apiHeaders(token) });
+          break;
+        }
+
+        const variants = buildPhoneVariants(digits);
+        const results = await Promise.all(
+          variants.map((v) =>
+            fetch(`${API_BASE}/customers/search/${encodeURIComponent(v)}`, { headers: apiHeaders(token) })
+              .then(async (r) => {
+                if (!r.ok) return [] as any[];
+                const j = await r.json().catch(() => null);
+                if (!j) return [] as any[];
+                const arr = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : j.data ? [j.data] : Array.isArray(j) ? j : [j];
+                return Array.isArray(arr) ? arr : [];
+              })
+              .catch(() => [] as any[])
+          )
+        );
+
+        const merged: any[] = [];
+        const seen = new Set<string>();
+        for (const list of results) {
+          for (const c of list) {
+            if (!c || typeof c !== "object") continue;
+            const key = String((c as any).id ?? JSON.stringify(c));
+            if (seen.has(key)) continue;
+            seen.add(key);
+            merged.push(c);
+          }
+        }
+
+        return new Response(JSON.stringify({ data: merged }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       case "get-customer": {
