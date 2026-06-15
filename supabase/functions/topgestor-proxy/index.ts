@@ -154,6 +154,20 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "list-customers": {
+        const perPage = url.searchParams.get("per_page") || "100";
+        const page = url.searchParams.get("page") || "1";
+        const status = url.searchParams.get("status") || "";
+        const search = url.searchParams.get("search") || "";
+        const archived = url.searchParams.get("archived") || "";
+        const qp = new URLSearchParams({ per_page: perPage, page });
+        if (status) qp.set("status", status);
+        if (search) qp.set("search", search);
+        if (archived) qp.set("archived", archived);
+        apiRes = await fetch(`${API_BASE}/customers?${qp.toString()}`, { headers: apiHeaders(token) });
+        break;
+      }
+
       case "update-customer": {
         const id = url.searchParams.get("id");
         if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
