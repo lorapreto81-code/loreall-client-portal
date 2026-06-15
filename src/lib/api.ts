@@ -45,6 +45,16 @@ export async function getPlans() {
   return callProxy("get-plans");
 }
 
+export async function listCustomers(params: { per_page?: number; page?: number; status?: string; search?: string; archived?: boolean } = {}) {
+  const qp: Record<string, string> = {};
+  if (params.per_page) qp.per_page = String(params.per_page);
+  if (params.page) qp.page = String(params.page);
+  if (params.status) qp.status = params.status;
+  if (params.search) qp.search = params.search;
+  if (params.archived) qp.archived = "true";
+  return callProxy("list-customers", qp);
+}
+
 export async function updateCustomer(customerId: number, body: Record<string, unknown>) {
   return callProxy("update-customer", { id: String(customerId) }, { method: "POST", body });
 }
