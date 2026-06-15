@@ -1,4 +1,4 @@
-import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv, Popcorn } from "lucide-react";
+import { MessageCircle, Headphones, Gift, Megaphone, LogIn, Youtube, Tv, Popcorn, User, Crown } from "lucide-react";
 import LaunchesBanner from "@/components/LaunchesBanner";
 
 const logo = "/logo.png";
@@ -15,9 +15,17 @@ type LinkItem = {
   subtitle: string;
   highlight?: boolean;
   external?: boolean;
+  featured?: boolean;
 };
 
 const items: LinkItem[] = [
+  {
+    href: "/login",
+    icon: User,
+    title: "Minha Conta",
+    subtitle: "Acessar / renovar seu plano",
+    featured: true,
+  },
   {
     href: TRIAL_WA,
     icon: Gift,
@@ -39,12 +47,6 @@ const items: LinkItem[] = [
     title: "Canal no WhatsApp",
     subtitle: "Atualizações de jogos, filmes e séries",
     external: true,
-  },
-  {
-    href: "/login",
-    icon: LogIn,
-    title: "Minha Conta",
-    subtitle: "Acessar / renovar seu plano",
   },
 ];
 
