@@ -32,9 +32,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const { customer, login } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const currentTelas = typeof customer?.telas === "number"
-    ? customer.telas
-    : parseInt(String(customer?.telas || "1"), 10) || 1;
+  // Telas é regra fixa do sistema: sempre 1. Não usamos mais o valor do TopGestor.
+  const currentTelas = 1;
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [generating, setGenerating] = useState(false);
