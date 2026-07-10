@@ -206,7 +206,7 @@ function CreatePlanModal({ tgPlans, onClose, onCreated }: { tgPlans: Plan[]; onC
           <Field label="Nome"><input value={name} onChange={(e) => setName(e.target.value)} className="input-base" placeholder="Plano Mensal Premium" /></Field>
           <Field label="Descrição (opcional)"><input value={description} onChange={(e) => setDescription(e.target.value)} className="input-base" /></Field>
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Valor (R$)"><input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="input-base" placeholder="49.90" /></Field>
+            <Field label="Valor (R$ inteiro)"><input type="number" step="1" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} className="input-base" placeholder="50" /></Field>
             <Field label="Ciclo (dias)"><input type="number" value={periodicity} onChange={(e) => setPeriodicity(e.target.value)} className="input-base" /></Field>
           </div>
           <Field label="Método de cobrança">
