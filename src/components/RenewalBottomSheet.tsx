@@ -52,6 +52,22 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     enabled: !!customer && open,
   });
 
+  // Planos de assinatura ativos (SyncPay) — leitura pública via RLS
+  const subPlansQuery = useQuery({
+    queryKey: ["syncpay-public-plans"],
+    queryFn: async (): Promise<SyncpayPublicPlan[]> => {
+      const { data, error } = await supabase
+        .from("syncpay_plans" as any)
+        .select("id, syncpay_plan_id, name, amount, periodicity_days, billing_method, checkout_url")
+        .eq("status", "active")
+        .order("amount", { ascending: true });
+      if (error) return [];
+      return (data as unknown as SyncpayPublicPlan[]) || [];
+    },
+    staleTime: 300_000,
+    enabled: !!customer && open,
+  });
+
   const allPlans: Plan[] = Array.isArray(plansQuery.data)
     ? plansQuery.data
     : plansQuery.data?.data || [];
