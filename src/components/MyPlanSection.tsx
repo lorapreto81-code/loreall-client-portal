@@ -6,21 +6,17 @@ import { getPlans, updateCustomer, getCustomer } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
-  Plan, getPlanName, getPlanValue, screenLabel,
+  Plan, getPlanName, getPlanValue,
   matchesScreenCount, hasAnyScreenTag, detectCurrentPeriod, matchesPeriod,
 } from "@/lib/planUtils";
 
-const SCREEN_OPTIONS = [1, 2, 3] as const;
+// Regra fixa: telas sempre = 1. O cliente só escolhe o plano (período).
+const FIXED_TELAS = 1;
 
 const MyPlanSection = () => {
   const { customer, login } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const currentTelas = typeof customer?.telas === "number"
-    ? customer.telas
-    : parseInt(String(customer?.telas || "1"), 10) || 1;
-
-  const [selectedScreens, setSelectedScreens] = useState(currentTelas);
   const [confirmModal, setConfirmModal] = useState<Plan | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -45,9 +41,9 @@ const MyPlanSection = () => {
       const name = getPlanName(p);
       return hasAnyScreenTag(name) &&
         matchesPeriod(name, currentPeriod) &&
-        matchesScreenCount(name, selectedScreens);
+        matchesScreenCount(name, FIXED_TELAS);
     });
-  }, [allPlans, currentPeriod, selectedScreens]);
+  }, [allPlans, currentPeriod]);
 
   if (!customer) return null;
 
@@ -60,7 +56,9 @@ const MyPlanSection = () => {
     if (!confirmModal) return;
     setSaving(true);
     try {
-      await updateCustomer(customer.id, { plan_id: confirmModal.id, telas: selectedScreens });
+      // NUNCA enviar `telas` — o número de telas é gerenciado no TopGestor
+      // e deve permanecer o que o admin configurou lá (padrão: 1).
+      await updateCustomer(customer.id, { plan_id: confirmModal.id });
       const data = await getCustomer(customer.id);
       login((data.data || data) as Customer);
       queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
@@ -76,26 +74,8 @@ const MyPlanSection = () => {
   return (
     <>
       <p className="text-sm text-muted-foreground mb-4">
-        Escolha a quantidade de telas para o mesmo período do seu plano atual.
+        Escolha o plano para o mesmo período do seu plano atual.
       </p>
-
-      {/* Screen toggle */}
-      <div className="grid grid-cols-3 gap-2 mb-5">
-        {SCREEN_OPTIONS.map((n) => (
-          <button
-            key={n}
-            onClick={() => setSelectedScreens(n)}
-            className={`py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] ${
-              selectedScreens === n
-                ? "btn-primary-gradient"
-                : "bg-card border border-border text-muted-foreground"
-            }`}
-            style={{ minHeight: 44 }}
-          >
-            {screenLabel(n)}
-          </button>
-        ))}
-      </div>
 
       {/* Plans for same period */}
       {plansQuery.isLoading ? (
@@ -143,7 +123,7 @@ const MyPlanSection = () => {
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Nenhum plano disponível para {screenLabel(selectedScreens).toLowerCase()}.
+          Nenhum plano disponível para este período.
         </p>
       )}
 
