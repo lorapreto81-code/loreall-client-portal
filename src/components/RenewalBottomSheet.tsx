@@ -441,6 +441,52 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                 )}
               </>
             )}
+
+            {/* Assinaturas SyncPay — opção recorrente */}
+            {subPlansQuery.data && subPlansQuery.data.length > 0 && (
+              <div className="mt-5 pt-5 border-t border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-bold text-foreground">Nunca mais se preocupe com renovação</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-3">Assine e o pagamento acontece sozinho todo mês.</p>
+                <div className="space-y-2">
+                  {subPlansQuery.data.map((sp) => {
+                    const isPixAuto = sp.billing_method === "pix_automatico";
+                    const url = sp.checkout_url
+                      ? `${sp.checkout_url}${sp.checkout_url.includes("?") ? "&" : "?"}customer_id=${customer.id}&name=${encodeURIComponent(customer.name)}&email=${encodeURIComponent((customer as any).email || "")}`
+                      : null;
+                    return (
+                      <a
+                        key={sp.id}
+                        href={url || "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => { if (!url) e.preventDefault(); }}
+                        className={`block p-3 rounded-xl border-2 transition-all hover:scale-[1.01] ${isPixAuto ? "border-primary bg-primary/5" : "border-input bg-card hover:border-muted-foreground/40"}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {isPixAuto ? <Zap className="h-3.5 w-3.5 text-primary" /> : <Repeat className="h-3.5 w-3.5 text-muted-foreground" />}
+                              <span className="text-sm font-semibold text-foreground truncate">{sp.name}</span>
+                              {isPixAuto && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">RECOMENDADO</span>}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {isPixAuto ? "Débito automático · autoriza 1x no app do banco" : "QR novo por e-mail a cada ciclo"}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-base font-bold text-foreground">{formatCurrency(Number(sp.amount))}</div>
+                            <div className="text-[10px] text-muted-foreground">/ {sp.periodicity_days}d</div>
+                          </div>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
