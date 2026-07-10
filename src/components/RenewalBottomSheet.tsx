@@ -19,6 +19,17 @@ interface SyncpayPublicPlan {
   periodicity_days: number;
   billing_method: string;
   checkout_url: string | null;
+  topgestor_plan_id: number | null;
+}
+
+interface SubscribeResult {
+  subscription_id?: string;
+  qr_code_text?: string | null;
+  qr_code_base64?: string | null;
+  authorization_url?: string | null;
+  fallback?: boolean;
+  checkout_url?: string;
+  amount?: number;
 }
 
 interface Props {
@@ -43,6 +54,14 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const [now, setNow] = useState(Date.now());
   // fallback (planos >= R$500)
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  // Assinatura recorrente
+  const [subForm, setSubForm] = useState<SyncpayPublicPlan | null>(null);
+  const [subName, setSubName] = useState("");
+  const [subEmail, setSubEmail] = useState("");
+  const [subCpf, setSubCpf] = useState("");
+  const [subPhone, setSubPhone] = useState("");
+  const [subLoading, setSubLoading] = useState(false);
+  const [subResult, setSubResult] = useState<SubscribeResult | null>(null);
 
   const plansQuery = useQuery({
     queryKey: ["plans"],
@@ -57,7 +76,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     queryFn: async (): Promise<SyncpayPublicPlan[]> => {
       const { data, error } = await supabase
         .from("syncpay_plans" as any)
-        .select("id, syncpay_plan_id, name, amount, periodicity_days, billing_method, checkout_url")
+        .select("id, syncpay_plan_id, name, amount, periodicity_days, billing_method, checkout_url, topgestor_plan_id")
         .eq("status", "active")
         .order("amount", { ascending: true });
       if (error) return [];
@@ -84,6 +103,66 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const selectedPlan = activeCard?.plan;
   const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
   const canUsePix = planValue > 0 && planValue < PIX_MAX_AMOUNT;
+
+  // Assinaturas SyncPay filtradas pelo plano do TopGestor do cliente
+  const filteredSubPlans = useMemo(() => {
+    const all = subPlansQuery.data || [];
+    if (!currentPlanId) return [];
+    const matched = all.filter((sp) => sp.topgestor_plan_id === currentPlanId);
+    return matched;
+  }, [subPlansQuery.data, currentPlanId]);
+
+  const openSubscribeForm = (sp: SyncpayPublicPlan) => {
+    setSubForm(sp);
+    setSubResult(null);
+    setSubName(customer?.name || "");
+    setSubEmail(((customer as any)?.email as string) || "");
+    setSubCpf(((customer as any)?.cpf as string) || "");
+    setSubPhone(
+      String(((customer as any)?.whatsapp as string) || ((customer as any)?.celular as string) || "")
+    );
+  };
+
+  const closeSubscribeForm = () => {
+    setSubForm(null);
+    setSubResult(null);
+    setSubLoading(false);
+  };
+
+  const handleSubscribe = async () => {
+    if (!subForm || !customer) return;
+    setSubLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("syncpay-subscribe", {
+        body: {
+          plan_id: subForm.id,
+          customer_id: customer.id,
+          name: subName,
+          email: subEmail,
+          cpf: subCpf,
+          phone: subPhone,
+        },
+      });
+      if (error) throw new Error(error.message || "Falha ao criar assinatura");
+      const res = data as SubscribeResult & { error?: string };
+      if (res.fallback && res.checkout_url) {
+        window.open(res.checkout_url, "_blank", "noopener,noreferrer");
+        toast.message("Abrimos o checkout do plano em uma nova aba.");
+        closeSubscribeForm();
+        return;
+      }
+      if (!res.qr_code_text && !res.authorization_url) {
+        throw new Error("Resposta sem QR Code");
+      }
+      setSubResult(res);
+      toast.success("Assinatura criada! Pague o PIX para ativar.");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao criar assinatura");
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
 
   // Tick para countdown
   useEffect(() => {
@@ -228,6 +307,119 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   };
 
   if (!open) return null;
+
+  // ---------- Tela: assinatura recorrente (form ou QR) ----------
+  if (subForm) {
+    const isPixAuto = subForm.billing_method === "pix_automatico";
+    const qrText = subResult?.qr_code_text;
+    const qrImg = subResult?.qr_code_base64
+      ? (subResult.qr_code_base64.startsWith("data:") ? subResult.qr_code_base64 : `data:image/png;base64,${subResult.qr_code_base64}`)
+      : null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={closeSubscribeForm}>
+        <div
+          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button onClick={closeSubscribeForm} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
+            <X className="h-5 w-5" />
+          </button>
+
+          <div className="flex items-center gap-2 mb-1">
+            {isPixAuto ? <Zap className="h-4 w-4 text-primary" /> : <Repeat className="h-4 w-4 text-muted-foreground" />}
+            <h3 className="text-lg font-bold text-foreground">{isPixAuto ? "Pix Automático" : "Assinatura recorrente"}</h3>
+            {isPixAuto && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">RECOMENDADO</span>}
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            {subForm.name} · {formatCurrency(Number(subForm.amount))} / {subForm.periodicity_days}d
+          </p>
+
+          {!subResult ? (
+            <>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Nome completo</label>
+                  <input value={subName} onChange={(e) => setSubName(e.target.value)} className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="Como no CPF" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">CPF</label>
+                  <input value={subCpf} onChange={(e) => setSubCpf(e.target.value)} inputMode="numeric" maxLength={14} className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="000.000.000-00" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">E-mail</label>
+                  <input value={subEmail} onChange={(e) => setSubEmail(e.target.value)} type="email" className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="voce@email.com" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">WhatsApp</label>
+                  <input value={subPhone} onChange={(e) => setSubPhone(e.target.value)} inputMode="tel" className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="(00) 00000-0000" />
+                </div>
+              </div>
+              <button
+                onClick={handleSubscribe}
+                disabled={subLoading}
+                className="btn-primary-gradient w-full mt-5 py-3.5 font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{ minHeight: 48 }}
+              >
+                {subLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                Assinar e gerar Pix
+              </button>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">
+                Ao continuar você autoriza a cobrança automática mensal.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-center text-[20px] font-bold text-foreground mb-1">{formatCurrency(Number(subResult.amount || subForm.amount))}</p>
+              <p className="text-center text-xs text-muted-foreground mb-3">Pague o PIX para ativar sua assinatura</p>
+
+              {qrImg && (
+                <div className="flex justify-center mb-4">
+                  <div className="bg-white p-3 rounded-xl">
+                    <img src={qrImg} alt="QR Code PIX" style={{ width: 220, height: 220 }} />
+                  </div>
+                </div>
+              )}
+
+              {qrText && (
+                <>
+                  <p className="text-xs text-muted-foreground mb-1.5">Código copia e cola:</p>
+                  <div className="bg-muted rounded-lg p-2.5 mb-3">
+                    <p className="text-[11px] text-foreground break-all font-mono">{qrText}</p>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(qrText)}
+                    className="w-full px-5 py-3 text-sm rounded-lg inline-flex items-center justify-center gap-1.5 transition-all mb-2"
+                    style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? "Copiado!" : "Copiar código PIX"}
+                  </button>
+                </>
+              )}
+
+              {subResult.authorization_url && (
+                <a
+                  href={subResult.authorization_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-primary-gradient w-full py-3 text-sm font-semibold inline-flex items-center justify-center gap-1.5 mb-2"
+                  style={{ minHeight: 48 }}
+                >
+                  <ExternalLink className="h-4 w-4" /> Autorizar no banco
+                </a>
+              )}
+
+              <button onClick={closeSubscribeForm} className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2 w-full" style={{ minHeight: 44 }}>
+                Fechar
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+
 
   // ---------- Tela: PIX gerado ----------
   if (pix) {
@@ -441,8 +633,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               </>
             )}
 
-            {/* Assinaturas SyncPay — opção recorrente */}
-            {subPlansQuery.data && subPlansQuery.data.length > 0 && (
+            {/* Assinaturas SyncPay — filtradas para o plano atual do cliente */}
+            {filteredSubPlans.length > 0 && (
               <div className="mt-5 pt-5 border-t border-border">
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="h-4 w-4 text-primary" />
@@ -450,19 +642,13 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                 </div>
                 <p className="text-[11px] text-muted-foreground mb-3">Assine e o pagamento acontece sozinho todo mês.</p>
                 <div className="space-y-2">
-                  {subPlansQuery.data.map((sp) => {
+                  {filteredSubPlans.map((sp) => {
                     const isPixAuto = sp.billing_method === "pix_automatico";
-                    const url = sp.checkout_url
-                      ? `${sp.checkout_url}${sp.checkout_url.includes("?") ? "&" : "?"}customer_id=${customer.id}&name=${encodeURIComponent(customer.name)}&email=${encodeURIComponent((customer as any).email || "")}`
-                      : null;
                     return (
-                      <a
+                      <button
                         key={sp.id}
-                        href={url || "#"}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => { if (!url) e.preventDefault(); }}
-                        className={`block p-3 rounded-xl border-2 transition-all hover:scale-[1.01] ${isPixAuto ? "border-primary bg-primary/5" : "border-input bg-card hover:border-muted-foreground/40"}`}
+                        onClick={() => openSubscribeForm(sp)}
+                        className={`w-full text-left block p-3 rounded-xl border-2 transition-all hover:scale-[1.01] ${isPixAuto ? "border-primary bg-primary/5" : "border-input bg-card hover:border-muted-foreground/40"}`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0">
@@ -480,12 +666,13 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                             <div className="text-[10px] text-muted-foreground">/ {sp.periodicity_days}d</div>
                           </div>
                         </div>
-                      </a>
+                      </button>
                     );
                   })}
                 </div>
               </div>
             )}
+
           </>
         ) : (
           <p className="text-sm text-muted-foreground">

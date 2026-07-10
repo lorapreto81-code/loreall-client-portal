@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.syncpay-webhook]
 verify_jwt = false
 
+[functions.syncpay-subscribe]
+verify_jwt = false
+
 [functions.reseller-create-pix]
 verify_jwt = false
 
