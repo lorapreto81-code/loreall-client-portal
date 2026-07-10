@@ -520,8 +520,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               </>
             )}
 
-            {/* Assinaturas SyncPay — opção recorrente */}
-            {subPlansQuery.data && subPlansQuery.data.length > 0 && (
+            {/* Assinaturas SyncPay — filtradas para o plano atual do cliente */}
+            {filteredSubPlans.length > 0 && (
               <div className="mt-5 pt-5 border-t border-border">
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="h-4 w-4 text-primary" />
@@ -529,19 +529,13 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                 </div>
                 <p className="text-[11px] text-muted-foreground mb-3">Assine e o pagamento acontece sozinho todo mês.</p>
                 <div className="space-y-2">
-                  {subPlansQuery.data.map((sp) => {
+                  {filteredSubPlans.map((sp) => {
                     const isPixAuto = sp.billing_method === "pix_automatico";
-                    const url = sp.checkout_url
-                      ? `${sp.checkout_url}${sp.checkout_url.includes("?") ? "&" : "?"}customer_id=${customer.id}&name=${encodeURIComponent(customer.name)}&email=${encodeURIComponent((customer as any).email || "")}`
-                      : null;
                     return (
-                      <a
+                      <button
                         key={sp.id}
-                        href={url || "#"}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => { if (!url) e.preventDefault(); }}
-                        className={`block p-3 rounded-xl border-2 transition-all hover:scale-[1.01] ${isPixAuto ? "border-primary bg-primary/5" : "border-input bg-card hover:border-muted-foreground/40"}`}
+                        onClick={() => openSubscribeForm(sp)}
+                        className={`w-full text-left block p-3 rounded-xl border-2 transition-all hover:scale-[1.01] ${isPixAuto ? "border-primary bg-primary/5" : "border-input bg-card hover:border-muted-foreground/40"}`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0">
@@ -559,12 +553,13 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                             <div className="text-[10px] text-muted-foreground">/ {sp.periodicity_days}d</div>
                           </div>
                         </div>
-                      </a>
+                      </button>
                     );
                   })}
                 </div>
               </div>
             )}
+
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
