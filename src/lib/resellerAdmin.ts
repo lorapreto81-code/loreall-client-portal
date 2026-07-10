@@ -5,22 +5,27 @@ function getAdminPassword(): string {
   return sessionStorage.getItem("admin_password") || "";
 }
 
-async function call(action: string, opts: { method?: string; body?: Record<string, unknown>; params?: Record<string, string> } = {}) {
-  const params = new URLSearchParams({ action, ...(opts.params || {}) }).toString();
-  const r = await fetch(`${SUPABASE_URL}/functions/v1/reseller-admin?${params}`, {
-    method: opts.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-      "x-admin-password": getAdminPassword(),
-    },
-    ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
-  });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error || `Erro ${r.status}`);
-  return data;
+function makeCaller(fnName: string) {
+  return async (action: string, opts: { method?: string; body?: Record<string, unknown>; params?: Record<string, string> } = {}) => {
+    const params = new URLSearchParams({ action, ...(opts.params || {}) }).toString();
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}?${params}`, {
+      method: opts.method || "GET",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: ANON_KEY,
+        Authorization: `Bearer ${ANON_KEY}`,
+        "x-admin-password": getAdminPassword(),
+      },
+      ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || `Erro ${r.status}`);
+    return data;
+  };
 }
+
+const call = makeCaller("reseller-admin");
+const callSub = makeCaller("syncpay-subscriptions");
 
 export const resellerAdmin = {
   listLinks: () => call("list-links"),
@@ -35,8 +40,30 @@ export const resellerAdmin = {
   getConfig: () => call("get-config"),
   updateConfig: (entries: Record<string, string>) => call("update-config", { method: "POST", body: { entries } }),
   dashboard: () => call("dashboard"),
-  // Customers
   listPayments: (params?: Record<string, string>) => call("list-payments", { params }),
   deletePayment: (id: string) => call("delete-payment", { method: "POST", body: { id } }),
   customersDashboard: () => call("customers-dashboard"),
+};
+
+export interface SyncpayPlan {
+  id: string;
+  syncpay_plan_id: string;
+  name: string;
+  description?: string | null;
+  amount: number;
+  periodicity_days: number;
+  billing_method: "qr_code" | "pix_automatico" | string;
+  status: string;
+  checkout_url?: string | null;
+  topgestor_plan_id?: number | null;
+}
+
+export const syncpayAdmin = {
+  listPlans: (): Promise<{ plans: SyncpayPlan[] }> => callSub("list-plans"),
+  syncPlans: (): Promise<{ synced: number }> => callSub("sync-plans", { method: "POST" }),
+  createPlan: (body: Record<string, unknown>) => callSub("create-plan", { method: "POST", body }),
+  updatePlan: (body: Record<string, unknown>) => callSub("update-plan", { method: "POST", body }),
+  archivePlan: (id: string) => callSub("archive-plan", { method: "POST", body: { id } }),
+  listSubscribers: (plan_id: string) => callSub("list-subscribers", { params: { plan_id } }),
+  cancelSubscription: (subscription_id: string) => callSub("cancel-subscription", { method: "POST", body: { subscription_id } }),
 };
