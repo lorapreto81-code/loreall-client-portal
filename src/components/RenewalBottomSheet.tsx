@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ExternalLink, Copy, Check, X, QrCode } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
@@ -10,6 +10,16 @@ import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
 } from "@/lib/planUtils";
 const logo = "/logo.png";
+
+interface SyncpayPublicPlan {
+  id: string;
+  syncpay_plan_id: string;
+  name: string;
+  amount: number;
+  periodicity_days: number;
+  billing_method: string;
+  checkout_url: string | null;
+}
 
 interface Props {
   open: boolean;
