@@ -104,6 +104,66 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
   const canUsePix = planValue > 0 && planValue < PIX_MAX_AMOUNT;
 
+  // Assinaturas SyncPay filtradas pelo plano do TopGestor do cliente
+  const filteredSubPlans = useMemo(() => {
+    const all = subPlansQuery.data || [];
+    if (!currentPlanId) return [];
+    const matched = all.filter((sp) => sp.topgestor_plan_id === currentPlanId);
+    return matched;
+  }, [subPlansQuery.data, currentPlanId]);
+
+  const openSubscribeForm = (sp: SyncpayPublicPlan) => {
+    setSubForm(sp);
+    setSubResult(null);
+    setSubName(customer?.name || "");
+    setSubEmail(((customer as any)?.email as string) || "");
+    setSubCpf(((customer as any)?.cpf as string) || "");
+    setSubPhone(
+      String(((customer as any)?.whatsapp as string) || ((customer as any)?.celular as string) || "")
+    );
+  };
+
+  const closeSubscribeForm = () => {
+    setSubForm(null);
+    setSubResult(null);
+    setSubLoading(false);
+  };
+
+  const handleSubscribe = async () => {
+    if (!subForm || !customer) return;
+    setSubLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("syncpay-subscribe", {
+        body: {
+          plan_id: subForm.id,
+          customer_id: customer.id,
+          name: subName,
+          email: subEmail,
+          cpf: subCpf,
+          phone: subPhone,
+        },
+      });
+      if (error) throw new Error(error.message || "Falha ao criar assinatura");
+      const res = data as SubscribeResult & { error?: string };
+      if (res.fallback && res.checkout_url) {
+        window.open(res.checkout_url, "_blank", "noopener,noreferrer");
+        toast.message("Abrimos o checkout do plano em uma nova aba.");
+        closeSubscribeForm();
+        return;
+      }
+      if (!res.qr_code_text && !res.authorization_url) {
+        throw new Error("Resposta sem QR Code");
+      }
+      setSubResult(res);
+      toast.success("Assinatura criada! Pague o PIX para ativar.");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao criar assinatura");
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+
   // Tick para countdown
   useEffect(() => {
     if (!pix) return;
