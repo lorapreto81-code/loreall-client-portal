@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ExternalLink, Copy, Check, X, QrCode } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
@@ -10,6 +10,16 @@ import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
 } from "@/lib/planUtils";
 const logo = "/logo.png";
+
+interface SyncpayPublicPlan {
+  id: string;
+  syncpay_plan_id: string;
+  name: string;
+  amount: number;
+  periodicity_days: number;
+  billing_method: string;
+  checkout_url: string | null;
+}
 
 interface Props {
   open: boolean;
@@ -39,6 +49,22 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     queryKey: ["plans"],
     queryFn: getPlans,
     staleTime: 120_000,
+    enabled: !!customer && open,
+  });
+
+  // Planos de assinatura ativos (SyncPay) — leitura pública via RLS
+  const subPlansQuery = useQuery({
+    queryKey: ["syncpay-public-plans"],
+    queryFn: async (): Promise<SyncpayPublicPlan[]> => {
+      const { data, error } = await supabase
+        .from("syncpay_plans" as any)
+        .select("id, syncpay_plan_id, name, amount, periodicity_days, billing_method, checkout_url")
+        .eq("status", "active")
+        .order("amount", { ascending: true });
+      if (error) return [];
+      return (data as unknown as SyncpayPublicPlan[]) || [];
+    },
+    staleTime: 300_000,
     enabled: !!customer && open,
   });
 
@@ -414,6 +440,52 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                   </>
                 )}
               </>
+            )}
+
+            {/* Assinaturas SyncPay — opção recorrente */}
+            {subPlansQuery.data && subPlansQuery.data.length > 0 && (
+              <div className="mt-5 pt-5 border-t border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-bold text-foreground">Nunca mais se preocupe com renovação</h4>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-3">Assine e o pagamento acontece sozinho todo mês.</p>
+                <div className="space-y-2">
+                  {subPlansQuery.data.map((sp) => {
+                    const isPixAuto = sp.billing_method === "pix_automatico";
+                    const url = sp.checkout_url
+                      ? `${sp.checkout_url}${sp.checkout_url.includes("?") ? "&" : "?"}customer_id=${customer.id}&name=${encodeURIComponent(customer.name)}&email=${encodeURIComponent((customer as any).email || "")}`
+                      : null;
+                    return (
+                      <a
+                        key={sp.id}
+                        href={url || "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => { if (!url) e.preventDefault(); }}
+                        className={`block p-3 rounded-xl border-2 transition-all hover:scale-[1.01] ${isPixAuto ? "border-primary bg-primary/5" : "border-input bg-card hover:border-muted-foreground/40"}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {isPixAuto ? <Zap className="h-3.5 w-3.5 text-primary" /> : <Repeat className="h-3.5 w-3.5 text-muted-foreground" />}
+                              <span className="text-sm font-semibold text-foreground truncate">{sp.name}</span>
+                              {isPixAuto && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">RECOMENDADO</span>}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {isPixAuto ? "Débito automático · autoriza 1x no app do banco" : "QR novo por e-mail a cada ciclo"}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-base font-bold text-foreground">{formatCurrency(Number(sp.amount))}</div>
+                            <div className="text-[10px] text-muted-foreground">/ {sp.periodicity_days}d</div>
+                          </div>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </>
         ) : (

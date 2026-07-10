@@ -141,6 +141,120 @@ async function releasePendingReferrals(
   }
 }
 
+// ---------- helpers de assinatura ----------
+async function findTgCustomerByCpfOrEmail(tgToken: string, cpf?: string, email?: string): Promise<number | null> {
+  const q = (cpf || "").replace(/\D/g, "") || email || "";
+  if (!q) return null;
+  try {
+    const res = await fetch(`${TG_BASE}/customers?search=${encodeURIComponent(q)}&per_page=5`, {
+      headers: { Authorization: `Bearer ${tgToken}`, Accept: "application/json" },
+    });
+    const data = await res.json().catch(() => ({}));
+    const list = data.data || data.customers || [];
+    return list[0]?.id ? Number(list[0].id) : null;
+  } catch { return null; }
+}
+
+async function handleSubscriptionEvent(
+  supabase: ReturnType<typeof createClient>,
+  event: string,
+  data: Record<string, any>,
+) {
+  const subId: string | undefined = data.subscription_id || data.subscription?.id || data.subscription?.token || data.id;
+  const planId: string | undefined = data.plan_id || data.plan?.id || data.plan?.token || data.subscription?.plan_id;
+  if (!subId) return { ok: true, ignored: "no subscription id" };
+
+  const customer = data.customer || data.subscriber || {};
+  const patch: Record<string, unknown> = {
+    syncpay_subscription_id: subId,
+    syncpay_plan_id: planId || "",
+    customer_name: customer.name,
+    customer_email: customer.email,
+    customer_cpf: (customer.cpf || "").replace(/\D/g, ""),
+    customer_phone: customer.phone || customer.whatsapp,
+    billing_method: data.billing_method || data.subscription?.billing_method,
+    metadata: data,
+  };
+
+  const { data: existing } = await supabase
+    .from("syncpay_subscriptions")
+    .select("*")
+    .eq("syncpay_subscription_id", subId)
+    .maybeSingle();
+
+  let tgCustomerId: number | null = existing?.customer_id || null;
+  if (!tgCustomerId) {
+    const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
+    if (tgToken) tgCustomerId = await findTgCustomerByCpfOrEmail(tgToken, customer.cpf, customer.email);
+  }
+  if (tgCustomerId) patch.customer_id = tgCustomerId;
+
+  const status = String(data.status || "").toLowerCase();
+  if (event.includes("cancel") || status === "cancelled" || status === "canceled") {
+    patch.status = "cancelled";
+    patch.cancelled_at = new Date().toISOString();
+  } else if (event.includes("suspend") || status === "suspended" || status === "delinquent") {
+    patch.status = "suspended";
+  } else if (event.includes("charge.paid") || event.includes("charge.succeeded")) {
+    patch.status = "active";
+    patch.last_charge_at = new Date().toISOString();
+    if (data.next_charge_at || data.subscription?.next_charge_at) {
+      patch.next_charge_at = data.next_charge_at || data.subscription.next_charge_at;
+    }
+  } else if (event.includes("create") || event.includes("activated")) {
+    patch.status = "active";
+  }
+
+  await supabase.from("syncpay_subscriptions").upsert(patch, { onConflict: "syncpay_subscription_id" });
+
+  const chargeId: string | undefined = data.charge_id || data.charge?.id || data.transaction_id;
+  const isChargePaid = (event.includes("charge") && (event.includes("paid") || event.includes("succeeded")))
+    || (event.includes("subscription") && status === "paid");
+
+  if (isChargePaid && tgCustomerId) {
+    const { data: planRow } = await supabase
+      .from("syncpay_plans")
+      .select("topgestor_plan_id, amount")
+      .eq("syncpay_plan_id", planId || "")
+      .maybeSingle();
+    const tgPlanId = planRow?.topgestor_plan_id;
+    const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
+    if (tgPlanId && tgToken) {
+      try {
+        const tgRes = await fetch(`${TG_BASE}/customers/${tgCustomerId}/renew`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tgToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ plan_id: tgPlanId, message_id: 44282, send_whatsapp: true }),
+        });
+        const rr = await tgRes.json().catch(() => ({}));
+        await supabase.from("payments").insert({
+          customer_id: tgCustomerId,
+          customer_name: customer.name || `Sub ${subId}`,
+          plan_id: tgPlanId,
+          plan_name: `Assinatura ${planId}`,
+          amount: Number(data.amount || planRow?.amount || 0),
+          provider_transaction_id: chargeId || subId,
+          subscription_id: subId,
+          charge_id: chargeId || null,
+          fastdepix_status: "paid",
+          paid_at: new Date().toISOString(),
+          renewal_response: rr,
+          renewed_at: tgRes.ok ? new Date().toISOString() : null,
+          metadata: { source: "syncpay_subscription" },
+        });
+      } catch (e) { console.error("[syncpay-webhook] sub renew failed", e); }
+    } else {
+      console.warn("[syncpay-webhook] charge paid sem mapeamento TG plan_id", { planId, tgCustomerId });
+    }
+  }
+
+  return { ok: true, kind: "subscription", subscription_id: subId, status: patch.status };
+}
+
 // ---------- handler ----------
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -156,16 +270,25 @@ Deno.serve(async (req) => {
     const isExpired = ["failed", "expired", "cancelled", "canceled", "refunded"].includes(rawStatus);
 
     console.log("[syncpay-webhook] event", event, "tx", txId, "status", rawStatus);
-    if (!txId) {
-      return new Response(JSON.stringify({ ok: true, ignored: "no transaction id" }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Eventos de assinatura (recorrência) — rota separada
+    if (event.includes("subscription") || event.includes("charge") || data.subscription_id || data.subscription) {
+      const result = await handleSubscriptionEvent(supabase, event, data);
+      return new Response(JSON.stringify(result), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!txId) {
+      return new Response(JSON.stringify({ ok: true, ignored: "no transaction id" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Tenta achar em payments (cliente) ou reseller_credit_purchases (revendedor)
     const { data: payment } = await supabase
