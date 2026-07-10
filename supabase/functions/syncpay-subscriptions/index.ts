@@ -118,10 +118,15 @@ Deno.serve(async (req) => {
       }
 
       case "create-plan": {
+        // SyncPay exige amount em REAIS inteiro (ex.: 50 = R$ 50,00)
+        const amountInt = Math.round(Number(body.amount));
+        if (!Number.isFinite(amountInt) || amountInt < 1) {
+          return err("amount deve ser um inteiro em reais (>= 1)", 422);
+        }
         const payload = {
           name: body.name,
           description: body.description || "",
-          amount: Number(body.amount),
+          amount: amountInt,
           periodicity_days: Number(body.periodicity_days || 30),
           billing_advance_days: Number(body.billing_advance_days || 3),
           grace_period_days: Number(body.grace_period_days || 5),
