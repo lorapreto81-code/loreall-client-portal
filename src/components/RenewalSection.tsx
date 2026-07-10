@@ -14,9 +14,8 @@ const RenewalSection = () => {
   const { customer, login } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const currentTelas = typeof customer?.telas === "number"
-    ? customer.telas
-    : parseInt(String(customer?.telas || "1"), 10) || 1;
+  // Telas é regra fixa do sistema: sempre 1. Não usamos mais o valor do TopGestor.
+  const currentTelas = 1;
 
   const [selectedPeriodIdx, setSelectedPeriodIdx] = useState(0);
   const [generatingLink, setGeneratingLink] = useState(false);
