@@ -123,7 +123,7 @@ const MyPlanSection = () => {
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Nenhum plano disponível para {screenLabel(selectedScreens).toLowerCase()}.
+          Nenhum plano disponível para este período.
         </p>
       )}
 
