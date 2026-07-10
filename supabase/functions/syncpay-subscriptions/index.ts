@@ -39,8 +39,8 @@ async function getSyncpayToken(): Promise<string> {
   const clientSecret = Deno.env.get("SYNCPAY_CLIENT_SECRET");
   if (!clientId || !clientSecret) throw new Error("SYNCPAY_CLIENT_ID/SECRET não configurados");
 
-  // Endpoint oficial: POST /api/partner/v1/token  (client_credentials)
-  const res = await fetch(`${SP_BASE}/token`, {
+  // Endpoint oficial: POST /api/partner/v1/auth-token  (client_credentials)
+  const res = await fetch(`${SP_BASE}/auth-token`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
