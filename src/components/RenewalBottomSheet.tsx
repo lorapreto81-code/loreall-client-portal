@@ -308,6 +308,119 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
   if (!open) return null;
 
+  // ---------- Tela: assinatura recorrente (form ou QR) ----------
+  if (subForm) {
+    const isPixAuto = subForm.billing_method === "pix_automatico";
+    const qrText = subResult?.qr_code_text;
+    const qrImg = subResult?.qr_code_base64
+      ? (subResult.qr_code_base64.startsWith("data:") ? subResult.qr_code_base64 : `data:image/png;base64,${subResult.qr_code_base64}`)
+      : null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={closeSubscribeForm}>
+        <div
+          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button onClick={closeSubscribeForm} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
+            <X className="h-5 w-5" />
+          </button>
+
+          <div className="flex items-center gap-2 mb-1">
+            {isPixAuto ? <Zap className="h-4 w-4 text-primary" /> : <Repeat className="h-4 w-4 text-muted-foreground" />}
+            <h3 className="text-lg font-bold text-foreground">{isPixAuto ? "Pix Automático" : "Assinatura recorrente"}</h3>
+            {isPixAuto && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">RECOMENDADO</span>}
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            {subForm.name} · {formatCurrency(Number(subForm.amount))} / {subForm.periodicity_days}d
+          </p>
+
+          {!subResult ? (
+            <>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Nome completo</label>
+                  <input value={subName} onChange={(e) => setSubName(e.target.value)} className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="Como no CPF" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">CPF</label>
+                  <input value={subCpf} onChange={(e) => setSubCpf(e.target.value)} inputMode="numeric" maxLength={14} className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="000.000.000-00" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">E-mail</label>
+                  <input value={subEmail} onChange={(e) => setSubEmail(e.target.value)} type="email" className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="voce@email.com" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">WhatsApp</label>
+                  <input value={subPhone} onChange={(e) => setSubPhone(e.target.value)} inputMode="tel" className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="(00) 00000-0000" />
+                </div>
+              </div>
+              <button
+                onClick={handleSubscribe}
+                disabled={subLoading}
+                className="btn-primary-gradient w-full mt-5 py-3.5 font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{ minHeight: 48 }}
+              >
+                {subLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                Assinar e gerar Pix
+              </button>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">
+                Ao continuar você autoriza a cobrança automática mensal.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-center text-[20px] font-bold text-foreground mb-1">{formatCurrency(Number(subResult.amount || subForm.amount))}</p>
+              <p className="text-center text-xs text-muted-foreground mb-3">Pague o PIX para ativar sua assinatura</p>
+
+              {qrImg && (
+                <div className="flex justify-center mb-4">
+                  <div className="bg-white p-3 rounded-xl">
+                    <img src={qrImg} alt="QR Code PIX" style={{ width: 220, height: 220 }} />
+                  </div>
+                </div>
+              )}
+
+              {qrText && (
+                <>
+                  <p className="text-xs text-muted-foreground mb-1.5">Código copia e cola:</p>
+                  <div className="bg-muted rounded-lg p-2.5 mb-3">
+                    <p className="text-[11px] text-foreground break-all font-mono">{qrText}</p>
+                  </div>
+                  <button
+                    onClick={() => handleCopy(qrText)}
+                    className="w-full px-5 py-3 text-sm rounded-lg inline-flex items-center justify-center gap-1.5 transition-all mb-2"
+                    style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? "Copiado!" : "Copiar código PIX"}
+                  </button>
+                </>
+              )}
+
+              {subResult.authorization_url && (
+                <a
+                  href={subResult.authorization_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-primary-gradient w-full py-3 text-sm font-semibold inline-flex items-center justify-center gap-1.5 mb-2"
+                  style={{ minHeight: 48 }}
+                >
+                  <ExternalLink className="h-4 w-4" /> Autorizar no banco
+                </a>
+              )}
+
+              <button onClick={closeSubscribeForm} className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2 w-full" style={{ minHeight: 44 }}>
+                Fechar
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+
+
   // ---------- Tela: PIX gerado ----------
   if (pix) {
     const expiresMs = new Date(pix.expires_at).getTime() - now;
