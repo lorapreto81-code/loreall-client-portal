@@ -19,6 +19,17 @@ interface SyncpayPublicPlan {
   periodicity_days: number;
   billing_method: string;
   checkout_url: string | null;
+  topgestor_plan_id: number | null;
+}
+
+interface SubscribeResult {
+  subscription_id?: string;
+  qr_code_text?: string | null;
+  qr_code_base64?: string | null;
+  authorization_url?: string | null;
+  fallback?: boolean;
+  checkout_url?: string;
+  amount?: number;
 }
 
 interface Props {
@@ -57,7 +68,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     queryFn: async (): Promise<SyncpayPublicPlan[]> => {
       const { data, error } = await supabase
         .from("syncpay_plans" as any)
-        .select("id, syncpay_plan_id, name, amount, periodicity_days, billing_method, checkout_url")
+        .select("id, syncpay_plan_id, name, amount, periodicity_days, billing_method, checkout_url, topgestor_plan_id")
         .eq("status", "active")
         .order("amount", { ascending: true });
       if (error) return [];
