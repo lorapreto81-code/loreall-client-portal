@@ -17,6 +17,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          charge_id: string | null
           created_at: string
           customer_id: number
           customer_name: string
@@ -35,10 +36,12 @@ export type Database = {
           qr_code_url: string | null
           renewal_response: Json | null
           renewed_at: string | null
+          subscription_id: string | null
           updated_at: string
         }
         Insert: {
           amount: number
+          charge_id?: string | null
           created_at?: string
           customer_id: number
           customer_name: string
@@ -57,10 +60,12 @@ export type Database = {
           qr_code_url?: string | null
           renewal_response?: Json | null
           renewed_at?: string | null
+          subscription_id?: string | null
           updated_at?: string
         }
         Update: {
           amount?: number
+          charge_id?: string | null
           created_at?: string
           customer_id?: number
           customer_name?: string
@@ -79,6 +84,7 @@ export type Database = {
           qr_code_url?: string | null
           renewal_response?: Json | null
           renewed_at?: string | null
+          subscription_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -297,6 +303,120 @@ export type Database = {
           updated_at?: string
           warez_user_id?: number
           warez_username?: string
+        }
+        Relationships: []
+      }
+      syncpay_plans: {
+        Row: {
+          amount: number
+          billing_advance_days: number | null
+          billing_method: string
+          checkout_url: string | null
+          created_at: string
+          description: string | null
+          grace_period_days: number | null
+          id: string
+          max_retry_attempts: number | null
+          metadata: Json | null
+          name: string
+          periodicity_days: number
+          status: string
+          syncpay_plan_id: string
+          topgestor_plan_id: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_advance_days?: number | null
+          billing_method?: string
+          checkout_url?: string | null
+          created_at?: string
+          description?: string | null
+          grace_period_days?: number | null
+          id?: string
+          max_retry_attempts?: number | null
+          metadata?: Json | null
+          name: string
+          periodicity_days?: number
+          status?: string
+          syncpay_plan_id: string
+          topgestor_plan_id?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_advance_days?: number | null
+          billing_method?: string
+          checkout_url?: string | null
+          created_at?: string
+          description?: string | null
+          grace_period_days?: number | null
+          id?: string
+          max_retry_attempts?: number | null
+          metadata?: Json | null
+          name?: string
+          periodicity_days?: number
+          status?: string
+          syncpay_plan_id?: string
+          topgestor_plan_id?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      syncpay_subscriptions: {
+        Row: {
+          billing_method: string | null
+          cancelled_at: string | null
+          created_at: string
+          customer_cpf: string | null
+          customer_email: string | null
+          customer_id: number | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          last_charge_at: string | null
+          metadata: Json | null
+          next_charge_at: string | null
+          status: string
+          syncpay_plan_id: string
+          syncpay_subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          billing_method?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_cpf?: string | null
+          customer_email?: string | null
+          customer_id?: number | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          last_charge_at?: string | null
+          metadata?: Json | null
+          next_charge_at?: string | null
+          status?: string
+          syncpay_plan_id: string
+          syncpay_subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          billing_method?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_cpf?: string | null
+          customer_email?: string | null
+          customer_id?: number | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          last_charge_at?: string | null
+          metadata?: Json | null
+          next_charge_at?: string | null
+          status?: string
+          syncpay_plan_id?: string
+          syncpay_subscription_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
