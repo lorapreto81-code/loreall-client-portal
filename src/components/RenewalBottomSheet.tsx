@@ -54,6 +54,14 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const [now, setNow] = useState(Date.now());
   // fallback (planos >= R$500)
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  // Assinatura recorrente
+  const [subForm, setSubForm] = useState<SyncpayPublicPlan | null>(null);
+  const [subName, setSubName] = useState("");
+  const [subEmail, setSubEmail] = useState("");
+  const [subCpf, setSubCpf] = useState("");
+  const [subPhone, setSubPhone] = useState("");
+  const [subLoading, setSubLoading] = useState(false);
+  const [subResult, setSubResult] = useState<SubscribeResult | null>(null);
 
   const plansQuery = useQuery({
     queryKey: ["plans"],
