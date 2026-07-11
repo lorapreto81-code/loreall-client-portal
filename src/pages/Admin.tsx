@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat } from "lucide-react";
+import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat, Inbox } from "lucide-react";
 import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
 import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
 import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
@@ -7,6 +7,7 @@ import ResellerConfigTab from "@/components/admin/ResellerConfigTab";
 import CustomersPaymentsTab from "@/components/admin/CustomersPaymentsTab";
 import CustomersDashboardTab from "@/components/admin/CustomersDashboardTab";
 import ReferralTrialConfigTab from "@/components/admin/ReferralTrialConfigTab";
+import TrialSignupsTab from "@/components/admin/TrialSignupsTab";
 import PixProviderTab from "@/components/admin/PixProviderTab";
 import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
 import SyncpaySubscriptionsTab from "@/components/admin/SyncpaySubscriptionsTab";
@@ -19,7 +20,7 @@ interface Notice {
   atualizado_em: string;
 }
 
-type Tab = "avisos" | "links" | "recargas" | "dashboard" | "clientes" | "clientes-dash" | "tg-clientes" | "config" | "indicacao" | "pix-provider" | "assinaturas";
+type Tab = "avisos" | "links" | "recargas" | "dashboard" | "clientes" | "clientes-dash" | "tg-clientes" | "config" | "indicacao" | "trial-signups" | "pix-provider" | "assinaturas";
 
 const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "avisos", label: "Avisos", icon: Megaphone },
@@ -30,6 +31,7 @@ const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "clientes-dash", label: "Dashboard cli.", icon: LineChart },
   { id: "tg-clientes", label: "Clientes TG", icon: Database },
   { id: "assinaturas", label: "Assinaturas", icon: Repeat },
+  { id: "trial-signups", label: "Testes grátis", icon: Inbox },
   { id: "indicacao", label: "Indicação", icon: Gift },
   { id: "pix-provider", label: "Provedor PIX", icon: ArrowLeftRight },
   { id: "config", label: "Configurações", icon: Settings },
@@ -161,6 +163,7 @@ const Admin = () => {
         {tab === "clientes-dash" && <CustomersDashboardTab />}
         {tab === "tg-clientes" && <TopGestorCustomersTab />}
         {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
+        {tab === "trial-signups" && <TrialSignupsTab />}
         {tab === "indicacao" && <ReferralTrialConfigTab />}
         {tab === "pix-provider" && <PixProviderTab />}
         {tab === "config" && <ResellerConfigTab />}

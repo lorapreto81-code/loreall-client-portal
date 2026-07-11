@@ -1,67 +1,116 @@
-## Objetivo
-Adicionar **SyncPay** como provedor PIX alternativo ao **Fast Depix** que já existe, mantendo os dois ativos no sistema. O Admin escolhe o provedor padrão (separado para **Clientes** e **Revendedores**) com um botão de troca rápida.
 
-## Arquitetura
+# Fluxo de Indicação com Validação Manual
 
+## O problema real
+
+Hoje o fluxo atual (`/indicacao/:code` → `referrals-api?action=create-trial`) cria o cliente **direto no TopGestor** como trial ativo. Mas na prática o cliente **não consegue acessar nada** enquanto você não criar usuário/senha manualmente no painel Warez/Uniplay. Resultado: cliente cadastrado sem credenciais, você recebe a mensagem no WhatsApp, cria no painel e responde "no braço".
+
+Precisamos formalizar essa fila.
+
+## Novo fluxo end-to-end
+
+```text
+┌─────────────────┐     ┌──────────────────┐     ┌────────────────────┐
+│ Cliente atual   │     │ Indicado         │     │ Admin (você)       │
+│ (indicador)     │     │ (novo)           │     │                    │
+└────────┬────────┘     └────────┬─────────┘     └─────────┬──────────┘
+         │                       │                         │
+         │ 1. Copia link do      │                         │
+         │   ReferralSheet       │                         │
+         ├──────────────────────▶│                         │
+         │                       │ 2. Abre /indicacao/CODE │
+         │                       │    preenche nome+WA     │
+         │                       │                         │
+         │                       │ 3. Cria registro em     │
+         │                       │    trial_signups        │
+         │                       │    status=pending       │
+         │                       ├────────────────────────▶│
+         │                       │                         │
+         │                       │ 4. Vê tela "Cadastro    │ 5. Nova aba
+         │                       │    em análise, avisamos │    "Testes Grátis"
+         │                       │    no WhatsApp"         │    lista pendentes
+         │                       │                         │
+         │                       │                         │ 6. Cria user/senha
+         │                       │                         │    no Warez/Uniplay
+         │                       │                         │
+         │                       │                         │ 7. Clica "Aprovar"
+         │                       │                         │    preenche user+senha
+         │                       │                         │    → cria no TopGestor
+         │                       │                         │      via edge function
+         │                       │                         │    → registra referral
+         │                       │                         │      status=
+         │                       │                         │      pending_referrer_
+         │                       │                         │      renewal
+         │                       │                         │
+         │                       │ 8. Recebe link WhatsApp │
+         │                       │◀────────────────────────┤    com credenciais
+         │                       │                         │
+         │                       │ 9. Vai pra /login       │
+         │                       │    e usa o sistema      │
+         │                       │                         │
+         │ 10. Quando o indicado │                         │
+         │    renovar (pagar     │                         │
+         │    1º PIX), regra     │                         │
+         │    atual credita +30d │                         │
+         │◀──────────────────────┴─────────────────────────┤
 ```
-Cliente / Revendedor
-        |
-        v
-  fastdepix-create-pix  (cliente, renovação)        ── escolhe provedor pelo system_config
-  reseller-create-pix   (revendedor, recarga)       ── escolhe provedor pelo system_config
-        |
-        ├──► Fast Depix  → fastdepix-webhook
-        └──► SyncPay     → syncpay-webhook  (novo)
-```
 
-Ambos os webhooks chamam a mesma lógica interna de "pagamento confirmado":
-- Cliente: renovação no TopGestor + crédito de indicação
-- Revendedor: recarga de créditos WAREZ
+## Estados do pré-cadastro (`trial_signups`)
 
-## Mudanças
+- **pending** — preencheu formulário, aguardando você criar credenciais
+- **approved** — você aprovou, cliente criado no TopGestor, credenciais enviadas
+- **rejected** — WhatsApp duplicado / suspeito de fraude (com motivo)
 
-### 1. Banco
-Adicionar em `system_config` 3 chaves (via migration, com valores padrão):
-- `pix_provider_customers` → `fastdepix` | `syncpay` (default `fastdepix`)
-- `pix_provider_resellers` → `fastdepix` | `syncpay` (default `fastdepix`)
-- `syncpay_api_url` → default `https://api.syncpay.pro`
+Bônus do indicador continua igual (regra da memória): só libera +30 dias quando o indicado **paga o 1º PIX**, não quando é aprovado. Isso evita fraude de gente cadastrando fake pra ganhar bônus.
 
-Adicionar em `payments` e `reseller_credit_purchases`:
-- `provider TEXT DEFAULT 'fastdepix'` — para rastrear quem processou cada cobrança
+## Mudanças concretas
 
-Secrets (vou pedir ao usuário): `SYNCPAY_CLIENT_ID`, `SYNCPAY_CLIENT_SECRET`.
+### 1. Banco (nova tabela)
+`trial_signups` com: `referral_code`, `name`, `whatsapp`, `status`, `topgestor_customer_id` (preenchido só na aprovação), `approved_by`, `rejection_reason`, timestamps.
 
-### 2. Edge functions novas
-- **`syncpay-client`** (helper interno — não exposto): gera/cacheia o Bearer token (validade 1h) e expõe `createCashIn()` e `getTransaction()`.
-- **`syncpay-webhook`** (`verify_jwt = false`): recebe `cashin.create`/`cashin.update`, identifica se é pagamento de cliente ou revendedor pelo `external_id` salvo, e chama a mesma lógica de confirmação já existente nos webhooks Fast Depix.
+Índice único em `whatsapp` WHERE status IN ('pending','approved') pra evitar cadastro duplicado.
 
-### 3. Edge functions existentes
-- **`fastdepix-create-pix`**: lê `pix_provider_customers`. Se `syncpay`, cria cobrança via SyncPay; senão, mantém fluxo Fast Depix. Resposta normalizada (mesmos campos: `payment_id`, `qr_code_url`, `qr_code_text`, `expires_at`, `amount`).
-- **`reseller-create-pix`**: igual, lendo `pix_provider_resellers`.
-- **`reseller-check-status`** / **`payment-status`**: quando o registro tem `provider='syncpay'`, consulta `/transaction/{id}` do SyncPay.
+### 2. Edge function `referrals-api` (edições)
+- `action=create-trial` **muda comportamento**: em vez de criar no TopGestor, insere em `trial_signups` com status `pending` e retorna `{ status: 'pending', message: '...' }`.
+- `action=list-pending-signups` (novo, admin) — lista fila.
+- `action=approve-signup` (novo, admin) — recebe `signup_id`, `usuario`, `senha`, `plan_id`. Cria cliente no TopGestor via API existente, cria registro em `referrals` com status `pending_referrer_renewal`, marca signup como `approved`. Retorna link WhatsApp pronto pro admin mandar pro cliente.
+- `action=reject-signup` (novo, admin) — marca como `rejected` com motivo.
 
-### 4. Admin (UI)
-Nova aba **"Provedor PIX"** em `src/pages/Admin.tsx` com componente `PixProviderTab.tsx`:
-- Card "Clientes (renovações)" com toggle Fast Depix ↔ SyncPay
-- Card "Revendedores (recargas)" com toggle Fast Depix ↔ SyncPay
-- Status de configuração (mostra se as secrets do SyncPay estão presentes)
-- Webhook URL do SyncPay para copiar/colar no painel deles
+### 3. Frontend `IndicacaoTeste.tsx`
+Depois de enviar, mostra tela nova: "✓ Cadastro recebido! Estamos preparando seu acesso — você receberá as credenciais no WhatsApp em até X horas." Sem mostrar user/senha (porque ainda não existem).
 
-### 5. Frontend
-Sem mudança visível — `src/lib/api.ts` (`createPixPayment`) e `src/lib/resellerApi.ts` continuam chamando as mesmas funções, que internamente roteiam.
+### 4. Novo painel admin `TrialSignupsTab.tsx`
+Aba nova em `/admin` com lista de pendentes: nome, WhatsApp, quem indicou, quando cadastrou. Cada linha tem:
+- Botão **Aprovar** → abre modal pedindo usuário, senha e plano → chama `approve-signup` → mostra botão "Enviar credenciais no WhatsApp" com mensagem pré-formatada.
+- Botão **Rejeitar** → pede motivo → marca como rejeitado.
 
-## Pontos técnicos
-- SyncPay exige `client.cpf` (11 dígitos) sempre. Para renovação de cliente onde não temos CPF, usaremos o CPF cadastrado no TopGestor; se não houver, fallback para um CPF placeholder configurável. Para revendedores, pediremos CPF no checkout só quando o provedor ativo for SyncPay.
-- Limite ≥ R$ 500 sem CPF (regra do Fast Depix) não se aplica ao SyncPay — então quando SyncPay estiver ativo, podemos remover o fallback "link de pagamento ≥ R$ 500" (manter comportamento atual quando Fast Depix estiver ativo).
-- Token SyncPay cacheado em memória da edge function por ~55 min; renovado on-demand.
-- Webhook do SyncPay: `https://qknlbgpesxirghlvalty.supabase.co/functions/v1/syncpay-webhook` (mostrado no Admin para copiar).
+Também mostra histórico de aprovados/rejeitados com filtro.
 
-## Entregáveis
-1. Migration: 3 chaves em `system_config` + coluna `provider` nas 2 tabelas
-2. Secrets `SYNCPAY_CLIENT_ID` / `SYNCPAY_CLIENT_SECRET`
-3. Edge functions: `syncpay-webhook` (nova) + atualização de `fastdepix-create-pix`, `reseller-create-pix`, `reseller-check-status`, `payment-status`
-4. Helper compartilhado SyncPay (inline em cada função, já que edge functions não compartilham módulos facilmente)
-5. Nova aba `PixProviderTab` no Admin
-6. `config.toml`: `verify_jwt = false` para `syncpay-webhook`
+### 5. `ReferralSheet.tsx` (ajuste leve de copy)
+Trocar texto pra deixar claro que o bônus vem quando o indicado **pagar** (não quando cadastrar), evitando expectativa errada.
 
-Confirma para eu começar? Vou precisar das credenciais `SYNCPAY_CLIENT_ID` e `SYNCPAY_CLIENT_SECRET` quando você aprovar.
+## Sobre o desconto de 5%
+
+**Recomendo NÃO implementar agora.** Motivos:
+1. O indicado já ganha teste grátis (dias configuráveis no admin) — já é um incentivo forte.
+2. Aplicar 5% no 1º PIX exige mexer em `fastdepix-create-pix`, criar tabela de cupons, e uma flag "primeiro pagamento" no cliente. É outro projeto.
+3. Se depois quiser adicionar, dá pra fazer isolado sem retrabalho no fluxo de aprovação.
+
+Se você quiser mesmo o desconto, marco pra fazer numa segunda leva.
+
+## Ordem de implementação
+
+1. Migration `trial_signups` + grants + RLS + policies
+2. Editar `referrals-api` (mudar create-trial + adicionar approve/reject/list)
+3. Atualizar `IndicacaoTeste.tsx` (tela de "em análise")
+4. Criar `TrialSignupsTab.tsx` e plugar em `Admin.tsx`
+5. Ajuste de copy no `ReferralSheet.tsx`
+
+## Detalhes técnicos
+
+- Autenticação admin: reusar o padrão de `ReferralTrialConfigTab` (mesma proteção já existente pras rotas admin do `referrals-api`).
+- Mensagem WhatsApp de aprovação: template com nome, usuário, senha, plano, dias de teste, link de download do app. Botão copia URL `wa.me` já pronta.
+- Rejeição de WhatsApp duplicado: se já existe signup pending/approved com mesmo WhatsApp, `create-trial` retorna erro com link pro suporte (comportamento atual já existe, mantém).
+- TopGestor: criação usa endpoint `POST /customers` via `topgestor-proxy` — precisa adicionar action `create-customer` no proxy se ainda não tiver (verificar).
+
+Aprova esse plano ou quer ajustar algo (ex: incluir o desconto de 5% agora, mudar copy, adicionar auto-aprovação em casos específicos)?

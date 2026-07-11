@@ -180,6 +180,8 @@ Deno.serve(async (req) => {
     }
 
     // ----- create-trial (public) -----
+    // NEW BEHAVIOR: enqueue in trial_signups (status=pending) instead of creating in TopGestor.
+    // Admin must approve manually — credentials are created in the panel (Warez/Uniplay) first.
     if (action === "create-trial") {
       const body = await req.json().catch(() => ({}));
       const code = String(body.code || "").trim().toUpperCase();
@@ -204,50 +206,133 @@ Deno.serve(async (req) => {
       if (cfg.trial_enabled === "false") {
         return jsonRes({ error: "Sistema de teste grátis temporariamente desativado" }, 403);
       }
-      const productId = Number(cfg.trial_product_id);
-      const planId = Number(cfg.trial_plan_id);
-      const telas = Number(cfg.trial_telas || 1);
       const days = Number(cfg.trial_days || 1);
+      const telas = Number(cfg.trial_telas || 1);
+      const supportWhatsapp = cfg.trial_support_whatsapp || "";
+
+      // 3) Anti-abuse: reject if WhatsApp already exists in TopGestor as active customer
+      const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
+      if (tgToken) {
+        try {
+          const searchRes = await fetch(`${TG_BASE}/customers/search/${encodeURIComponent(whatsapp)}`, {
+            headers: { Authorization: `Bearer ${tgToken}`, Accept: "application/json" },
+          });
+          if (searchRes.ok) {
+            const searchData = await searchRes.json().catch(() => ({}));
+            const list = Array.isArray(searchData?.data) ? searchData.data : (Array.isArray(searchData) ? searchData : []);
+            const match = list.find((c: any) => onlyDigits(c.whatsapp || c.telefone || "") === whatsapp);
+            if (match) {
+              return jsonRes({
+                error: "Este WhatsApp já está cadastrado. Faça login ou fale com o suporte.",
+                already_exists: true,
+                support_whatsapp: supportWhatsapp,
+              }, 409);
+            }
+          }
+        } catch (e) {
+          console.warn("[create-trial] TG search failed (continuing)", e);
+        }
+      }
+
+      // 4) Insert into trial_signups queue
+      const { data: inserted, error: insErr } = await supabase
+        .from("trial_signups")
+        .insert({
+          referral_code: code,
+          referrer_customer_id: refRow.customer_id,
+          referrer_customer_name: refRow.customer_name,
+          name,
+          whatsapp,
+          status: "pending",
+          trial_days: days,
+        })
+        .select()
+        .single();
+
+      if (insErr) {
+        const msg = String(insErr.message || "").toLowerCase();
+        if (msg.includes("duplicate") || msg.includes("unique")) {
+          return jsonRes({
+            error: "Este WhatsApp já tem um cadastro em análise ou aprovado. Fale com o suporte.",
+            already_exists: true,
+            support_whatsapp: supportWhatsapp,
+          }, 409);
+        }
+        console.error("[create-trial] signup insert error", insErr);
+        return jsonRes({ error: insErr.message }, 500);
+      }
+
+      return jsonRes({
+        ok: true,
+        status: "pending",
+        signup_id: inserted?.id,
+        trial_days: days,
+        telas,
+        support_whatsapp: supportWhatsapp,
+        referrer_name: refRow.customer_name,
+      });
+    }
+
+    // ----- list-signups (admin) -----
+    if (action === "list-signups") {
+      const pwd = req.headers.get("x-admin-password");
+      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      const status = url.searchParams.get("status"); // pending | approved | rejected | null=all
+      let q = supabase.from("trial_signups").select("*").order("created_at", { ascending: false }).limit(300);
+      if (status) q = q.eq("status", status);
+      const { data, error } = await q;
+      if (error) return jsonRes({ error: error.message }, 500);
+      return jsonRes({ signups: data || [] });
+    }
+
+    // ----- approve-signup (admin) -----
+    // Admin has ALREADY created user/password in Warez/Uniplay. Now we:
+    //   1) create the customer in TopGestor with those credentials
+    //   2) mark signup as approved
+    //   3) create a referrals row (pending_payment) so referrer bonus is triggered on 1st PIX
+    if (action === "approve-signup") {
+      const pwd = req.headers.get("x-admin-password");
+      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+
+      const body = await req.json().catch(() => ({}));
+      const signupId = String(body.signup_id || "").trim();
+      const usuario = String(body.usuario || "").trim();
+      const password = String(body.password || "").trim();
+      const planIdOverride = body.plan_id ? Number(body.plan_id) : null;
+      const daysOverride = body.trial_days ? Number(body.trial_days) : null;
+
+      if (!signupId) return jsonRes({ error: "signup_id obrigatório" }, 400);
+      if (usuario.length < 2 || usuario.length > 32) return jsonRes({ error: "Usuário inválido" }, 400);
+      if (password.length < 3 || password.length > 32) return jsonRes({ error: "Senha inválida" }, 400);
+
+      const { data: signup, error: getErr } = await supabase
+        .from("trial_signups")
+        .select("*")
+        .eq("id", signupId)
+        .maybeSingle();
+      if (getErr || !signup) return jsonRes({ error: "Cadastro não encontrado" }, 404);
+      if (signup.status !== "pending") {
+        return jsonRes({ error: `Cadastro já está ${signup.status}` }, 409);
+      }
+
+      const cfg = await getConfigMap(supabase);
+      const productId = Number(cfg.trial_product_id);
+      const planId = planIdOverride || Number(cfg.trial_plan_id);
+      const telas = Number(cfg.trial_telas || 1);
+      const days = daysOverride || Number(signup.trial_days || cfg.trial_days || 1);
       const supportWhatsapp = cfg.trial_support_whatsapp || "";
       if (!productId || !planId) {
-        return jsonRes({ error: "Configuração de teste incompleta. Avise o suporte." }, 500);
+        return jsonRes({ error: "Configure product_id e plan_id na aba Indicação antes de aprovar" }, 500);
       }
 
       const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
       if (!tgToken) return jsonRes({ error: "TopGestor não configurado" }, 500);
-      const tgHeaders = {
-        Authorization: `Bearer ${tgToken}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      };
 
-      // 3) Anti-abuse: check if WhatsApp already exists in TopGestor
-      try {
-        const searchRes = await fetch(`${TG_BASE}/customers/search/${encodeURIComponent(whatsapp)}`, { headers: tgHeaders });
-        if (searchRes.ok) {
-          const searchData = await searchRes.json().catch(() => ({}));
-          const list = Array.isArray(searchData?.data) ? searchData.data : (Array.isArray(searchData) ? searchData : []);
-          const match = list.find((c: any) => onlyDigits(c.whatsapp || c.telefone || "") === whatsapp);
-          if (match) {
-            return jsonRes({
-              error: "Este WhatsApp já está cadastrado. Faça login ou fale com o suporte.",
-              already_exists: true,
-              support_whatsapp: supportWhatsapp,
-            }, 409);
-          }
-        }
-      } catch (e) {
-        console.warn("[create-trial] TG search failed (continuing)", e);
-      }
-
-      // 4) Build payload
-      const usuario = `t${whatsapp.slice(-6)}${genCode(3).toLowerCase()}`.slice(0, 16);
-      const password = genCode(6).toLowerCase();
-      const observacao = `Teste grátis via indicação. Indicado por: ${refRow.customer_name || "ID " + refRow.customer_id} (cód ${refRow.code}).`;
+      const observacao = `Teste grátis via indicação. Indicado por: ${signup.referrer_customer_name || "ID " + signup.referrer_customer_id} (cód ${signup.referral_code}). Aprovado manualmente.`;
 
       const createPayload: Record<string, unknown> = {
-        name,
-        whatsapp,
+        name: signup.name,
+        whatsapp: signup.whatsapp,
         product_id: productId,
         plan_id: planId,
         telas,
@@ -258,15 +343,18 @@ Deno.serve(async (req) => {
         send_whatsapp: false,
       };
 
-      // 5) Create in TopGestor
       const createRes = await fetch(`${TG_BASE}/customers`, {
         method: "POST",
-        headers: tgHeaders,
+        headers: {
+          Authorization: `Bearer ${tgToken}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(createPayload),
       });
       const createData = await createRes.json().catch(() => ({}));
       if (!createRes.ok) {
-        console.error("[create-trial] TG create failed", createRes.status, createData);
+        console.error("[approve-signup] TG create failed", createRes.status, createData);
         return jsonRes({
           error: createData?.message || createData?.error || `Falha ao criar no TopGestor (${createRes.status})`,
           tg_response: createData,
@@ -279,21 +367,36 @@ Deno.serve(async (req) => {
       }
 
       // Block self-referral
-      if (referredId === Number(refRow.customer_id)) {
-        return jsonRes({ error: "Você não pode se indicar" }, 400);
+      if (referredId === Number(signup.referrer_customer_id)) {
+        return jsonRes({ error: "Auto-indicação detectada — TopGestor retornou o próprio ID do indicador" }, 400);
       }
 
-      // 6) Insert referral row (pending_payment)
+      // Mark signup approved
+      await supabase
+        .from("trial_signups")
+        .update({
+          status: "approved",
+          topgestor_customer_id: referredId,
+          usuario,
+          password,
+          plan_id: planId,
+          trial_days: days,
+          approved_at: new Date().toISOString(),
+          approved_by: "admin",
+        })
+        .eq("id", signupId);
+
+      // Register referral (pending_payment) — bonus fires when referred pays 1st PIX
       const { error: refErr } = await supabase.from("referrals").insert({
-        referrer_customer_id: refRow.customer_id,
+        referrer_customer_id: signup.referrer_customer_id,
         referred_customer_id: referredId,
-        referred_customer_name: name,
-        referral_code: code,
+        referred_customer_name: signup.name,
+        referral_code: signup.referral_code,
         bonus_days: 30,
         status: "pending_payment",
       });
       if (refErr && !`${refErr.message}`.toLowerCase().includes("duplicate")) {
-        console.error("[create-trial] referrals insert error", refErr);
+        console.error("[approve-signup] referrals insert error", refErr);
       }
 
       return jsonRes({
@@ -303,8 +406,52 @@ Deno.serve(async (req) => {
         password,
         trial_days: days,
         support_whatsapp: supportWhatsapp,
-        referrer_name: refRow.customer_name,
       });
+    }
+
+    // ----- reject-signup (admin) -----
+    if (action === "reject-signup") {
+      const pwd = req.headers.get("x-admin-password");
+      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      const body = await req.json().catch(() => ({}));
+      const signupId = String(body.signup_id || "").trim();
+      const reason = String(body.reason || "").trim().slice(0, 300);
+      if (!signupId) return jsonRes({ error: "signup_id obrigatório" }, 400);
+
+      const { data: signup } = await supabase
+        .from("trial_signups")
+        .select("status")
+        .eq("id", signupId)
+        .maybeSingle();
+      if (!signup) return jsonRes({ error: "Cadastro não encontrado" }, 404);
+      if (signup.status !== "pending") {
+        return jsonRes({ error: `Cadastro já está ${signup.status}` }, 409);
+      }
+
+      const { error } = await supabase
+        .from("trial_signups")
+        .update({
+          status: "rejected",
+          rejection_reason: reason || "Sem motivo informado",
+          rejected_at: new Date().toISOString(),
+          approved_by: "admin",
+        })
+        .eq("id", signupId);
+      if (error) return jsonRes({ error: error.message }, 500);
+      return jsonRes({ ok: true });
+    }
+
+    // ----- get-signup-status (public — used by "em análise" screen for polling) -----
+    if (action === "get-signup-status") {
+      const signupId = String(url.searchParams.get("signup_id") || "").trim();
+      if (!signupId) return jsonRes({ error: "signup_id required" }, 400);
+      const { data } = await supabase
+        .from("trial_signups")
+        .select("id, status, name, trial_days, created_at")
+        .eq("id", signupId)
+        .maybeSingle();
+      if (!data) return jsonRes({ error: "not found" }, 404);
+      return jsonRes(data);
     }
 
     return jsonRes({ error: "Invalid action" }, 400);
