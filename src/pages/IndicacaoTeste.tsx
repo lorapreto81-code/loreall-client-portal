@@ -42,7 +42,7 @@ const IndicacaoTeste = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<CreateResult | null>(null);
+  const [result, setResult] = useState<PendingResult | null>(null);
 
   useEffect(() => {
     (async () => {
