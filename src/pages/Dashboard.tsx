@@ -85,6 +85,23 @@ const Dashboard = () => {
   const days = daysUntil(customer.data_de_vencimento);
   const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
 
+  // Dados do cliente — checagem de completude
+  const rawPhone = String((customer as any).whatsapp || (customer as any).celular || "").replace(/\D/g, "");
+  const hasValidPhone = rawPhone.length >= 10; // exige DDD + número
+  const hasValidName = (customer.name || "").trim().split(" ").filter(Boolean).length >= 2;
+  const profileIncomplete = !hasValidPhone || !hasValidName;
+
+  // Auto-abre "Meus dados" 1x por sessão quando incompleto
+  useEffect(() => {
+    if (!profileIncomplete) return;
+    const key = `loreall_profile_prompted_${customer.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    const t = setTimeout(() => setProfileOpen(true), 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileIncomplete, customer.id]);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
