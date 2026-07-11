@@ -242,6 +242,30 @@ const Dashboard = () => {
           Renovar acesso
         </button>
 
+        {/* MEUS DADOS — acesso claro e destacado para atualizar cadastro */}
+        <button
+          onClick={() => setProfileOpen(true)}
+          className="w-full text-left card-elevated p-4 flex items-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <div className="rounded-full p-2.5 shrink-0 bg-primary/10">
+            <User className="h-4 w-4 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              Meus dados de acesso
+              {profileIncomplete && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/20 text-warning-foreground uppercase">
+                  Atualizar
+                </span>
+              )}
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-snug truncate">
+              Nome, WhatsApp, e-mail e CPF · toque para editar
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        </button>
+
         {/* LANÇAMENTOS */}
         <div>
           <div className="flex items-center gap-2 mb-2.5 px-1">
