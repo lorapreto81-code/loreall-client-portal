@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  CalendarDays, Monitor, Zap, User, ChevronRight
+  CalendarDays, Monitor, Zap, User, ChevronRight, CheckCircle2
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -80,6 +80,22 @@ const Dashboard = () => {
     return () => window.removeEventListener("auth:unauthorized", handler);
   }, [logout, navigate]);
 
+  // Dados do cliente — checagem de completude (hooks precisam vir antes de qualquer early return)
+  const rawPhone = String((customer as any)?.whatsapp || (customer as any)?.celular || "").replace(/\D/g, "");
+  const hasValidPhone = rawPhone.length >= 10; // exige DDD + número
+  const hasValidName = (customer?.name || "").trim().split(" ").filter(Boolean).length >= 2;
+  const profileIncomplete = !!customer && (!hasValidPhone || !hasValidName);
+
+  // Auto-abre "Meus dados" 1x por sessão quando incompleto
+  useEffect(() => {
+    if (!customer || !profileIncomplete) return;
+    const key = `loreall_profile_prompted_${customer.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    const t = setTimeout(() => setProfileOpen(true), 600);
+    return () => clearTimeout(t);
+  }, [profileIncomplete, customer]);
+
   if (!customer) return null;
 
   const days = daysUntil(customer.data_de_vencimento);
@@ -133,6 +149,31 @@ const Dashboard = () => {
       </header>
 
       <main className="px-4 py-4 max-w-[480px] mx-auto" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* CONFIRME SEUS DADOS — prioridade máxima quando incompletos */}
+        {profileIncomplete && (
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="w-full text-left rounded-xl p-4 flex items-center gap-3 border-2 animate-in fade-in slide-in-from-top duration-300"
+            style={{
+              borderColor: "hsl(var(--warning))",
+              background: "hsl(var(--warning) / 0.08)",
+            }}
+          >
+            <div className="rounded-full p-2.5 shrink-0" style={{ background: "hsl(var(--warning) / 0.18)" }}>
+              <AlertTriangle className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">Confirme seus dados</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                {!hasValidPhone
+                  ? "Adicione seu WhatsApp com DDD para receber lembretes de renovação."
+                  : "Verifique se seu nome está completo."}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </button>
+        )}
+
         {/* CARD DO PLANO — status único, sem duplicar em outro lugar */}
         {(() => {
           const pill = getStatusPill(days);
@@ -210,25 +251,39 @@ const Dashboard = () => {
           <LaunchesBanner />
         </div>
 
-        {/* MEUS DADOS — nome + WhatsApp formatado */}
+        {/* MEUS DADOS — nome + WhatsApp formatado, com status */}
         <button
           onClick={() => setProfileOpen(true)}
           className="card-elevated p-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99] w-full flex items-center gap-3"
         >
-          <div className="rounded-full p-2.5 bg-primary/10 shrink-0">
-            <User className="h-4 w-4 text-primary" />
+          <div
+            className="rounded-full p-2.5 shrink-0"
+            style={{
+              background: profileIncomplete ? "hsl(var(--warning) / 0.15)" : "hsl(var(--primary) / 0.10)",
+            }}
+          >
+            {profileIncomplete ? (
+              <AlertTriangle className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
+            ) : (
+              <User className="h-4 w-4 text-primary" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground truncate">{customer.name || "Meus dados"}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-semibold text-foreground truncate">{customer.name || "Meus dados"}</p>
+              {!profileIncomplete && (
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#2E9A73" }} />
+              )}
+            </div>
             <p className="text-[11px] text-muted-foreground truncate">
-              {(() => {
-                const raw = String((customer as any).whatsapp || (customer as any).celular || "");
-                return raw ? formatPhone(raw) : "Toque para adicionar seu WhatsApp";
-              })()}
+              {hasValidPhone
+                ? formatPhone(rawPhone)
+                : "Toque para adicionar seu WhatsApp com DDD"}
             </p>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
+
 
 
         {/* INDIQUE E GANHE */}
