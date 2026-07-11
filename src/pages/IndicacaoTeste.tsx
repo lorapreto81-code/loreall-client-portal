@@ -99,7 +99,7 @@ const IndicacaoTeste = () => {
         }
         return;
       }
-      setResult(data as CreateResult);
+      setResult(data as PendingResult);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro inesperado");
     } finally {
