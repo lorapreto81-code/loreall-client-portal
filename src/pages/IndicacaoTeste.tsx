@@ -99,7 +99,24 @@ const IndicacaoTeste = () => {
         }
         return;
       }
-      setResult(data as PendingResult);
+      const pending = data as PendingResult;
+      setResult(pending);
+
+      // Auto-abre WhatsApp de suporte com os dados do cliente para a equipe já ser notificada
+      const supportMsg =
+        `Olá! 👋 Acabei de me cadastrar pelo link de indicação e quero ativar meu *teste grátis* na *Loreall Play TV*.\n\n` +
+        `━━━━━━━━━━━━━━━━━━\n` +
+        `📛 *Nome:* ${name.trim()}\n` +
+        `📱 *WhatsApp:* ${formatPhone(phone)}\n` +
+        `🎁 *Indicado por:* ${referrerName || "—"}\n` +
+        `🔖 *Código:* ${code}\n` +
+        `🎫 *Protocolo:* ${pending.signup_id.slice(0, 8).toUpperCase()}\n` +
+        `📅 *Teste:* ${pending.trial_days} dia(s)\n` +
+        `━━━━━━━━━━━━━━━━━━\n\n` +
+        `Aguardo o envio do meu usuário e senha 🙌`;
+      if (pending.support_whatsapp) {
+        openSupport(pending.support_whatsapp, supportMsg);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro inesperado");
     } finally {
