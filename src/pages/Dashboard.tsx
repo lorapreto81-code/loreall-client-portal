@@ -129,7 +129,7 @@ const Dashboard = () => {
               <div className="text-[11px] text-muted-foreground leading-tight">Área do Cliente</div>
               <div className="text-[13px] font-semibold text-foreground leading-tight truncate">Olá, {firstName(customer.name)}!</div>
             </div>
-          </div>
+          </button>
           <div className="flex items-center gap-1">
             <button
               onClick={toggleTheme}
