@@ -161,22 +161,30 @@ const IndicacaoTeste = () => {
 
   if (result) {
     const supportMsg =
-      `Oi! Acabei de me cadastrar pro teste grátis pela indicação do(a) *${referrerName}* (código ${code}).\n\n` +
-      `📛 Nome: ${name}\n📱 WhatsApp: ${formatPhone(phone)}\n🎫 Protocolo: ${result.signup_id.slice(0, 8).toUpperCase()}\n\nEstou aguardando a liberação do meu teste de ${result.trial_days} dia(s).`;
+      `Olá! 👋 Acabei de me cadastrar pelo link de indicação e quero ativar meu *teste grátis* na *Loreall Play TV*.\n\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `📛 *Nome:* ${name.trim()}\n` +
+      `📱 *WhatsApp:* ${formatPhone(phone)}\n` +
+      `🎁 *Indicado por:* ${referrerName || "—"}\n` +
+      `🔖 *Código:* ${code}\n` +
+      `🎫 *Protocolo:* ${result.signup_id.slice(0, 8).toUpperCase()}\n` +
+      `📅 *Teste:* ${result.trial_days} dia(s)\n` +
+      `━━━━━━━━━━━━━━━━━━\n\n` +
+      `Aguardo o envio do meu usuário e senha 🙌`;
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
         <div className="card-elevated p-6 w-full max-w-md space-y-5">
           <div className="text-center space-y-3">
             <div className="relative inline-flex">
-              <Clock className="h-14 w-14 text-primary" />
+              <MessageCircle className="h-14 w-14 text-primary" />
               <span className="absolute -top-1 -right-1 flex h-4 w-4">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
                 <span className="relative inline-flex rounded-full h-4 w-4 bg-primary" />
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Cadastro em análise</h1>
+            <h1 className="text-2xl font-bold text-foreground">Abrimos o WhatsApp pra você!</h1>
             <p className="text-sm text-muted-foreground">
-              Recebemos seus dados! Nossa equipe está preparando seu acesso e vai enviar o <strong className="text-foreground">usuário e senha</strong> diretamente no seu WhatsApp.
+              Envie a mensagem que já preenchemos e nossa equipe libera seu <strong className="text-foreground">usuário e senha</strong> em instantes.
             </p>
           </div>
 
@@ -190,8 +198,8 @@ const IndicacaoTeste = () => {
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex gap-3">
             <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div className="text-xs text-muted-foreground space-y-1">
-              <p className="font-semibold text-foreground">Próximo passo</p>
-              <p>Fique de olho no seu WhatsApp — em breve você recebe as credenciais e um tutorial rápido de instalação.</p>
+              <p className="font-semibold text-foreground">Não abriu o WhatsApp?</p>
+              <p>Alguns navegadores bloqueiam a abertura automática. Toque no botão abaixo para abrir manualmente.</p>
             </div>
           </div>
 
@@ -201,7 +209,7 @@ const IndicacaoTeste = () => {
             className="w-full py-3 btn-primary-gradient font-semibold text-sm inline-flex items-center justify-center gap-2"
             disabled={!result.support_whatsapp}
           >
-            <MessageCircle className="h-4 w-4" /> Falar com o suporte
+            <MessageCircle className="h-4 w-4" /> Abrir WhatsApp do suporte
           </button>
           {!result.support_whatsapp && (
             <p className="text-xs text-destructive text-center">
