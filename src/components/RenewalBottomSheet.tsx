@@ -137,14 +137,41 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     if (!subForm || !customer) return;
     setSubLoading(true);
     try {
+      const cleanCpf = subCpf.replace(/\D/g, "");
+      const cleanPhone = subPhone.replace(/\D/g, "");
+      const trimmedName = subName.trim();
+      const trimmedEmail = subEmail.trim().toLowerCase();
+
+      // Persiste dados no TopGestor para reutilizar em próximas assinaturas
+      try {
+        const savedName = (customer.name || "").trim();
+        const savedEmail = String((customer as any).email || "").trim().toLowerCase();
+        const savedCpf = String((customer as any).cpf || "").replace(/\D/g, "");
+        const savedPhone = String((customer as any).whatsapp || (customer as any).celular || "").replace(/\D/g, "");
+        const patch: Record<string, unknown> = {};
+        if (trimmedName && trimmedName !== savedName) patch.name = trimmedName;
+        if (trimmedEmail && trimmedEmail !== savedEmail) patch.email = trimmedEmail;
+        if (cleanCpf && cleanCpf !== savedCpf) patch.cpf = cleanCpf;
+        if (cleanPhone && cleanPhone !== savedPhone) patch.whatsapp = cleanPhone;
+        if (Object.keys(patch).length > 0) {
+          await updateCustomer(customer.id, patch);
+          try {
+            const cust = await getCustomer(customer.id);
+            login((cust.data || cust) as Customer);
+          } catch { /* ignore refresh error */ }
+        }
+      } catch (e) {
+        console.warn("[subscribe] falha ao salvar dados do cliente", e);
+      }
+
       const { data, error } = await supabase.functions.invoke("syncpay-subscribe", {
         body: {
           plan_id: subForm.id,
           customer_id: customer.id,
-          name: subName,
-          email: subEmail,
-          cpf: subCpf,
-          phone: subPhone,
+          name: trimmedName,
+          email: trimmedEmail,
+          cpf: cleanCpf,
+          phone: cleanPhone,
         },
       });
       if (error) throw new Error(error.message || "Falha ao criar assinatura");
