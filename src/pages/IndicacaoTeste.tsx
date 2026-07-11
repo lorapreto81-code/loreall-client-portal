@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Loader2, Gift, CheckCircle2, MessageCircle, ArrowLeft, AlertCircle } from "lucide-react";
+import { Loader2, Gift, CheckCircle2, MessageCircle, ArrowLeft, AlertCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { lookupReferralCode } from "@/lib/api";
 
@@ -15,13 +15,10 @@ interface PublicConfig {
   support_whatsapp: string;
 }
 
-interface CreateResult {
-  customer_id: number;
-  usuario: string;
-  password: string;
+interface PendingResult {
+  signup_id: string;
   trial_days: number;
   support_whatsapp: string;
-  referrer_name?: string;
 }
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
