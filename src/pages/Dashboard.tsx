@@ -120,16 +120,13 @@ const Dashboard = () => {
       {/* HEADER — só identidade e ações; status fica no card abaixo */}
       <header className="bg-card/80 backdrop-blur-md sticky top-0 z-10 border-b border-border">
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
-          <button
-            onClick={() => setProfileOpen(true)}
-            className="flex items-center gap-2.5 min-w-0 text-left transition-opacity hover:opacity-80 active:opacity-70"
-          >
+          <div className="flex items-center gap-2.5 min-w-0">
             <img src={logo} alt="Loreall Play TV" style={{ height: 32, width: "auto" }} />
             <div className="hidden min-[360px]:block min-w-0">
               <div className="text-[11px] text-muted-foreground leading-tight">Área do Cliente</div>
               <div className="text-[13px] font-semibold text-foreground leading-tight truncate">Olá, {firstName(customer.name)}!</div>
             </div>
-          </button>
+          </div>
           <div className="flex items-center gap-1">
             <button
               onClick={toggleTheme}
