@@ -5,11 +5,10 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  Crown, Clock, Monitor, Zap, User, ChevronRight, Phone
+  CalendarDays, Monitor, Zap, User, ChevronRight
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
-import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -21,6 +20,15 @@ import ProfileSheet from "@/components/ProfileSheet";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
+/** Formats a Brazilian phone number for display. */
+const formatPhone = (raw: string): string => {
+  const d = String(raw || "").replace(/\D/g, "");
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  if (d.length === 13) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}`;
+  return String(raw || "");
+};
+
 /** Returns color for days remaining */
 const getDaysColor = (days: number): string => {
   if (days < 0) return "#E24B4A";
@@ -29,12 +37,13 @@ const getDaysColor = (days: number): string => {
   return "#5DCAA5";
 };
 
-/** Returns correct text for days remaining */
-const getDaysText = (days: number): string => {
-  if (days < 0) return "Acesso vencido";
-  if (days === 0) return "Vence hoje!";
-  if (days === 1) return "Falta 1 dia";
-  return `Faltam ${days} dias`;
+/** Short status pill for the header. */
+const getStatusPill = (days: number): { label: string; bg: string; color: string } => {
+  if (days < 0) return { label: "Vencido", bg: "rgba(226,75,74,0.15)", color: "#E24B4A" };
+  if (days === 0) return { label: "Vence hoje", bg: "rgba(240,149,149,0.18)", color: "#E24B4A" };
+  if (days === 1) return { label: "1 dia", bg: "rgba(250,199,117,0.20)", color: "#B47700" };
+  if (days < 7) return { label: `${days} dias`, bg: "rgba(250,199,117,0.20)", color: "#B47700" };
+  return { label: "Ativo", bg: "rgba(93,202,165,0.15)", color: "#2E9A73" };
 };
 
 /** Plural for telas */
