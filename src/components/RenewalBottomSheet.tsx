@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse } from "@/lib/api";
+import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
