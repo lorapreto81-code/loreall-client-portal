@@ -145,22 +145,37 @@ const IndicacaoTeste = () => {
   if (result) {
     const supportMsg =
       `Oi! Acabei de me cadastrar pro teste grátis pela indicação do(a) *${referrerName}* (código ${code}).\n\n` +
-      `📛 Nome: ${name}\n📱 WhatsApp: ${formatPhone(phone)}\n🆔 ID: ${result.customer_id}\n👤 Usuário: ${result.usuario}\n🔑 Senha: ${result.password}\n\nQuero ativar meu teste de ${result.trial_days} dia(s).`;
+      `📛 Nome: ${name}\n📱 WhatsApp: ${formatPhone(phone)}\n🎫 Protocolo: ${result.signup_id.slice(0, 8).toUpperCase()}\n\nEstou aguardando a liberação do meu teste de ${result.trial_days} dia(s).`;
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
         <div className="card-elevated p-6 w-full max-w-md space-y-5">
-          <div className="text-center space-y-2">
-            <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Cadastro criado! 🎉</h1>
+          <div className="text-center space-y-3">
+            <div className="relative inline-flex">
+              <Clock className="h-14 w-14 text-primary" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-primary" />
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Cadastro em análise</h1>
             <p className="text-sm text-muted-foreground">
-              Você tem {result.trial_days} dia(s) de teste grátis. Fale com o suporte para liberar seu acesso.
+              Recebemos seus dados! Nossa equipe está preparando seu acesso e vai enviar o <strong className="text-foreground">usuário e senha</strong> diretamente no seu WhatsApp.
             </p>
           </div>
 
           <div className="bg-muted/40 border border-border rounded-lg p-4 space-y-2 text-sm">
-            <Row label="ID do cliente" value={`#${result.customer_id}`} />
-            <Row label="Usuário (temporário)" value={result.usuario} mono />
-            <Row label="Senha (temporária)" value={result.password} mono />
+            <Row label="Protocolo" value={result.signup_id.slice(0, 8).toUpperCase()} mono />
+            <Row label="Nome" value={name} />
+            <Row label="WhatsApp" value={formatPhone(phone)} />
+            <Row label="Teste liberado" value={`${result.trial_days} dia(s)`} />
+          </div>
+
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex gap-3">
+            <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p className="font-semibold text-foreground">Próximo passo</p>
+              <p>Fique de olho no seu WhatsApp — em breve você recebe as credenciais e um tutorial rápido de instalação.</p>
+            </div>
           </div>
 
           <button
