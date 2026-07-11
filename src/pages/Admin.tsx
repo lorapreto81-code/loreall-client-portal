@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat } from "lucide-react";
+import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat, Inbox } from "lucide-react";
 import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
 import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
 import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
@@ -7,6 +7,7 @@ import ResellerConfigTab from "@/components/admin/ResellerConfigTab";
 import CustomersPaymentsTab from "@/components/admin/CustomersPaymentsTab";
 import CustomersDashboardTab from "@/components/admin/CustomersDashboardTab";
 import ReferralTrialConfigTab from "@/components/admin/ReferralTrialConfigTab";
+import TrialSignupsTab from "@/components/admin/TrialSignupsTab";
 import PixProviderTab from "@/components/admin/PixProviderTab";
 import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
 import SyncpaySubscriptionsTab from "@/components/admin/SyncpaySubscriptionsTab";
