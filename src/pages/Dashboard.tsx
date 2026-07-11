@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  Crown, Clock, Monitor, Zap
+  Crown, Clock, Monitor, Zap, User, ChevronRight, Phone
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -17,6 +17,7 @@ import NoticeBanner from "@/components/NoticeBanner";
 import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
+import ProfileSheet from "@/components/ProfileSheet";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
@@ -52,6 +53,8 @@ const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
   const [renewalOpen, setRenewalOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  
   
 
   useEffect(() => {
@@ -208,7 +211,25 @@ const Dashboard = () => {
           <LaunchesBanner />
         </div>
 
-        {/* 6. INDIQUE E GANHE */}
+        {/* 6. MEUS DADOS */}
+        <button
+          onClick={() => setProfileOpen(true)}
+          className="card-elevated p-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99] w-full flex items-center gap-3"
+        >
+          <div className="rounded-full p-2.5 bg-primary/10 shrink-0">
+            <User className="h-4 w-4 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">Meus dados</p>
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1 truncate">
+              <Phone className="h-3 w-3 shrink-0" />
+              {String((customer as any).whatsapp || (customer as any).celular || "Adicione seu WhatsApp")}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        </button>
+
+        {/* 7. INDIQUE E GANHE */}
         <button
           onClick={() => setReferralOpen(true)}
           className="card-elevated p-5 card-referral text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden"
@@ -260,6 +281,7 @@ const Dashboard = () => {
       />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
+      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   );
 };

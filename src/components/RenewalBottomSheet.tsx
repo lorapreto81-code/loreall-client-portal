@@ -104,12 +104,16 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
   const canUsePix = planValue > 0 && planValue < PIX_MAX_AMOUNT;
 
-  // Assinaturas SyncPay filtradas pelo plano do TopGestor do cliente
-  const filteredSubPlans = useMemo(() => {
+  // Escolhe UM plano de assinatura recomendado (preferindo PIX Automático)
+  // filtrado pelo plano TopGestor atual do cliente. Mantém a UI simples.
+  const recommendedSubPlan = useMemo<SyncpayPublicPlan | null>(() => {
     const all = subPlansQuery.data || [];
-    if (!currentPlanId) return [];
+    if (!currentPlanId) return null;
     const matched = all.filter((sp) => sp.topgestor_plan_id === currentPlanId);
-    return matched;
+    if (matched.length === 0) return null;
+    return (
+      matched.find((sp) => sp.billing_method === "pix_automatico") || matched[0]
+    );
   }, [subPlansQuery.data, currentPlanId]);
 
   const openSubscribeForm = (sp: SyncpayPublicPlan) => {
@@ -633,43 +637,43 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               </>
             )}
 
-            {/* Assinaturas SyncPay — filtradas para o plano atual do cliente */}
-            {filteredSubPlans.length > 0 && (
+            {/* PIX Automático — card único destacado */}
+            {recommendedSubPlan && (
               <div className="mt-5 pt-5 border-t border-border">
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <h4 className="text-sm font-bold text-foreground">Nunca mais se preocupe com renovação</h4>
-                </div>
-                <p className="text-[11px] text-muted-foreground mb-3">Assine e o pagamento acontece sozinho todo mês.</p>
-                <div className="space-y-2">
-                  {filteredSubPlans.map((sp) => {
-                    const isPixAuto = sp.billing_method === "pix_automatico";
-                    return (
-                      <button
-                        key={sp.id}
-                        onClick={() => openSubscribeForm(sp)}
-                        className={`w-full text-left block p-3 rounded-xl border-2 transition-all hover:scale-[1.01] ${isPixAuto ? "border-primary bg-primary/5" : "border-input bg-card hover:border-muted-foreground/40"}`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {isPixAuto ? <Zap className="h-3.5 w-3.5 text-primary" /> : <Repeat className="h-3.5 w-3.5 text-muted-foreground" />}
-                              <span className="text-sm font-semibold text-foreground truncate">{sp.name}</span>
-                              {isPixAuto && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">RECOMENDADO</span>}
-                            </div>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              {isPixAuto ? "Débito automático · autoriza 1x no app do banco" : "QR novo por e-mail a cada ciclo"}
-                            </p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="text-base font-bold text-foreground">{formatCurrency(Number(sp.amount))}</div>
-                            <div className="text-[10px] text-muted-foreground">/ {sp.periodicity_days}d</div>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                  Pagamento automático
+                </p>
+                <button
+                  onClick={() => openSubscribeForm(recommendedSubPlan)}
+                  className="w-full text-left block p-4 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden"
+                  style={{
+                    border: "2px solid transparent",
+                    background:
+                      "linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, linear-gradient(135deg, #00C8FF, #7B2FD4) border-box",
+                    borderRadius: 16,
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full p-2 bg-primary/10 shrink-0">
+                      <Zap className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                        <span className="text-sm font-bold text-foreground">
+                          {recommendedSubPlan.billing_method === "pix_automatico"
+                            ? "PIX Automático"
+                            : "Assinatura recorrente"}
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">
+                          RECOMENDADO
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-snug">
+                        Nunca mais se preocupe com renovação. Autorize uma vez no app do banco e pronto.
+                      </p>
+                    </div>
+                  </div>
+                </button>
               </div>
             )}
 
