@@ -254,38 +254,6 @@ const Dashboard = () => {
           <LaunchesBanner />
         </div>
 
-        {/* MEUS DADOS — nome + WhatsApp formatado, com status */}
-        <button
-          onClick={() => setProfileOpen(true)}
-          className="card-elevated p-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99] w-full flex items-center gap-3"
-        >
-          <div
-            className="rounded-full p-2.5 shrink-0"
-            style={{
-              background: profileIncomplete ? "hsl(var(--warning) / 0.15)" : "hsl(var(--primary) / 0.10)",
-            }}
-          >
-            {profileIncomplete ? (
-              <AlertTriangle className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
-            ) : (
-              <User className="h-4 w-4 text-primary" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <p className="text-sm font-semibold text-foreground truncate">{customer.name || "Meus dados"}</p>
-              {!profileIncomplete && (
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#2E9A73" }} />
-              )}
-            </div>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {hasValidPhone
-                ? formatPhone(rawPhone)
-                : "Toque para adicionar seu WhatsApp com DDD"}
-            </p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-        </button>
 
 
 
