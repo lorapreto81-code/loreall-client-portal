@@ -5,11 +5,10 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  Crown, Clock, Monitor, Zap, User, ChevronRight, Phone
+  CalendarDays, Monitor, Zap, User, ChevronRight
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
-import { StatusBadge } from "@/components/StatusBadge";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -21,6 +20,15 @@ import ProfileSheet from "@/components/ProfileSheet";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
+/** Formats a Brazilian phone number for display. */
+const formatPhone = (raw: string): string => {
+  const d = String(raw || "").replace(/\D/g, "");
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  if (d.length === 13) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}`;
+  return String(raw || "");
+};
+
 /** Returns color for days remaining */
 const getDaysColor = (days: number): string => {
   if (days < 0) return "#E24B4A";
@@ -29,12 +37,13 @@ const getDaysColor = (days: number): string => {
   return "#5DCAA5";
 };
 
-/** Returns correct text for days remaining */
-const getDaysText = (days: number): string => {
-  if (days < 0) return "Acesso vencido";
-  if (days === 0) return "Vence hoje!";
-  if (days === 1) return "Falta 1 dia";
-  return `Faltam ${days} dias`;
+/** Short status pill for the header. */
+const getStatusPill = (days: number): { label: string; bg: string; color: string } => {
+  if (days < 0) return { label: "Vencido", bg: "rgba(226,75,74,0.15)", color: "#E24B4A" };
+  if (days === 0) return { label: "Vence hoje", bg: "rgba(240,149,149,0.18)", color: "#E24B4A" };
+  if (days === 1) return { label: "1 dia", bg: "rgba(250,199,117,0.20)", color: "#B47700" };
+  if (days < 7) return { label: `${days} dias`, bg: "rgba(250,199,117,0.20)", color: "#B47700" };
+  return { label: "Ativo", bg: "rgba(93,202,165,0.15)", color: "#2E9A73" };
 };
 
 /** Plural for telas */
@@ -92,18 +101,17 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <NoticeBanner />
 
-      {/* 1. HEADER */}
+      {/* HEADER — só identidade e ações; status fica no card abaixo */}
       <header className="bg-card/80 backdrop-blur-md sticky top-0 z-10 border-b border-border">
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <img src={logo} alt="Loreall Play TV" style={{ height: 32, width: "auto" }} />
-            <div className="hidden min-[360px]:block">
+            <div className="hidden min-[360px]:block min-w-0">
               <div className="text-[11px] text-muted-foreground leading-tight">Área do Cliente</div>
-              <div className="text-[13px] font-semibold text-foreground leading-tight">Olá, {firstName(customer.name)}!</div>
+              <div className="text-[13px] font-semibold text-foreground leading-tight truncate">Olá, {firstName(customer.name)}!</div>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <StatusBadge status={status} />
             <button
               onClick={toggleTheme}
               className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
@@ -116,6 +124,7 @@ const Dashboard = () => {
               onClick={handleLogout}
               className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
               style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
+              title="Sair"
             >
               <LogOut className="h-[18px] w-[18px]" />
             </button>
@@ -124,85 +133,75 @@ const Dashboard = () => {
       </header>
 
       <main className="px-4 py-4 max-w-[480px] mx-auto" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {/* 2. CARD DE STATUS PRINCIPAL */}
-        {isLoading ? (
-          <div className="card-elevated p-5 space-y-3">
-            <div className="skeleton-bar h-3 w-32" />
-            <div className="skeleton-bar h-7 w-48" />
-            <div className="skeleton-bar h-4 w-36" />
-            <div className="grid grid-cols-2 gap-3 mt-4 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-              <div className="space-y-1.5"><div className="skeleton-bar h-3 w-12" /><div className="skeleton-bar h-4 w-24" /></div>
-              <div className="space-y-1.5"><div className="skeleton-bar h-3 w-12" /><div className="skeleton-bar h-4 w-20" /></div>
-            </div>
-          </div>
-        ) : (
-          <div className="card-elevated p-5 relative overflow-hidden">
-            {/* Decorative gradient top */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
+        {/* CARD DO PLANO — status único, sem duplicar em outro lugar */}
+        {(() => {
+          const pill = getStatusPill(days);
+          return (
+            <div className="card-elevated p-5 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
 
-            <div className="flex items-center gap-2 mb-3">
-              <Crown className="h-4 w-4 text-primary" />
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Plano Ativo</p>
-              <span
-                className="ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full"
-                style={{
-                  background: days < 0 ? "rgba(226,75,74,0.12)" : days < 7 ? "rgba(250,199,117,0.15)" : "rgba(93,202,165,0.12)",
-                  color: getDaysColor(days),
-                }}
-              >
-                {status === "ativo" ? "ATIVO" : status.toUpperCase()}
-              </span>
-            </div>
-
-            <p className="text-2xl font-bold text-foreground">{customer.plan?.name || "—"}</p>
-            <p className="text-sm font-medium mt-0.5" style={{ color: getDaysColor(days) }}>
-              {getDaysText(days)}
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 mt-4 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-              <div className="flex items-start gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-0.5">Vencimento</p>
-                  <p className="text-sm font-semibold text-foreground">{formatDate(customer.data_de_vencimento)}</p>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Seu plano</p>
+                  <p className="text-xl font-bold text-foreground leading-tight truncate">{customer.plan?.name || "—"}</p>
                 </div>
+                <span
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+                  style={{ background: pill.bg, color: pill.color }}
+                >
+                  {pill.label.toUpperCase()}
+                </span>
               </div>
-              <div className="flex items-start gap-2">
-                <Monitor className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-0.5">Telas</p>
-                  <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
+
+              <div className="grid grid-cols-2 gap-3 pt-3" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+                <div className="flex items-start gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-muted-foreground mb-0.5">Vence em</p>
+                    <p className="text-sm font-semibold text-foreground">{formatDate(customer.data_de_vencimento)}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Monitor className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-muted-foreground mb-0.5">Telas</p>
+                    <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
-        {/* 3. ALERTAS */}
-        {days < 0 && (
+        {/* ALERTA — apenas quando urgente; texto natural */}
+        {days < 0 ? (
           <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-destructive/10 text-destructive-foreground border border-destructive/20">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             Seu acesso está vencido. Renove para continuar assistindo.
           </div>
-        )}
-        {days >= 0 && days < 7 && (
+        ) : days === 0 ? (
           <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning-foreground border border-warning/20">
             <AlertTriangle className="h-5 w-5 shrink-0" />
-            Seu acesso vence em {days === 1 ? "1 dia" : `${days} dias`}. Renove agora!
+            Seu acesso vence hoje. Renove agora para não ficar sem sinal.
           </div>
-        )}
+        ) : days < 7 ? (
+          <div className="flex items-center gap-2.5 rounded-xl p-4 text-sm font-medium bg-warning/10 text-warning-foreground border border-warning/20">
+            <AlertTriangle className="h-5 w-5 shrink-0" />
+            {days === 1 ? "Falta 1 dia" : `Faltam ${days} dias`} para o vencimento. Renove agora!
+          </div>
+        ) : null}
 
-        {/* 4. BOTÃO RENOVAR */}
+        {/* CTA PRINCIPAL */}
         <button
           onClick={() => setRenewalOpen(true)}
           className="group btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 w-full relative overflow-hidden"
-          style={{ minHeight: 64, borderRadius: 16 }}
+          style={{ minHeight: 60, borderRadius: 16 }}
         >
           <Zap className="h-5 w-5 group-hover:scale-110 transition-transform" />
           Renovar acesso
         </button>
 
-        {/* 5. LANÇAMENTOS */}
+        {/* LANÇAMENTOS */}
         <div>
           <div className="flex items-center gap-2 mb-2.5 px-1">
             <Film className="h-4 w-4 text-accent" />
@@ -211,7 +210,7 @@ const Dashboard = () => {
           <LaunchesBanner />
         </div>
 
-        {/* 6. MEUS DADOS */}
+        {/* MEUS DADOS — nome + WhatsApp formatado */}
         <button
           onClick={() => setProfileOpen(true)}
           className="card-elevated p-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99] w-full flex items-center gap-3"
@@ -220,16 +219,19 @@ const Dashboard = () => {
             <User className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">Meus dados</p>
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1 truncate">
-              <Phone className="h-3 w-3 shrink-0" />
-              {String((customer as any).whatsapp || (customer as any).celular || "Adicione seu WhatsApp")}
+            <p className="text-sm font-semibold text-foreground truncate">{customer.name || "Meus dados"}</p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {(() => {
+                const raw = String((customer as any).whatsapp || (customer as any).celular || "");
+                return raw ? formatPhone(raw) : "Toque para adicionar seu WhatsApp";
+              })()}
             </p>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
 
-        {/* 7. INDIQUE E GANHE */}
+
+        {/* INDIQUE E GANHE */}
         <button
           onClick={() => setReferralOpen(true)}
           className="card-elevated p-5 card-referral text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden"
@@ -246,7 +248,7 @@ const Dashboard = () => {
           </p>
         </button>
 
-        {/* 7. SUPORTE E PEDIR CONTEÚDO */}
+        {/* SUPORTE E PEDIR CONTEÚDO */}
         <div className="grid grid-cols-2 gap-3">
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Preciso%20de%20suporte.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}`}
