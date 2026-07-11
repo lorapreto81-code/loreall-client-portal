@@ -231,7 +231,7 @@ const Dashboard = () => {
         </button>
 
 
-        {/* 7. INDIQUE E GANHE */}
+        {/* INDIQUE E GANHE */}
         <button
           onClick={() => setReferralOpen(true)}
           className="card-elevated p-5 card-referral text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden"
@@ -248,7 +248,7 @@ const Dashboard = () => {
           </p>
         </button>
 
-        {/* 7. SUPORTE E PEDIR CONTEÚDO */}
+        {/* SUPORTE E PEDIR CONTEÚDO */}
         <div className="grid grid-cols-2 gap-3">
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Preciso%20de%20suporte.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}`}
