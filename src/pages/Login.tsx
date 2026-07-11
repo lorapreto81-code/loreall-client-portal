@@ -49,12 +49,13 @@ const Login = () => {
     if (ref) {
       const code = ref.trim().toUpperCase();
       localStorage.setItem(REF_KEY, code);
-      setRefCode(code);
-    } else {
-      const stored = localStorage.getItem(REF_KEY);
-      if (stored) setRefCode(stored);
+      // Link de indicação sempre leva ao cadastro de teste grátis.
+      navigate(`/indicacao/${code}`, { replace: true });
+      return;
     }
-  }, []);
+    const stored = localStorage.getItem(REF_KEY);
+    if (stored) setRefCode(stored);
+  }, [navigate]);
 
   const pickAccount = (c: Customer) => {
     login(c);
