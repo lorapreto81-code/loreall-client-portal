@@ -120,16 +120,13 @@ const Dashboard = () => {
       {/* HEADER — só identidade e ações; status fica no card abaixo */}
       <header className="bg-card/80 backdrop-blur-md sticky top-0 z-10 border-b border-border">
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
-          <button
-            onClick={() => setProfileOpen(true)}
-            className="flex items-center gap-2.5 min-w-0 text-left transition-opacity hover:opacity-80 active:opacity-70"
-          >
+          <div className="flex items-center gap-2.5 min-w-0">
             <img src={logo} alt="Loreall Play TV" style={{ height: 32, width: "auto" }} />
             <div className="hidden min-[360px]:block min-w-0">
               <div className="text-[11px] text-muted-foreground leading-tight">Área do Cliente</div>
               <div className="text-[13px] font-semibold text-foreground leading-tight truncate">Olá, {firstName(customer.name)}!</div>
             </div>
-          </button>
+          </div>
           <div className="flex items-center gap-1">
             <button
               onClick={toggleTheme}
@@ -243,6 +240,30 @@ const Dashboard = () => {
         >
           <Zap className="h-5 w-5 group-hover:scale-110 transition-transform" />
           Renovar acesso
+        </button>
+
+        {/* MEUS DADOS — acesso claro e destacado para atualizar cadastro */}
+        <button
+          onClick={() => setProfileOpen(true)}
+          className="w-full text-left card-elevated p-4 flex items-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <div className="rounded-full p-2.5 shrink-0 bg-primary/10">
+            <User className="h-4 w-4 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              Meus dados de acesso
+              {profileIncomplete && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/20 text-warning-foreground uppercase">
+                  Atualizar
+                </span>
+              )}
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-snug truncate">
+              Nome, WhatsApp, e-mail e CPF · toque para editar
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
 
         {/* LANÇAMENTOS */}
