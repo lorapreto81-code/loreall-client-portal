@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, X, User, Phone } from "lucide-react";
+import { Loader2, X, User, Phone, Mail, IdCard } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 
@@ -19,10 +19,20 @@ const formatPhone = (v: string) => {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 };
 
+const formatCpf = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+};
+
 const ProfileSheet = ({ open, onClose }: Props) => {
   const { customer, login } = useAuthStore();
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -33,6 +43,8 @@ const ProfileSheet = ({ open, onClose }: Props) => {
       (customer as any).celular ||
       "";
     setWhatsapp(formatPhone(String(raw)));
+    setEmail(String((customer as any).email || ""));
+    setCpf(formatCpf(String((customer as any).cpf || "")));
   }, [open, customer]);
 
   if (!open || !customer) return null;
@@ -40,12 +52,25 @@ const ProfileSheet = ({ open, onClose }: Props) => {
   const handleSave = async () => {
     const trimmed = name.trim();
     const phoneDigits = onlyDigits(whatsapp);
+    const cpfDigits = onlyDigits(cpf);
+    const trimmedEmail = email.trim().toLowerCase();
+
     if (trimmed.length < 3) return toast.error("Informe seu nome completo.");
     if (phoneDigits.length < 10) return toast.error("WhatsApp inválido.");
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
+      return toast.error("E-mail inválido.");
+    if (cpfDigits && cpfDigits.length !== 11) return toast.error("CPF inválido.");
 
     setSaving(true);
     try {
-      await updateCustomer(customer.id, { name: trimmed, whatsapp: phoneDigits });
+      const patch: Record<string, unknown> = {
+        name: trimmed,
+        whatsapp: phoneDigits,
+      };
+      if (trimmedEmail) patch.email = trimmedEmail;
+      if (cpfDigits) patch.cpf = cpfDigits;
+
+      await updateCustomer(customer.id, patch);
       const data = await getCustomer(customer.id);
       login((data.data || data) as Customer);
       toast.success("Dados atualizados!");
@@ -63,7 +88,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
       onClick={onClose}
     >
       <div
-        className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 relative"
+        className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 relative max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -76,7 +101,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
 
         <h3 className="text-lg font-bold text-foreground mb-1">Meus dados</h3>
         <p className="text-xs text-muted-foreground mb-5">
-          Mantenha suas informações atualizadas para receber cobranças e avisos.
+          Preencha uma vez e reutilize no Pix Automático e nas cobranças.
         </p>
 
         <div className="space-y-4">
@@ -104,8 +129,35 @@ const ProfileSheet = ({ open, onClose }: Props) => {
               className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
               placeholder="(00) 00000-0000"
             />
+          </div>
+
+          <div>
+            <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+              <Mail className="h-3.5 w-3.5" /> E-mail <span className="opacity-60">(opcional)</span>
+            </label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
+              placeholder="voce@email.com"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+              <IdCard className="h-3.5 w-3.5" /> CPF <span className="opacity-60">(opcional)</span>
+            </label>
+            <input
+              value={cpf}
+              onChange={(e) => setCpf(formatCpf(e.target.value))}
+              inputMode="numeric"
+              maxLength={14}
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
+              placeholder="000.000.000-00"
+            />
             <p className="text-[10px] text-muted-foreground mt-1">
-              Enviaremos avisos de vencimento e cobranças automáticas neste número.
+              Adiantar o CPF e e-mail agiliza a assinatura do Pix Automático.
             </p>
           </div>
         </div>
