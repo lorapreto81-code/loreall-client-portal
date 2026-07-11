@@ -438,6 +438,69 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_signups: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          name: string
+          password: string | null
+          plan_id: number | null
+          referral_code: string
+          referrer_customer_id: number
+          referrer_customer_name: string | null
+          rejected_at: string | null
+          rejection_reason: string | null
+          status: string
+          topgestor_customer_id: number | null
+          trial_days: number | null
+          updated_at: string
+          usuario: string | null
+          whatsapp: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          password?: string | null
+          plan_id?: number | null
+          referral_code: string
+          referrer_customer_id: number
+          referrer_customer_name?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          topgestor_customer_id?: number | null
+          trial_days?: number | null
+          updated_at?: string
+          usuario?: string | null
+          whatsapp: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          password?: string | null
+          plan_id?: number | null
+          referral_code?: string
+          referrer_customer_id?: number
+          referrer_customer_name?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          topgestor_customer_id?: number | null
+          trial_days?: number | null
+          updated_at?: string
+          usuario?: string | null
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       warez_api_logs: {
         Row: {
           created_at: string
