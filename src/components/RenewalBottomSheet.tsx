@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse } from "@/lib/api";
+import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
@@ -137,14 +137,41 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     if (!subForm || !customer) return;
     setSubLoading(true);
     try {
+      const cleanCpf = subCpf.replace(/\D/g, "");
+      const cleanPhone = subPhone.replace(/\D/g, "");
+      const trimmedName = subName.trim();
+      const trimmedEmail = subEmail.trim().toLowerCase();
+
+      // Persiste dados no TopGestor para reutilizar em próximas assinaturas
+      try {
+        const savedName = (customer.name || "").trim();
+        const savedEmail = String((customer as any).email || "").trim().toLowerCase();
+        const savedCpf = String((customer as any).cpf || "").replace(/\D/g, "");
+        const savedPhone = String((customer as any).whatsapp || (customer as any).celular || "").replace(/\D/g, "");
+        const patch: Record<string, unknown> = {};
+        if (trimmedName && trimmedName !== savedName) patch.name = trimmedName;
+        if (trimmedEmail && trimmedEmail !== savedEmail) patch.email = trimmedEmail;
+        if (cleanCpf && cleanCpf !== savedCpf) patch.cpf = cleanCpf;
+        if (cleanPhone && cleanPhone !== savedPhone) patch.whatsapp = cleanPhone;
+        if (Object.keys(patch).length > 0) {
+          await updateCustomer(customer.id, patch);
+          try {
+            const cust = await getCustomer(customer.id);
+            login((cust.data || cust) as Customer);
+          } catch { /* ignore refresh error */ }
+        }
+      } catch (e) {
+        console.warn("[subscribe] falha ao salvar dados do cliente", e);
+      }
+
       const { data, error } = await supabase.functions.invoke("syncpay-subscribe", {
         body: {
           plan_id: subForm.id,
           customer_id: customer.id,
-          name: subName,
-          email: subEmail,
-          cpf: subCpf,
-          phone: subPhone,
+          name: trimmedName,
+          email: trimmedEmail,
+          cpf: cleanCpf,
+          phone: cleanPhone,
         },
       });
       if (error) throw new Error(error.message || "Falha ao criar assinatura");
@@ -341,21 +368,24 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           {!subResult ? (
             <>
               <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-muted-foreground">Nome completo</label>
-                  <input value={subName} onChange={(e) => setSubName(e.target.value)} className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="Como no CPF" />
+                <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 space-y-2">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Nome completo</label>
+                    <input value={subName} onChange={(e) => setSubName(e.target.value)} className="w-full mt-0.5 px-2.5 py-2 rounded-md bg-background border border-border text-sm" placeholder="Como no CPF" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wide text-muted-foreground">WhatsApp</label>
+                    <input value={subPhone} onChange={(e) => setSubPhone(e.target.value)} inputMode="tel" className="w-full mt-0.5 px-2.5 py-2 rounded-md bg-background border border-border text-sm" placeholder="(00) 00000-0000" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Salvos no seu perfil — só preencha se estiverem em branco.</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">CPF</label>
+                  <label className="text-xs font-semibold text-foreground">CPF <span className="text-destructive">*</span></label>
                   <input value={subCpf} onChange={(e) => setSubCpf(e.target.value)} inputMode="numeric" maxLength={14} className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="000.000.000-00" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">E-mail</label>
+                  <label className="text-xs font-semibold text-foreground">E-mail <span className="text-destructive">*</span></label>
                   <input value={subEmail} onChange={(e) => setSubEmail(e.target.value)} type="email" className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="voce@email.com" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground">WhatsApp</label>
-                  <input value={subPhone} onChange={(e) => setSubPhone(e.target.value)} inputMode="tel" className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="(00) 00000-0000" />
                 </div>
               </div>
               <button
@@ -368,7 +398,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                 Assinar e gerar Pix
               </button>
               <p className="text-[10px] text-muted-foreground text-center mt-2">
-                Ao continuar você autoriza a cobrança automática mensal.
+                Salvamos seus dados para as próximas assinaturas. Ao continuar você autoriza a cobrança automática.
               </p>
             </>
           ) : (
