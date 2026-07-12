@@ -343,8 +343,12 @@ const Dashboard = () => {
       />
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
-      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
-      <MyInvoicesSheet open={invoicesOpen} onClose={() => setInvoicesOpen(false)} customerId={customer.id} />
+      <MyAccountSheet
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        customerId={customer.id}
+        initialTab={accountTab}
+      />
     </div>
   );
 };
