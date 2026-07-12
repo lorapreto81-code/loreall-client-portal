@@ -64,7 +64,7 @@ const headingFont: React.CSSProperties = { fontFamily: "'Outfit', sans-serif" };
 
 const IndicacaoTeste = () => {
   const { code: codeParam } = useParams<{ code: string }>();
-  const navigate = useNavigate();
+  
   const initialCode = (codeParam || "").trim().toUpperCase();
 
   const [code, setCode] = useState(initialCode);
