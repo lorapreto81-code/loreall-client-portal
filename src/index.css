@@ -189,31 +189,61 @@
     color: #8888AA;
   }
 
-  /* Referral card - golden */
+  /* Referral card - premium gold */
   .card-referral {
-    border-color: #F59E0B !important;
-    border-width: 1px !important;
+    background: linear-gradient(135deg, #FFF7E0 0%, #FDE7B5 55%, #F5C86B 100%) !important;
+    border: 1.5px solid #E0A93A !important;
+    box-shadow:
+      0 10px 28px -12px rgba(212, 155, 40, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    position: relative;
   }
-  .referral-icon { color: #854F0B; }
-  .referral-title { color: #854F0B; }
+  .card-referral::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%);
+    background-size: 220% 100%;
+    animation: shineGold 3.8s ease-in-out infinite;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes shineGold {
+    0%, 100% { background-position: 220% 0; }
+    50% { background-position: -20% 0; }
+  }
+  .referral-icon { color: #7A4A00; filter: drop-shadow(0 1px 0 rgba(255,255,255,0.5)); }
+  .referral-title { color: #6B3F00; font-weight: 700; letter-spacing: -0.01em; }
   .referral-badge {
-    background: #FAEEDA;
-    color: #854F0B;
-    border: 0.5px solid #F59E0B;
+    background: linear-gradient(135deg, #FFE29A, #E0A93A);
+    color: #4A2B00;
+    border: 1px solid #C88E22;
+    box-shadow: 0 1px 3px rgba(122, 74, 0, 0.25);
   }
-  .referral-subtitle { color: #B45309; }
+  .referral-subtitle { color: #6B3F00; }
 
   .dark .card-referral {
-    border-color: rgba(250, 199, 117, 0.5) !important;
+    background: linear-gradient(135deg, #2A1A00 0%, #4A2E00 55%, #7A4A00 100%) !important;
+    border: 1.5px solid #E0A93A !important;
+    box-shadow:
+      0 12px 32px -12px rgba(224, 169, 58, 0.45),
+      inset 0 1px 0 rgba(250, 199, 117, 0.25);
   }
-  .dark .referral-icon { color: #FAC775; }
-  .dark .referral-title { color: #FAC775; }
+  .dark .card-referral::before {
+    background: linear-gradient(120deg, transparent 30%, rgba(255, 220, 140, 0.35) 50%, transparent 70%);
+    mix-blend-mode: screen;
+  }
+  .dark .referral-icon { color: #FFD98A; filter: drop-shadow(0 0 6px rgba(255, 200, 90, 0.45)); }
+  .dark .referral-title { color: #FFE0A0; font-weight: 700; letter-spacing: -0.01em; }
   .dark .referral-badge {
-    background: #2A1A00;
-    color: #FAC775;
-    border: 0.5px solid #FAC775;
+    background: linear-gradient(135deg, #FFD98A, #E0A93A);
+    color: #2A1A00;
+    border: 1px solid #FFD98A;
+    box-shadow: 0 2px 8px rgba(224, 169, 58, 0.4);
   }
-  .dark .referral-subtitle { color: #EF9F27; }
+  .dark .referral-subtitle { color: #F5CD75; }
+
 
   /* Notice banner */
   .notice-banner {
