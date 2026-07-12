@@ -467,12 +467,64 @@ const IndicacaoTeste = () => {
             </div>
           </div>
 
+          {/* Código de indicação visível + copiar */}
+          <div
+            className="flex items-center justify-between gap-3 rounded-2xl p-3"
+            style={{ backgroundColor: "#f7f9fc", border: `1px dashed ${BORDER}` }}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <KeyRound className="h-4 w-4 shrink-0" style={{ color: MUTED }} />
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: MUTED }}>
+                  Código de indicação
+                </p>
+                <p className="text-sm font-bold tracking-widest truncate" style={{ color: TEXT }}>
+                  {code}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={copyCode}
+              className="shrink-0 h-9 px-3 rounded-xl inline-flex items-center gap-1.5 text-xs font-semibold transition-transform active:scale-95"
+              style={{ backgroundColor: ACCENT, color: "#fff" }}
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copiado" : "Copiar"}
+            </button>
+          </div>
+
+          {/* Bônus +5% */}
+          <div
+            className="flex items-center gap-3 rounded-2xl p-3.5"
+            style={{
+              background: "linear-gradient(135deg, #FFF7E0, #FDE7B5)",
+              border: "1px solid #E0A93A",
+            }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#E0A93A" }}
+            >
+              <Sparkles className="h-5 w-5" style={{ color: "#4A2B00" }} />
+            </div>
+            <div className="text-sm leading-tight">
+              <p className="font-bold" style={{ color: "#4A2B00" }}>
+                Bônus de +5% ativado
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#6B3F00" }}>
+                Você entrou por indicação — bônus extra aplicado na sua ativação.
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-3">
             <BenefitRow icon={<Sparkles className="h-4 w-4" />} text="Acesso imediato ao catálogo completo" />
             <BenefitRow icon={<ShieldCheck className="h-4 w-4" />} text="Sem cartão de crédito, sem compromisso" />
             <BenefitRow icon={<MessageCircle className="h-4 w-4" />} text="Suporte humano no WhatsApp" />
           </div>
         </SoftCard>
+
 
         {/* Formulário */}
         <SoftCard className="p-6 space-y-5">
