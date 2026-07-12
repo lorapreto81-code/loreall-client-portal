@@ -277,8 +277,8 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     <div className="text-lg font-bold text-foreground">{paidCount}</div>
                   </div>
                   <div className="rounded-lg bg-muted/40 p-3">
-                    <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Total pago</div>
-                    <div className="text-lg font-bold text-foreground">{fmtBRL(totalPaid)}</div>
+                    <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Pendentes</div>
+                    <div className="text-lg font-bold text-foreground">{pendingCount}</div>
                   </div>
                 </div>
               )}
