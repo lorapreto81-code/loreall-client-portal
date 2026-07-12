@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  CalendarDays, Monitor, Zap, User, ChevronRight, CheckCircle2
+  CalendarDays, Monitor, Zap, User, ChevronRight, CheckCircle2, Receipt
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -17,6 +17,7 @@ import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import ProfileSheet from "@/components/ProfileSheet";
+import MyInvoicesSheet from "@/components/MyInvoicesSheet";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
@@ -63,6 +64,7 @@ const Dashboard = () => {
   const [renewalOpen, setRenewalOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [invoicesOpen, setInvoicesOpen] = useState(false);
   
   
 
@@ -266,6 +268,23 @@ const Dashboard = () => {
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
 
+        {/* MINHAS FATURAS — histórico de pagamentos do cliente */}
+        <button
+          onClick={() => setInvoicesOpen(true)}
+          className="w-full text-left card-elevated p-4 flex items-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <div className="rounded-full p-2.5 shrink-0 bg-accent/10">
+            <Receipt className="h-4 w-4 text-accent" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">Minhas faturas</p>
+            <p className="text-[11px] text-muted-foreground leading-snug truncate">
+              Histórico de pagamentos, valores e datas
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        </button>
+
         {/* LANÇAMENTOS */}
         <div>
           <div className="flex items-center gap-2 mb-2.5 px-1">
@@ -331,6 +350,7 @@ const Dashboard = () => {
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <MyInvoicesSheet open={invoicesOpen} onClose={() => setInvoicesOpen(false)} customerId={customer.id} />
     </div>
   );
 };

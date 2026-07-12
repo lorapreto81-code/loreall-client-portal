@@ -8,9 +8,10 @@ const corsHeaders = {
 const FAST_BASE = "https://fastdepix.space/api/v1";
 
 interface Body {
-  action: "pending" | "status";
+  action: "pending" | "status" | "history";
   customer_id?: number;
   payment_id?: string;
+  limit?: number;
 }
 
 // Consulta ao vivo o status na adquirente (SyncPay ou FastDepix) e,
@@ -129,6 +130,28 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (error) throw error;
       return new Response(JSON.stringify({ payment: data || null }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (body.action === "history") {
+      const customerId = Number(body.customer_id);
+      if (!customerId) {
+        return new Response(JSON.stringify({ error: "customer_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 100);
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, amount, plan_name, provider, fastdepix_status, paid_at, created_at, renewed_at")
+        .eq("customer_id", customerId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return new Response(JSON.stringify({ payments: data || [] }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
