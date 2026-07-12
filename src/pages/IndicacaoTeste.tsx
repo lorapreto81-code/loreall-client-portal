@@ -386,7 +386,7 @@ const IndicacaoTeste = () => {
               <Row label="Protocolo" value={result.signup_id.slice(0, 8).toUpperCase()} mono />
               <Row label="Nome" value={name} />
               <Row label="WhatsApp" value={formatPhone(phone)} />
-              <Row label="Teste liberado" value={`${result.trial_days} dia(s)`} />
+              <Row label="Teste liberado" value="4 horas" />
             </div>
 
             <button
