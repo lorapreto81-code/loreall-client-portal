@@ -62,8 +62,13 @@ const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
   const [renewalOpen, setRenewalOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [invoicesOpen, setInvoicesOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountTab, setAccountTab] = useState<"dados" | "faturas">("dados");
+
+  const openAccount = (tab: "dados" | "faturas") => {
+    setAccountTab(tab);
+    setAccountOpen(true);
+  };
   
   
 
