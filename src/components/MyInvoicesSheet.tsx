@@ -79,9 +79,7 @@ export default function MyInvoicesSheet({ open, onClose, customerId }: Props) {
   if (!open) return null;
 
   const paidCount = items.filter((i) => ["paid", "approved", "completed"].includes(i.fastdepix_status?.toLowerCase())).length;
-  const totalPaid = items
-    .filter((i) => ["paid", "approved", "completed"].includes(i.fastdepix_status?.toLowerCase()))
-    .reduce((s, i) => s + Number(i.amount || 0), 0);
+  const pendingCount = items.filter((i) => ["pending"].includes(i.fastdepix_status?.toLowerCase())).length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
@@ -106,8 +104,8 @@ export default function MyInvoicesSheet({ open, onClose, customerId }: Props) {
               <div className="text-lg font-bold text-foreground">{paidCount}</div>
             </div>
             <div className="rounded-lg bg-muted/40 p-3">
-              <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Total pago</div>
-              <div className="text-lg font-bold text-foreground">{fmtBRL(totalPaid)}</div>
+              <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Pendentes</div>
+              <div className="text-lg font-bold text-foreground">{pendingCount}</div>
             </div>
           </div>
         )}
