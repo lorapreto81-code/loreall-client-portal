@@ -462,7 +462,7 @@ const IndicacaoTeste = () => {
                 <span style={{ color: ACCENT }}>{referrerName}</span>
               </p>
               <p className="text-xs mt-0.5" style={{ color: MUTED }}>
-                Ganhe {config?.days || 1} dia(s) de teste com {config?.telas || 1} tela.
+                Ganhe 4 horas de teste com {config?.telas || 1} tela.
               </p>
             </div>
           </div>
