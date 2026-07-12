@@ -159,22 +159,33 @@ function ProviderCard({
       <div className="grid grid-cols-2 gap-2">
         {PROVIDERS.map((p) => {
           const active = value === p.id;
+          const disabled = !!p.paused;
           return (
             <button
               key={p.id}
-              onClick={() => !active && onChange(p.id)}
+              disabled={disabled}
+              onClick={() => !active && !disabled && onChange(p.id)}
               className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                 active
                   ? "border-primary bg-primary/5 shadow-sm"
+                  : disabled
+                  ? "border-input bg-muted/30 opacity-60 cursor-not-allowed"
                   : "border-input bg-card hover:border-muted-foreground/40"
               }`}
             >
-              <div className={`inline-flex items-center justify-center h-9 w-9 rounded-lg bg-gradient-to-br ${p.color} text-white text-xs font-bold mb-2`}>
+              <div className={`inline-flex items-center justify-center h-9 w-9 rounded-lg bg-gradient-to-br ${p.color} text-white text-xs font-bold mb-2 ${disabled ? "grayscale" : ""}`}>
                 {p.short}
               </div>
-              <div className="text-sm font-semibold text-foreground">{p.label}</div>
+              <div className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                {p.label}
+                {disabled && (
+                  <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                    Pausado
+                  </span>
+                )}
+              </div>
               <div className="text-[11px] text-muted-foreground mt-0.5">
-                {active ? "✓ Em uso" : "Tocar para ativar"}
+                {disabled ? "Indisponível no momento" : active ? "✓ Em uso" : "Tocar para ativar"}
               </div>
             </button>
           );
