@@ -13,8 +13,8 @@ const PROVIDERS: { id: Provider; label: string; short: string; color: string; pa
 export default function PixProviderTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [customers, setCustomers] = useState<Provider>("fastdepix");
-  const [resellers, setResellers] = useState<Provider>("fastdepix");
+  const [customers, setCustomers] = useState<Provider>("syncpay");
+  const [resellers, setResellers] = useState<Provider>("syncpay");
   const [syncpayUrl, setSyncpayUrl] = useState("https://api.syncpayments.com.br");
   const [copied, setCopied] = useState(false);
 
