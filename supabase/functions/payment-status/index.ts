@@ -8,9 +8,10 @@ const corsHeaders = {
 const FAST_BASE = "https://fastdepix.space/api/v1";
 
 interface Body {
-  action: "pending" | "status";
+  action: "pending" | "status" | "history";
   customer_id?: number;
   payment_id?: string;
+  limit?: number;
 }
 
 // Consulta ao vivo o status na adquirente (SyncPay ou FastDepix) e,
