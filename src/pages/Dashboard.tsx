@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  CalendarDays, Monitor, Zap, User, ChevronRight, CheckCircle2, Receipt
+  CalendarDays, Monitor, Zap, User, ChevronRight, Receipt, HelpCircle, Plus
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -16,8 +16,7 @@ import NoticeBanner from "@/components/NoticeBanner";
 import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
-import ProfileSheet from "@/components/ProfileSheet";
-import MyInvoicesSheet from "@/components/MyInvoicesSheet";
+import MyAccountSheet from "@/components/MyAccountSheet";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
