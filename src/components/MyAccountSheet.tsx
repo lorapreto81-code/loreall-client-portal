@@ -66,7 +66,7 @@ const statusInfo = (s: string) => {
   return { label: "Expirado", color: "hsl(var(--muted-foreground))", bg: "hsl(var(--muted))", Icon: XCircle };
 };
 
-export default function MyAccountSheet({ open, onClose, customerId, initialTab = "dados" }: Props) {
+export default function MyAccountSheet({ open, onClose, customerId, initialTab = "dados", customerUsuario = "", whatsappNumber = "" }: Props) {
   const { customer, login } = useAuthStore();
   const [tab, setTab] = useState<"dados" | "faturas">(initialTab);
 
