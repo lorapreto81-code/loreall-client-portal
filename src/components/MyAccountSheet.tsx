@@ -331,7 +331,32 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
             </div>
           )}
         </div>
+
+        {/* Rodapé fixo: Suporte + Pedir conteúdo */}
+        {whatsappNumber && (
+          <div className="border-t border-border p-3 grid grid-cols-2 gap-2 bg-muted/20">
+            <a
+              href={`https://wa.me/${whatsappNumber}?text=Olá!%20Preciso%20de%20suporte.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customerUsuario)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-background border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <HelpCircle className="h-4 w-4" />
+              Suporte
+            </a>
+            <a
+              href={`https://wa.me/${whatsappNumber}?text=Olá!%20Quero%20pedir%20um%20conteúdo.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customerUsuario)}%20-%20Conteúdo%3A%20`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-background border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Pedir conteúdo
+            </a>
+          </div>
+        )}
       </div>
+
     </div>
   );
 }
