@@ -24,8 +24,8 @@ export default function PixProviderTab() {
     setLoading(true);
     try {
       const { config } = await resellerAdmin.getConfig();
-      setCustomers((config.pix_provider_customers as Provider) || "fastdepix");
-      setResellers((config.pix_provider_resellers as Provider) || "fastdepix");
+      setCustomers((config.pix_provider_customers as Provider) || "syncpay");
+      setResellers((config.pix_provider_resellers as Provider) || "syncpay");
       setSyncpayUrl(config.syncpay_api_url || "https://api.syncpayments.com.br");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao carregar");
