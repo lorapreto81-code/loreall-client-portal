@@ -64,39 +64,96 @@ const headingFont: React.CSSProperties = { fontFamily: "'Outfit', sans-serif" };
 
 const IndicacaoTeste = () => {
   const { code: codeParam } = useParams<{ code: string }>();
-  const code = (codeParam || "").trim().toUpperCase();
+  const navigate = useNavigate();
+  const initialCode = (codeParam || "").trim().toUpperCase();
 
-  const [checking, setChecking] = useState(true);
+  const [code, setCode] = useState(initialCode);
+  const [manualCode, setManualCode] = useState("");
+  const [checking, setChecking] = useState(!!initialCode);
+  const [validating, setValidating] = useState(false);
   const [referrerName, setReferrerName] = useState<string | null>(null);
   const [config, setConfig] = useState<PublicConfig | null>(null);
   const [invalid, setInvalid] = useState(false);
+  const [needsCode, setNeedsCode] = useState(!initialCode);
+  const [copied, setCopied] = useState(false);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PendingResult | null>(null);
 
+  // Sempre carrega config pública
   useEffect(() => {
     (async () => {
       try {
-        const [lookup, cfgRes] = await Promise.all([
-          lookupReferralCode(code),
-          fetch(`${SUPABASE_URL}/functions/v1/referrals-api?action=get-trial-config-public`, {
-            headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
-          }).then((r) => r.json()),
-        ]);
-        if (!lookup?.valid) {
-          setInvalid(true);
-        } else {
-          setReferrerName(lookup.customer_name || `Cliente #${lookup.customer_id}`);
-        }
+        const cfgRes = await fetch(
+          `${SUPABASE_URL}/functions/v1/referrals-api?action=get-trial-config-public`,
+          { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } },
+        ).then((r) => r.json());
         setConfig(cfgRes as PublicConfig);
       } catch {
+        /* ignore */
+      }
+    })();
+  }, []);
+
+  // Valida código quando vem via URL
+  useEffect(() => {
+    if (!initialCode) return;
+    (async () => {
+      try {
+        const lookup = await lookupReferralCode(initialCode);
+        if (!lookup?.valid) {
+          setInvalid(true);
+          setNeedsCode(true);
+        } else {
+          setReferrerName(lookup.customer_name || `Cliente #${lookup.customer_id}`);
+          setCode(initialCode);
+        }
+      } catch {
         setInvalid(true);
+        setNeedsCode(true);
       }
       setChecking(false);
     })();
-  }, [code]);
+  }, [initialCode]);
+
+  const handleValidateManual = async () => {
+    const c = manualCode.trim().toUpperCase();
+    if (c.length < 3) {
+      toast.error("Digite um código válido");
+      return;
+    }
+    setValidating(true);
+    try {
+      const lookup = await lookupReferralCode(c);
+      if (!lookup?.valid) {
+        toast.error("Código não encontrado. Confira com quem te indicou.");
+      } else {
+        setReferrerName(lookup.customer_name || `Cliente #${lookup.customer_id}`);
+        setCode(c);
+        setNeedsCode(false);
+        setInvalid(false);
+        toast.success(`Código validado! Indicado por ${lookup.customer_name || "cliente"}.`);
+      }
+    } catch {
+      toast.error("Erro ao validar código");
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      toast.success("Código copiado!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
 
   const buildSupportMessage = (pending: PendingResult) =>
     `Olá! 👋 Acabei de me cadastrar pelo link de indicação e quero ativar meu *teste grátis* na *Loreall Play TV*.\n\n` +
