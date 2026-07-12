@@ -163,7 +163,7 @@ const IndicacaoTeste = () => {
     `🎁 *Indicado por:* ${referrerName || "—"}\n` +
     `🔖 *Código:* ${code}\n` +
     `🎫 *Protocolo:* ${pending.signup_id.slice(0, 8).toUpperCase()}\n` +
-    `📅 *Teste:* ${pending.trial_days} dia(s)\n` +
+    `📅 *Teste:* 4 horas\n` +
     `━━━━━━━━━━━━━━━━━━\n\n` +
     `Aguardo o envio do meu usuário e senha 🙌`;
 
@@ -386,7 +386,7 @@ const IndicacaoTeste = () => {
               <Row label="Protocolo" value={result.signup_id.slice(0, 8).toUpperCase()} mono />
               <Row label="Nome" value={name} />
               <Row label="WhatsApp" value={formatPhone(phone)} />
-              <Row label="Teste liberado" value={`${result.trial_days} dia(s)`} />
+              <Row label="Teste liberado" value="4 horas" />
             </div>
 
             <button
@@ -462,7 +462,7 @@ const IndicacaoTeste = () => {
                 <span style={{ color: ACCENT }}>{referrerName}</span>
               </p>
               <p className="text-xs mt-0.5" style={{ color: MUTED }}>
-                Ganhe {config?.days || 1} dia(s) de teste com {config?.telas || 1} tela.
+                Ganhe 4 horas de teste com {config?.telas || 1} tela.
               </p>
             </div>
           </div>
