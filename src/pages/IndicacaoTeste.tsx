@@ -163,7 +163,7 @@ const IndicacaoTeste = () => {
     `🎁 *Indicado por:* ${referrerName || "—"}\n` +
     `🔖 *Código:* ${code}\n` +
     `🎫 *Protocolo:* ${pending.signup_id.slice(0, 8).toUpperCase()}\n` +
-    `📅 *Teste:* ${pending.trial_days} dia(s)\n` +
+    `📅 *Teste:* 4 horas\n` +
     `━━━━━━━━━━━━━━━━━━\n\n` +
     `Aguardo o envio do meu usuário e senha 🙌`;
 
