@@ -135,6 +135,28 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (body.action === "history") {
+      const customerId = Number(body.customer_id);
+      if (!customerId) {
+        return new Response(JSON.stringify({ error: "customer_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 100);
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, amount, plan_name, provider, fastdepix_status, paid_at, created_at, renewed_at")
+        .eq("customer_id", customerId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return new Response(JSON.stringify({ payments: data || [] }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (body.action === "status") {
       const paymentId = String(body.payment_id || "");
       const customerId = Number(body.customer_id);
