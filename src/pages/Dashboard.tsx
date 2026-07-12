@@ -98,7 +98,7 @@ const Dashboard = () => {
     const key = `loreall_profile_prompted_${customer.id}`;
     if (sessionStorage.getItem(key)) return;
     sessionStorage.setItem(key, "1");
-    const t = setTimeout(() => setProfileOpen(true), 600);
+    const t = setTimeout(() => openAccount("dados"), 600);
     return () => clearTimeout(t);
   }, [profileIncomplete, customer]);
 
