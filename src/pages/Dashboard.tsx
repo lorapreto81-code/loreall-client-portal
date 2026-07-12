@@ -318,7 +318,10 @@ const Dashboard = () => {
         onClose={() => setAccountOpen(false)}
         customerId={customer.id}
         initialTab={accountTab}
+        customerUsuario={customer.usuario}
+        whatsappNumber={WHATSAPP_NUMBER}
       />
+
     </div>
   );
 };
