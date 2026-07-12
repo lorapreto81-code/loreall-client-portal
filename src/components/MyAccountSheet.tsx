@@ -15,6 +15,8 @@ interface Props {
   onClose: () => void;
   customerId: number;
   initialTab?: "dados" | "faturas";
+  customerUsuario?: string;
+  whatsappNumber?: string;
 }
 
 interface Invoice {
