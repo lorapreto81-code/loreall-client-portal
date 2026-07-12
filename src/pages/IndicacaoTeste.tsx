@@ -12,6 +12,9 @@ import {
   Sparkles,
   User as UserIcon,
   Phone,
+  KeyRound,
+  Copy,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { lookupReferralCode } from "@/lib/api";
@@ -61,39 +64,96 @@ const headingFont: React.CSSProperties = { fontFamily: "'Outfit', sans-serif" };
 
 const IndicacaoTeste = () => {
   const { code: codeParam } = useParams<{ code: string }>();
-  const code = (codeParam || "").trim().toUpperCase();
+  
+  const initialCode = (codeParam || "").trim().toUpperCase();
 
-  const [checking, setChecking] = useState(true);
+  const [code, setCode] = useState(initialCode);
+  const [manualCode, setManualCode] = useState("");
+  const [checking, setChecking] = useState(!!initialCode);
+  const [validating, setValidating] = useState(false);
   const [referrerName, setReferrerName] = useState<string | null>(null);
   const [config, setConfig] = useState<PublicConfig | null>(null);
   const [invalid, setInvalid] = useState(false);
+  const [needsCode, setNeedsCode] = useState(!initialCode);
+  const [copied, setCopied] = useState(false);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PendingResult | null>(null);
 
+  // Sempre carrega config pública
   useEffect(() => {
     (async () => {
       try {
-        const [lookup, cfgRes] = await Promise.all([
-          lookupReferralCode(code),
-          fetch(`${SUPABASE_URL}/functions/v1/referrals-api?action=get-trial-config-public`, {
-            headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
-          }).then((r) => r.json()),
-        ]);
-        if (!lookup?.valid) {
-          setInvalid(true);
-        } else {
-          setReferrerName(lookup.customer_name || `Cliente #${lookup.customer_id}`);
-        }
+        const cfgRes = await fetch(
+          `${SUPABASE_URL}/functions/v1/referrals-api?action=get-trial-config-public`,
+          { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } },
+        ).then((r) => r.json());
         setConfig(cfgRes as PublicConfig);
       } catch {
+        /* ignore */
+      }
+    })();
+  }, []);
+
+  // Valida código quando vem via URL
+  useEffect(() => {
+    if (!initialCode) return;
+    (async () => {
+      try {
+        const lookup = await lookupReferralCode(initialCode);
+        if (!lookup?.valid) {
+          setInvalid(true);
+          setNeedsCode(true);
+        } else {
+          setReferrerName(lookup.customer_name || `Cliente #${lookup.customer_id}`);
+          setCode(initialCode);
+        }
+      } catch {
         setInvalid(true);
+        setNeedsCode(true);
       }
       setChecking(false);
     })();
-  }, [code]);
+  }, [initialCode]);
+
+  const handleValidateManual = async () => {
+    const c = manualCode.trim().toUpperCase();
+    if (c.length < 3) {
+      toast.error("Digite um código válido");
+      return;
+    }
+    setValidating(true);
+    try {
+      const lookup = await lookupReferralCode(c);
+      if (!lookup?.valid) {
+        toast.error("Código não encontrado. Confira com quem te indicou.");
+      } else {
+        setReferrerName(lookup.customer_name || `Cliente #${lookup.customer_id}`);
+        setCode(c);
+        setNeedsCode(false);
+        setInvalid(false);
+        toast.success(`Código validado! Indicado por ${lookup.customer_name || "cliente"}.`);
+      }
+    } catch {
+      toast.error("Erro ao validar código");
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      toast.success("Código copiado!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
 
   const buildSupportMessage = (pending: PendingResult) =>
     `Olá! 👋 Acabei de me cadastrar pelo link de indicação e quero ativar meu *teste grátis* na *Loreall Play TV*.\n\n` +
@@ -175,33 +235,114 @@ const IndicacaoTeste = () => {
     );
   }
 
-  if (invalid) {
+  // Se não temos código válido → tela de entrada de código
+  if (needsCode && !result) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={pageStyle}>
-        <SoftCard className="w-full max-w-sm text-center space-y-4 p-8">
-          <div
-            className="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: "rgba(239,68,68,0.10)" }}
-          >
-            <AlertCircle className="h-7 w-7" style={{ color: "#ef4444" }} />
-          </div>
-          <h1 className="text-xl font-extrabold" style={headingFont}>
-            Link inválido
-          </h1>
-          <p className="text-sm" style={{ color: MUTED }}>
-            Este código de indicação não existe ou expirou. Peça um novo link para quem te indicou.
+      <div className="min-h-screen flex items-start justify-center px-4 py-10" style={pageStyle}>
+        <div className="w-full max-w-[420px] flex flex-col gap-6">
+          <header className="flex flex-col items-center text-center gap-4">
+            <div
+              className="w-20 h-20 rounded-[1.75rem] flex items-center justify-center overflow-hidden"
+              style={{
+                backgroundColor: SURFACE,
+                border: `1px solid ${BORDER}`,
+                boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+              }}
+            >
+              <img src={logo} alt="Loreall Play TV" className="w-14 h-auto" />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-extrabold tracking-tight" style={headingFont}>
+                Tem um código de indicação?
+              </h1>
+              <p className="text-sm" style={{ color: MUTED }}>
+                Digite abaixo o código que você recebeu de outro cliente para liberar o seu teste grátis com bônus.
+              </p>
+            </div>
+          </header>
+
+          {invalid && (
+            <div
+              className="rounded-2xl p-3.5 flex items-start gap-2.5"
+              style={{
+                backgroundColor: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.20)",
+              }}
+            >
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#ef4444" }} />
+              <p className="text-xs" style={{ color: "#b91c1c" }}>
+                O link usado não é válido. Você pode digitar o código manualmente abaixo.
+              </p>
+            </div>
+          )}
+
+          <SoftCard className="p-6 space-y-5">
+            <div
+              className="flex items-center gap-3 rounded-2xl p-3.5"
+              style={{
+                background: "linear-gradient(135deg, #FFF7E0, #FDE7B5)",
+                border: "1px solid #E0A93A",
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "#E0A93A" }}
+              >
+                <Sparkles className="h-5 w-5" style={{ color: "#4A2B00" }} />
+              </div>
+              <div className="text-sm leading-tight">
+                <p className="font-bold" style={{ color: "#4A2B00" }}>
+                  Bônus de +5% no teste grátis
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: "#6B3F00" }}>
+                  Cadastrando com código de indicação você ganha um bônus extra na ativação.
+                </p>
+              </div>
+            </div>
+
+            <Field
+              label="Código de indicação"
+              icon={<KeyRound className="h-4 w-4" style={{ color: MUTED }} />}
+            >
+              <input
+                type="text"
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                maxLength={20}
+                className="w-full bg-transparent outline-none text-sm font-semibold tracking-widest uppercase"
+                style={{ color: TEXT }}
+                placeholder="EX: JOAO123"
+                onKeyDown={(e) => e.key === "Enter" && handleValidateManual()}
+              />
+            </Field>
+
+            <button
+              type="button"
+              onClick={handleValidateManual}
+              disabled={validating || manualCode.trim().length < 3}
+              className="w-full h-12 rounded-2xl font-bold text-sm inline-flex items-center justify-center gap-2 transition-transform active:scale-[0.98] disabled:opacity-60"
+              style={{ backgroundColor: ACCENT, color: "#fff" }}
+            >
+              {validating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              {validating ? "Validando..." : "Validar código"}
+            </button>
+          </SoftCard>
+
+          <p className="text-xs text-center" style={{ color: MUTED }}>
+            Não tem código?{" "}
+            <Link to="/login" className="font-semibold" style={{ color: ACCENT }}>
+              Fazer login
+            </Link>
           </p>
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-2 text-sm font-semibold"
-            style={{ color: ACCENT }}
-          >
-            <ArrowLeft className="h-4 w-4" /> Ir para o login
-          </Link>
-        </SoftCard>
+        </div>
       </div>
     );
   }
+
 
   if (result) {
     const supportMsg = buildSupportMessage(result);
@@ -326,12 +467,64 @@ const IndicacaoTeste = () => {
             </div>
           </div>
 
+          {/* Código de indicação visível + copiar */}
+          <div
+            className="flex items-center justify-between gap-3 rounded-2xl p-3"
+            style={{ backgroundColor: "#f7f9fc", border: `1px dashed ${BORDER}` }}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <KeyRound className="h-4 w-4 shrink-0" style={{ color: MUTED }} />
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: MUTED }}>
+                  Código de indicação
+                </p>
+                <p className="text-sm font-bold tracking-widest truncate" style={{ color: TEXT }}>
+                  {code}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={copyCode}
+              className="shrink-0 h-9 px-3 rounded-xl inline-flex items-center gap-1.5 text-xs font-semibold transition-transform active:scale-95"
+              style={{ backgroundColor: ACCENT, color: "#fff" }}
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copiado" : "Copiar"}
+            </button>
+          </div>
+
+          {/* Bônus +5% */}
+          <div
+            className="flex items-center gap-3 rounded-2xl p-3.5"
+            style={{
+              background: "linear-gradient(135deg, #FFF7E0, #FDE7B5)",
+              border: "1px solid #E0A93A",
+            }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#E0A93A" }}
+            >
+              <Sparkles className="h-5 w-5" style={{ color: "#4A2B00" }} />
+            </div>
+            <div className="text-sm leading-tight">
+              <p className="font-bold" style={{ color: "#4A2B00" }}>
+                Bônus de +5% ativado
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#6B3F00" }}>
+                Você entrou por indicação — bônus extra aplicado na sua ativação.
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-3">
             <BenefitRow icon={<Sparkles className="h-4 w-4" />} text="Acesso imediato ao catálogo completo" />
             <BenefitRow icon={<ShieldCheck className="h-4 w-4" />} text="Sem cartão de crédito, sem compromisso" />
             <BenefitRow icon={<MessageCircle className="h-4 w-4" />} text="Suporte humano no WhatsApp" />
           </div>
         </SoftCard>
+
 
         {/* Formulário */}
         <SoftCard className="p-6 space-y-5">
