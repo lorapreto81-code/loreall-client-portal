@@ -257,9 +257,13 @@ const Dashboard = () => {
           <div className="flex items-center gap-2 mb-1">
             <Gift className="h-5 w-5 referral-icon" />
             <h2 className="text-base font-medium referral-title">Indique e ganhe</h2>
-            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full referral-badge">
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full referral-badge inline-flex items-center gap-1">
               +30 dias
+              <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-[1px] rounded-full bg-emerald-500 text-white">
+                Grátis
+              </span>
             </span>
+
           </div>
           <p className="text-sm referral-subtitle">
             Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
