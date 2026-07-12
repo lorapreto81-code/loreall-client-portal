@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Loader2,
   Gift,
@@ -12,6 +12,9 @@ import {
   Sparkles,
   User as UserIcon,
   Phone,
+  KeyRound,
+  Copy,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { lookupReferralCode } from "@/lib/api";
