@@ -5,9 +5,9 @@ import { Loader2, Save, Zap, Users, ServerCog, Copy, Check, ArrowLeftRight } fro
 
 type Provider = "fastdepix" | "syncpay";
 
-const PROVIDERS: { id: Provider; label: string; short: string; color: string }[] = [
-  { id: "fastdepix", label: "Fast Depix", short: "FD", color: "from-emerald-500 to-teal-600" },
+const PROVIDERS: { id: Provider; label: string; short: string; color: string; paused?: boolean }[] = [
   { id: "syncpay", label: "SyncPay", short: "SP", color: "from-indigo-500 to-purple-600" },
+  { id: "fastdepix", label: "Fast Depix", short: "FD", color: "from-emerald-500 to-teal-600", paused: true },
 ];
 
 export default function PixProviderTab() {
