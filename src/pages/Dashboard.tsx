@@ -274,63 +274,33 @@ const Dashboard = () => {
           </p>
         </button>
 
-        {/* RODAPÉ DE UTILITÁRIOS — 4 ícones compactos */}
-        <div className="mt-1">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-1">
-            Minha conta
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            <button
-              onClick={() => openAccount("dados")}
-              className="card-elevated relative flex flex-col items-center justify-center gap-1.5 py-3 px-1 transition-all hover:scale-[1.03] active:scale-[0.97]"
-            >
-              <div className="rounded-full p-2 bg-primary/10">
-                <User className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-[11px] font-medium text-foreground leading-none">Dados</span>
+        {/* MINHA CONTA — entrada única para dados, faturas, suporte e pedidos */}
+        <button
+          onClick={() => openAccount("dados")}
+          className="card-elevated w-full p-4 flex items-center gap-3 text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative"
+        >
+          <div className="rounded-full p-2.5 bg-primary/10 shrink-0">
+            <User className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-foreground">Minha conta</p>
               {profileIncomplete && (
                 <span
-                  className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full"
-                  style={{ background: "hsl(var(--warning))" }}
-                />
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                  style={{ background: "hsl(var(--warning) / 0.18)", color: "hsl(var(--warning))" }}
+                >
+                  AÇÃO
+                </span>
               )}
-            </button>
-
-            <button
-              onClick={() => openAccount("faturas")}
-              className="card-elevated flex flex-col items-center justify-center gap-1.5 py-3 px-1 transition-all hover:scale-[1.03] active:scale-[0.97]"
-            >
-              <div className="rounded-full p-2 bg-accent/10">
-                <Receipt className="h-4 w-4 text-accent" />
-              </div>
-              <span className="text-[11px] font-medium text-foreground leading-none">Faturas</span>
-            </button>
-
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Preciso%20de%20suporte.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="card-elevated flex flex-col items-center justify-center gap-1.5 py-3 px-1 transition-all hover:scale-[1.03] active:scale-[0.97]"
-            >
-              <div className="rounded-full p-2 bg-muted">
-                <HelpCircle className="h-4 w-4 text-foreground" />
-              </div>
-              <span className="text-[11px] font-medium text-foreground leading-none">Suporte</span>
-            </a>
-
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=Olá!%20Quero%20pedir%20um%20conteúdo.%20Meu%20usuário%20é%3A%20${encodeURIComponent(customer.usuario)}%20-%20Conteúdo%3A%20`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="card-elevated flex flex-col items-center justify-center gap-1.5 py-3 px-1 transition-all hover:scale-[1.03] active:scale-[0.97]"
-            >
-              <div className="rounded-full p-2 bg-muted">
-                <Plus className="h-4 w-4 text-foreground" />
-              </div>
-              <span className="text-[11px] font-medium text-foreground leading-none text-center">Pedir</span>
-            </a>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-snug truncate">
+              Dados, faturas, suporte e pedidos
+            </p>
           </div>
-        </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        </button>
+
 
         <div className="h-2" />
       </main>
