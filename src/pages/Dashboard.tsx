@@ -313,9 +313,17 @@ const Dashboard = () => {
           </div>
         </button>
 
-
+        {/* LANÇAMENTOS — informativo, no final */}
+        <div>
+          <div className="flex items-center gap-2 mb-2.5 px-1">
+            <Film className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-semibold text-foreground">Lançamentos</h2>
+          </div>
+          <LaunchesBanner />
+        </div>
 
         <div className="h-2" />
+
       </main>
 
       <ExpirationPopup
