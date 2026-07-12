@@ -136,7 +136,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+              className="p-2 text-foreground bg-muted/60 hover:bg-muted transition-colors rounded-full border border-border"
               style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
               title={theme === "dark" ? "Modo claro" : "Modo escuro"}
             >
@@ -144,7 +144,7 @@ const Dashboard = () => {
             </button>
             <button
               onClick={handleLogout}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors rounded-full"
               style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
               title="Sair"
             >
