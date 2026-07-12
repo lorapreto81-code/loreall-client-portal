@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  CalendarDays, Monitor, Zap, User, ChevronRight, CheckCircle2
+  CalendarDays, Monitor, Zap, User, ChevronRight, CheckCircle2, Receipt
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -17,6 +17,7 @@ import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import ProfileSheet from "@/components/ProfileSheet";
+import MyInvoicesSheet from "@/components/MyInvoicesSheet";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
@@ -63,6 +64,7 @@ const Dashboard = () => {
   const [renewalOpen, setRenewalOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [invoicesOpen, setInvoicesOpen] = useState(false);
   
   
 
