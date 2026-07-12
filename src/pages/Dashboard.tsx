@@ -158,7 +158,7 @@ const Dashboard = () => {
         {/* CONFIRME SEUS DADOS — prioridade máxima quando incompletos */}
         {profileIncomplete && (
           <button
-            onClick={() => setProfileOpen(true)}
+            onClick={() => openAccount("dados")}
             className="w-full text-left rounded-xl p-4 flex items-center gap-3 border-2 animate-in fade-in slide-in-from-top duration-300"
             style={{
               borderColor: "hsl(var(--warning))",
