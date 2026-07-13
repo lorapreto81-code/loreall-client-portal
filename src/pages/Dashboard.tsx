@@ -6,7 +6,7 @@ import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
   CalendarDays, Monitor, Zap, User, ChevronRight, Receipt, HelpCircle, Plus,
-  Mail, X
+  Mail, X, Download
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -359,6 +359,25 @@ const Dashboard = () => {
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Plus className="h-3.5 w-3.5" /> Pedir
             </div>
+          </div>
+        </button>
+
+        {/* COMO INSTALAR */}
+        <button
+          onClick={() => navigate("/instalacao")}
+          className="card-elevated w-full p-4 text-left transition-all hover:scale-[1.005] active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-gradient-to-br from-accent/20 to-accent/5 shrink-0 border border-accent/20">
+              <Download className="h-5 w-5 text-accent" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Como instalar</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Apps recomendados para Smart TV, TV Box e celular
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
           </div>
         </button>
 
