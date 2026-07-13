@@ -69,6 +69,19 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [copied, setCopied] = useState<"user" | "pass" | null>(null);
+
+  const copyValue = async (value: string, which: "user" | "pass") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(which);
+      toast.success(which === "user" ? "Usuário copiado!" : "Senha copiada!");
+      setTimeout(() => setCopied((c) => (c === which ? null : c)), 1500);
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  };
 
   // Faturas
   const [loading, setLoading] = useState(false);
