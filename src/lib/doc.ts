@@ -62,7 +62,8 @@ export function isValidDoc(v: string): boolean {
   return false;
 }
 
-/** Retorna documento mascarado com dígitos ocultos, ex.: ***.***.789-00 ou **.***.***/0001-** */
+// Retorna documento mascarado com dígitos ocultos.
+// Ex.: CPF -> ***.***.789-00 | CNPJ -> **.***.***\/0001-**
 export function maskDocPartial(v: string): string {
   const d = onlyDigits(v);
   if (d.length === 11) {
