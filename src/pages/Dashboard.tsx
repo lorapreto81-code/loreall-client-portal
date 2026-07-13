@@ -6,7 +6,7 @@ import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
   CalendarDays, Monitor, Zap, User, ChevronRight, Receipt, HelpCircle, Plus,
-  Mail, X, Download, Menu
+  Mail, X, Download, Menu, KeyRound, Copy, Eye, EyeOff, Check
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/store/authStore";
