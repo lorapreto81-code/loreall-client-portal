@@ -67,7 +67,6 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
-  const [cpf, setCpf] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Faturas
