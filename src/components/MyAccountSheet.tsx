@@ -231,19 +231,9 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     placeholder="voce@email.com"
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <IdCard className="h-3.5 w-3.5" /> CPF <span className="opacity-60">(opcional)</span>
-                  </label>
-                  <input
-                    value={cpf}
-                    onChange={(e) => setCpf(formatCpf(e.target.value))}
-                    inputMode="numeric"
-                    maxLength={14}
-                    className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
-                    placeholder="000.000.000-00"
-                  />
-                </div>
+                <p className="text-[10px] text-muted-foreground -mt-1">
+                  CPF só será solicitado ao ativar o Pix Automático.
+                </p>
               </div>
               <button
                 onClick={handleSave}
