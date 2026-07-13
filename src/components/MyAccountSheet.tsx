@@ -84,7 +84,6 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     const raw = (customer as any).whatsapp || (customer as any).celular || "";
     setWhatsapp(formatPhone(String(raw)));
     setEmail(String((customer as any).email || ""));
-    setCpf(formatCpf(String((customer as any).cpf || "")));
   }, [open, customer]);
 
   useEffect(() => {
