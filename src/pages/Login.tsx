@@ -173,8 +173,9 @@ const Login = () => {
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4 leading-snug">
-                Insira seu <span className="font-semibold text-foreground">e-mail</span> cadastrado
-                para consultar seus dados de acesso e todas as informações.
+                Acesse com seu <span className="font-semibold text-foreground">celular</span> ou
+                <span className="font-semibold text-foreground"> usuário</span> para consultar
+                seus dados e renovar seu plano.
               </p>
 
               {refCode && (
@@ -193,9 +194,8 @@ const Login = () => {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-                    placeholder="E-mail de cadastro"
-                    autoComplete="email"
-                    inputMode="email"
+                    placeholder="Celular ou usuário"
+                    autoComplete="username"
                   />
                   <Search className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                 </div>
@@ -206,11 +206,11 @@ const Login = () => {
                   className="w-full py-3.5 btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-wide"
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin-slow" /> : <Search className="h-4 w-4" />}
-                  {loading ? "Consultando..." : "Consultar meus dados"}
+                  {loading ? "Consultando..." : "Acessar minha conta"}
                 </button>
 
                 <p className="text-[11px] text-muted-foreground text-center pt-1">
-                  Também aceita celular ou usuário antigo.
+                  Em breve o login também será por e-mail.
                 </p>
               </form>
 
