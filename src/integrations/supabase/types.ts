@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      confirmed_customer_emails: {
+        Row: {
+          confirmed_at: string
+          customer_id: number
+          email: string
+          updated_at: string
+        }
+        Insert: {
+          confirmed_at?: string
+          customer_id: number
+          email: string
+          updated_at?: string
+        }
+        Update: {
+          confirmed_at?: string
+          customer_id?: number
+          email?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
