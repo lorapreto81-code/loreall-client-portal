@@ -231,9 +231,37 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     placeholder="voce@email.com"
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground -mt-1">
-                  CPF só será solicitado ao ativar o Pix Automático.
-                </p>
+                {(() => {
+                  const raw = String((customer as any)?.cpf || "");
+                  const digits = raw.replace(/\D/g, "");
+                  if (digits.length === 11) {
+                    return (
+                      <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 flex items-center justify-between">
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">CPF cadastrado</div>
+                          <div className="text-sm font-mono text-foreground">{`***.***.${digits.slice(6, 9)}-${digits.slice(9)}`}</div>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">Pix Automático</span>
+                      </div>
+                    );
+                  }
+                  if (digits.length === 14) {
+                    return (
+                      <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 flex items-center justify-between">
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">CNPJ cadastrado</div>
+                          <div className="text-sm font-mono text-foreground">{`**.***.***/${digits.slice(8, 12)}-**`}</div>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">Pix Automático</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <p className="text-[10px] text-muted-foreground -mt-1">
+                      CPF/CNPJ só será solicitado ao ativar o Pix Automático.
+                    </p>
+                  );
+                })()}
               </div>
               <button
                 onClick={handleSave}

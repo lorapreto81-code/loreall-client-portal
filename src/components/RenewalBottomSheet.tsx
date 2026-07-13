@@ -5,6 +5,7 @@ import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } 
 import { supabase } from "@/integrations/supabase/client";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
+import { maskDoc, isValidDoc, onlyDigits as onlyDigitsDoc, detectDoc } from "@/lib/doc";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
@@ -121,7 +122,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     setSubResult(null);
     setSubName(customer?.name || "");
     setSubEmail(((customer as any)?.email as string) || "");
-    setSubCpf(((customer as any)?.cpf as string) || "");
+    setSubCpf(maskDoc(String((customer as any)?.cpf || "")));
     setSubPhone(
       String(((customer as any)?.whatsapp as string) || ((customer as any)?.celular as string) || "")
     );
@@ -137,10 +138,16 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     if (!subForm || !customer) return;
     setSubLoading(true);
     try {
-      const cleanCpf = subCpf.replace(/\D/g, "");
+      const cleanCpf = onlyDigitsDoc(subCpf);
       const cleanPhone = subPhone.replace(/\D/g, "");
       const trimmedName = subName.trim();
       const trimmedEmail = subEmail.trim().toLowerCase();
+
+      if (!isValidDoc(cleanCpf)) {
+        setSubLoading(false);
+        toast.error("CPF ou CNPJ inválido. Confira os dígitos.");
+        return;
+      }
 
       // Persiste dados no TopGestor para reutilizar em próximas assinaturas
       try {
@@ -380,8 +387,24 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                   <p className="text-[10px] text-muted-foreground">Salvos no seu perfil — só preencha se estiverem em branco.</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-foreground">CPF <span className="text-destructive">*</span></label>
-                  <input value={subCpf} onChange={(e) => setSubCpf(e.target.value)} inputMode="numeric" maxLength={14} className="w-full mt-1 px-3 py-2.5 rounded-lg bg-background border border-border text-sm" placeholder="000.000.000-00" />
+                  <label className="text-xs font-semibold text-foreground">
+                    CPF ou CNPJ <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    value={subCpf}
+                    onChange={(e) => setSubCpf(maskDoc(e.target.value))}
+                    inputMode="numeric"
+                    maxLength={18}
+                    className={`w-full mt-1 px-3 py-2.5 rounded-lg bg-background border text-sm ${
+                      subCpf && !isValidDoc(subCpf) ? "border-destructive" : "border-border"
+                    }`}
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  />
+                  {subCpf && !isValidDoc(subCpf) && (
+                    <p className="text-[10px] text-destructive mt-1">
+                      {detectDoc(subCpf) ? "Documento inválido — confira os dígitos." : "Digite os 11 dígitos do CPF ou 14 do CNPJ."}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-foreground">E-mail <span className="text-destructive">*</span></label>

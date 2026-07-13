@@ -38,6 +38,28 @@ function validCPF(cpfStr: string): boolean {
   let d2 = (s * 10) % 11; if (d2 === 10) d2 = 0;
   return d2 === parseInt(cpf[10]);
 }
+function validCNPJ(v: string): boolean {
+  const c = onlyDigits(v);
+  if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
+  const calc = (base: string, weights: number[]) => {
+    let s = 0;
+    for (let i = 0; i < weights.length; i++) s += parseInt(base[i]) * weights[i];
+    const r = s % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const w2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const d1 = calc(c.slice(0, 12), w1);
+  if (d1 !== parseInt(c[12])) return false;
+  const d2 = calc(c.slice(0, 13), w2);
+  return d2 === parseInt(c[13]);
+}
+function validDoc(v: string): boolean {
+  const d = onlyDigits(v);
+  if (d.length === 11) return validCPF(d);
+  if (d.length === 14) return validCNPJ(d);
+  return false;
+}
 function validEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 // ------- token -------
@@ -73,7 +95,7 @@ Deno.serve(async (req) => {
     if (!plan_id) return err("plan_id obrigatório");
     if (!name || String(name).trim().length < 3) return err("Nome inválido");
     if (!email || !validEmail(String(email))) return err("E-mail inválido");
-    if (!cpf || !validCPF(String(cpf))) return err("CPF inválido");
+    if (!cpf || !validDoc(String(cpf))) return err("CPF ou CNPJ inválido");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
