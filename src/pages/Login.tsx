@@ -237,8 +237,8 @@ const Login = () => {
           href="https://wa.me/5583985591952?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe."
           target="_blank"
           rel="noopener noreferrer"
-          className="block rounded-2xl overflow-hidden shadow-xl transition-transform hover:scale-[1.01] active:scale-[0.99]"
-          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.35)" }}
+          className="block rounded-2xl overflow-hidden border border-border/60 transition-transform hover:scale-[1.01] active:scale-[0.99] bg-card/40"
+          style={{ boxShadow: "0 20px 50px -20px rgba(0,0,0,0.6)" }}
           aria-label="Indique e ganhe 1 mês grátis"
         >
           <img
@@ -248,6 +248,10 @@ const Login = () => {
             loading="lazy"
           />
         </a>
+
+        <p className="text-[10px] text-muted-foreground/60 text-center">
+          © Loreall Play TV — Seu entretenimento em qualquer tela.
+        </p>
       </div>
     </div>
   );
