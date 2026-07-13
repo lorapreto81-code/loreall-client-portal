@@ -66,10 +66,12 @@ const Dashboard = () => {
   const [referralOpen, setReferralOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountTab, setAccountTab] = useState<"dados" | "faturas">("dados");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const openAccount = (tab: "dados" | "faturas") => {
     setAccountTab(tab);
     setAccountOpen(true);
+    setMenuOpen(false);
   };
   
   
