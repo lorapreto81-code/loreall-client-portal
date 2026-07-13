@@ -221,7 +221,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <Mail className="h-3.5 w-3.5" /> E-mail <span className="opacity-60">(opcional)</span>
+                    <Mail className="h-3.5 w-3.5" /> E-mail
                   </label>
                   <input
                     value={email}
