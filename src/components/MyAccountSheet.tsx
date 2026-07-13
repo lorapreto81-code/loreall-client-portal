@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import {
   X, User, Phone, Mail, Loader2, Receipt,
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
-  KeyRound, Copy, Eye, EyeOff, Check,
+  KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2,
 } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
@@ -209,23 +209,43 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                 Mantenha seus dados atualizados para receber lembretes e agilizar cobranças.
               </p>
 
-              {/* Dados de acesso ao aplicativo */}
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 mb-4">
-                <div className="flex items-center gap-1.5 mb-2.5">
-                  <KeyRound className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs font-semibold text-foreground">Dados de acesso ao aplicativo</span>
+              {/* Dados de acesso ao aplicativo — destaque colorido */}
+              <div
+                className="rounded-xl p-3.5 mb-4 relative overflow-hidden border-2"
+                style={{
+                  borderColor: "hsl(var(--primary) / 0.4)",
+                  background:
+                    "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))",
+                  boxShadow: "0 4px 20px -8px hsl(var(--primary) / 0.3)",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="rounded-full p-1.5 bg-primary/25">
+                    <KeyRound className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-primary uppercase tracking-wider leading-none">
+                      Meus dados de acesso
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      Use no app do seu player
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <div>
-                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Usuário</div>
-                    <div className="flex items-center gap-2 rounded-lg bg-background border border-border px-3 py-2">
-                      <div className="flex-1 text-sm font-mono text-foreground truncate select-all">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
+                      <UserCircle2 className="h-3 w-3" /> Usuário
+                    </div>
+                    <div className="flex items-center gap-2 rounded-lg bg-background border border-primary/20 px-3 py-2">
+                      <UserCircle2 className="h-4 w-4 text-primary shrink-0" />
+                      <div className="flex-1 text-sm font-mono font-semibold text-foreground truncate select-all">
                         {String((customer as any)?.usuario || "—")}
                       </div>
                       <button
                         type="button"
                         onClick={() => copyValue(String((customer as any)?.usuario || ""), "user")}
-                        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                         aria-label="Copiar usuário"
                       >
                         {copied === "user" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
@@ -233,9 +253,12 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Senha</div>
-                    <div className="flex items-center gap-2 rounded-lg bg-background border border-border px-3 py-2">
-                      <div className="flex-1 text-sm font-mono text-foreground truncate select-all">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
+                      <Lock className="h-3 w-3" /> Senha
+                    </div>
+                    <div className="flex items-center gap-2 rounded-lg bg-background border border-primary/20 px-3 py-2">
+                      <Lock className="h-4 w-4 text-primary shrink-0" />
+                      <div className="flex-1 text-sm font-mono font-semibold text-foreground truncate select-all">
                         {showPass
                           ? String((customer as any)?.password || "—")
                           : "•".repeat(Math.min(12, String((customer as any)?.password || "").length) || 6)}
@@ -243,7 +266,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                       <button
                         type="button"
                         onClick={() => setShowPass((v) => !v)}
-                        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                         aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
                       >
                         {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -251,7 +274,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                       <button
                         type="button"
                         onClick={() => copyValue(String((customer as any)?.password || ""), "pass")}
-                        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                         aria-label="Copiar senha"
                       >
                         {copied === "pass" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
@@ -259,8 +282,8 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     </div>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Use estes dados para entrar no aplicativo do seu player.
+                <p className="text-[10px] text-muted-foreground mt-2.5">
+                  Toque no ícone para copiar. Use estes dados para entrar no app.
                 </p>
               </div>
 
