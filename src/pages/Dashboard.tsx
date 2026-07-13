@@ -158,14 +158,108 @@ const Dashboard = () => {
             >
               {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
-            <button
-              onClick={handleLogout}
-              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors rounded-full"
-              style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
-              title="Sair"
-            >
-              <LogOut className="h-[18px] w-[18px]" />
-            </button>
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <button
+                  className="p-2 text-foreground bg-muted/60 hover:bg-muted transition-colors rounded-full border border-border relative"
+                  style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
+                  title="Menu"
+                  aria-label="Abrir menu"
+                >
+                  <Menu className="h-[18px] w-[18px]" />
+                  {profileIncomplete && (
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-warning animate-pulse" />
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[85vw] max-w-[340px] p-0 flex flex-col">
+                <SheetHeader className="p-5 border-b border-border">
+                  <SheetTitle className="text-left flex items-center gap-3">
+                    <div className="rounded-full p-2 bg-primary/15">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[11px] text-muted-foreground font-normal">Área do Cliente</div>
+                      <div className="text-sm font-semibold text-foreground truncate">{customer.name}</div>
+                    </div>
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
+                  <button
+                    onClick={() => openAccount("dados")}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    <User className="h-[18px] w-[18px] text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                        Meus dados
+                        {profileIncomplete && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "hsl(var(--warning) / 0.18)", color: "hsl(var(--warning))" }}>AÇÃO</span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">Perfil, e-mail e WhatsApp</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => openAccount("faturas")}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    <Receipt className="h-[18px] w-[18px] text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground">Faturas</div>
+                      <div className="text-[11px] text-muted-foreground">Histórico de pagamentos</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate("/instalacao"); }}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    <Download className="h-[18px] w-[18px] text-accent shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground">Como instalar</div>
+                      <div className="text-[11px] text-muted-foreground">Apps para Smart TV, Box e celular</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <a
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Olá! Preciso de ajuda. Usuário: ${customer.usuario}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    <HelpCircle className="h-[18px] w-[18px] text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground">Suporte</div>
+                      <div className="text-[11px] text-muted-foreground">Falar no WhatsApp</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </a>
+                  <button
+                    onClick={() => { setReferralOpen(true); setMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    <Gift className="h-[18px] w-[18px] text-accent shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground">Indique e ganhe</div>
+                      <div className="text-[11px] text-muted-foreground">+30 dias grátis por indicação</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </nav>
+                <div className="p-3 border-t border-border">
+                  <button
+                    onClick={() => { setMenuOpen(false); handleLogout(); }}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 transition-colors text-left text-destructive"
+                  >
+                    <LogOut className="h-[18px] w-[18px] shrink-0" />
+                    <div className="text-sm font-medium">Sair da conta</div>
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
