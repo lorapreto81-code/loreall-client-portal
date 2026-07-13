@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  X, User, Phone, Mail, IdCard, Loader2, Receipt,
+  X, User, Phone, Mail, Loader2, Receipt,
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
 } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
