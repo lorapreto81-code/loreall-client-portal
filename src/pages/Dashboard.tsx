@@ -67,6 +67,19 @@ const Dashboard = () => {
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountTab, setAccountTab] = useState<"dados" | "faturas">("dados");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [copied, setCopied] = useState<"user" | "pass" | null>(null);
+
+  const copyCred = async (value: string, which: "user" | "pass") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(which);
+      toast.success(which === "user" ? "Usuário copiado!" : "Senha copiada!");
+      setTimeout(() => setCopied((c) => (c === which ? null : c)), 1500);
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  };
 
   const openAccount = (tab: "dados" | "faturas") => {
     setAccountTab(tab);
