@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  CalendarDays, Monitor, Zap, User, ChevronRight, Receipt, HelpCircle, Plus
+  CalendarDays, Monitor, Zap, User, ChevronRight, Receipt, HelpCircle, Plus,
+  Mail, X
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
