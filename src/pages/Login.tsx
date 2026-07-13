@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Crown } from "lucide-react";
+import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Search } from "lucide-react";
 import { searchCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
+import indiqueBanner from "@/assets/indique-ganhe-banner.jpg.asset.json";
 const logo = "/logo.png";
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
 const REF_KEY = "loreall_pending_ref";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const formatDate = (s?: string) => {
   if (!s) return "—";
@@ -16,8 +18,6 @@ const formatDate = (s?: string) => {
   return d.toLocaleDateString("pt-BR");
 };
 
-// Mostra apenas as 2 primeiras e 1 última letra de cada palavra do nome.
-// Ex.: "João Pedro Silva" -> "Jo••o P••••o S••••a"
 const maskName = (raw?: string) => {
   if (!raw) return "—";
   return raw
@@ -34,7 +34,6 @@ const maskName = (raw?: string) => {
     .join(" ");
 };
 
-
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,7 +48,6 @@ const Login = () => {
     if (ref) {
       const code = ref.trim().toUpperCase();
       localStorage.setItem(REF_KEY, code);
-      // Link de indicação sempre leva ao cadastro de teste grátis.
       navigate(`/indicacao/${code}`, { replace: true });
       return;
     }
@@ -67,31 +65,36 @@ const Login = () => {
     e.preventDefault();
     const id = identifier.trim();
     if (!id) {
-      toast.error("Informe seu usuário ou celular.");
+      toast.error("Informe seu e-mail, celular ou usuário.");
       return;
     }
     setLoading(true);
     try {
+      const isEmail = EMAIL_RE.test(id);
       const digits = onlyDigits(id);
-      const isPhone = digits.length >= 8;
-      const query = isPhone ? digits : id;
+      const isPhone = !isEmail && digits.length >= 8;
+      const query = isEmail ? id.toLowerCase() : isPhone ? digits : id;
       const data = await searchCustomer(query);
-      const customers = Array.isArray(data) ? data : data?.data ? (Array.isArray(data.data) ? data.data : [data.data]) : [data];
+      const customers = Array.isArray(data)
+        ? data
+        : data?.data
+          ? Array.isArray(data.data) ? data.data : [data.data]
+          : [data];
       const tail8 = digits.slice(-8);
       const filtered = customers.filter((c: any) => {
-        if (!isPhone && (c.usuario === id || c.username === id)) return true;
+        if (isEmail) {
+          return String(c.email || "").toLowerCase() === id.toLowerCase();
+        }
         if (isPhone) {
           const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone]
             .filter(Boolean)
             .map((v: string) => onlyDigits(String(v)));
-          // Compara pelos últimos 8 dígitos — tolera DDD ausente, dígito 9 faltando,
-          // código do país (55) e espaços/formatação no telefone cadastrado.
           return phoneFields.some((p) => p.slice(-8) === tail8);
         }
-        return false;
+        return c.usuario === id || c.username === id;
       });
       if (filtered.length === 0) {
-        toast.error("Usuário ou celular não encontrado.");
+        toast.error("Não encontramos uma conta com esses dados.");
         return;
       }
       if (filtered.length === 1) {
@@ -100,23 +103,26 @@ const Login = () => {
       }
       setMatches(filtered);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao fazer login.");
+      toast.error(err.message || "Erro ao acessar sua conta.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
-      {/* Ambient glow background */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+    <div className="min-h-screen flex items-start justify-center bg-background px-4 py-10 relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-sm relative z-10">
-        <div className="flex justify-center mb-6">
-          <img src={logo} alt="Loreall Play TV" style={{ width: 120, height: "auto" }} />
+      <div className="w-full max-w-sm relative z-10 flex flex-col gap-5">
+        {/* Logo + subtítulo estilo referência */}
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <img src={logo} alt="Loreall Play TV" style={{ width: 150, height: "auto" }} />
+          <p className="text-[11px] font-semibold tracking-[0.35em] text-muted-foreground uppercase">
+            Seus dados de acesso
+          </p>
         </div>
 
-        <div className="card-elevated p-6 shadow-xl" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+        <div className="card-elevated p-5 shadow-xl" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
           {matches.length > 1 ? (
             <>
               <button
@@ -129,7 +135,7 @@ const Login = () => {
                 Escolha um acesso
               </h1>
               <p className="text-xs text-muted-foreground text-center mb-5">
-                Encontramos {matches.length} acessos neste número. Selecione qual deseja abrir:
+                Encontramos {matches.length} contas. Selecione qual deseja abrir:
               </p>
               <div className="space-y-2.5">
                 {matches.map((c) => {
@@ -145,7 +151,6 @@ const Login = () => {
                         <span className="font-semibold text-foreground text-sm truncate">
                           {maskName(c.usuario || c.name)}
                         </span>
-
                         {c.status && (
                           <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
                             {c.status}
@@ -167,12 +172,10 @@ const Login = () => {
             </>
           ) : (
             <>
-              <div className="flex items-center justify-center gap-2 mb-5">
-                <Crown className="h-5 w-5 text-primary" />
-                <h1 className="text-lg font-bold text-foreground text-center">
-                  Minha Conta
-                </h1>
-              </div>
+              <p className="text-sm text-muted-foreground mb-4 leading-snug">
+                Insira seu <span className="font-semibold text-foreground">e-mail</span> cadastrado
+                para consultar seus dados de acesso e todas as informações.
+              </p>
 
               {refCode && (
                 <div className="mb-4 p-3 rounded-lg flex items-start gap-2.5" style={{ background: "rgba(123, 47, 212, 0.08)", border: "1px solid rgba(123, 47, 212, 0.2)" }}>
@@ -183,29 +186,32 @@ const Login = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                    Usuário ou celular
-                  </label>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="relative">
                   <input
                     type="text"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
-                    placeholder="Seu usuário ou celular"
-                    autoComplete="username"
+                    className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
+                    placeholder="E-mail de cadastro"
+                    autoComplete="email"
+                    inputMode="email"
                   />
+                  <Search className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full py-3.5 btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-wide"
                 >
-                  {loading && <Loader2 className="h-4 w-4 animate-spin-slow" />}
-                  {loading ? "Entrando..." : "Entrar na conta"}
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin-slow" /> : <Search className="h-4 w-4" />}
+                  {loading ? "Consultando..." : "Consultar meus dados"}
                 </button>
+
+                <p className="text-[11px] text-muted-foreground text-center pt-1">
+                  Também aceita celular ou usuário antigo.
+                </p>
               </form>
 
               <a
@@ -220,6 +226,23 @@ const Login = () => {
             </>
           )}
         </div>
+
+        {/* Banner Indique e Ganhe */}
+        <a
+          href="https://wa.me/5583985591952?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-2xl overflow-hidden shadow-xl transition-transform hover:scale-[1.01] active:scale-[0.99]"
+          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.35)" }}
+          aria-label="Indique e ganhe 1 mês grátis"
+        >
+          <img
+            src={indiqueBanner.url}
+            alt="Indique e ganhe +1 mês grátis para cada amigo que assinar"
+            className="w-full h-auto block"
+            loading="lazy"
+          />
+        </a>
       </div>
     </div>
   );
