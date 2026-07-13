@@ -5,6 +5,7 @@ import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } 
 import { supabase } from "@/integrations/supabase/client";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
+import { maskDoc, isValidDoc, onlyDigits as onlyDigitsDoc, detectDoc } from "@/lib/doc";
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
