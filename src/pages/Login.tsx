@@ -110,19 +110,24 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-background px-4 py-10 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative overflow-hidden">
+      {/* Ambient gradient glow */}
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full bg-primary/15 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-sm relative z-10 flex flex-col gap-5">
-        {/* Logo + subtítulo estilo referência */}
-        <div className="flex flex-col items-center gap-2 pt-2">
-          <img src={logo} alt="Loreall Play TV" style={{ width: 150, height: "auto" }} />
-          <p className="text-[11px] font-semibold tracking-[0.35em] text-muted-foreground uppercase">
+      <div className="w-full max-w-sm relative z-10 flex flex-col gap-4">
+        {/* Logo compacta + wordmark */}
+        <div className="flex flex-col items-center gap-1.5 pt-1">
+          <img src={logo} alt="Loreall Play TV" style={{ width: 64, height: "auto" }} />
+          <p className="text-[10px] font-semibold tracking-[0.4em] text-muted-foreground uppercase">
             Seus dados de acesso
           </p>
         </div>
 
-        <div className="card-elevated p-5 shadow-xl" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+        <div
+          className="rounded-2xl p-5 border border-border/60 bg-card/95 backdrop-blur-xl"
+          style={{ boxShadow: "0 20px 50px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03) inset" }}
+        >
           {matches.length > 1 ? (
             <>
               <button
