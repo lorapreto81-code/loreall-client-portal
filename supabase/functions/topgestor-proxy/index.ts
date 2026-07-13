@@ -177,6 +177,38 @@ Deno.serve(async (req) => {
           headers: apiHeaders(token),
           body: JSON.stringify(body),
         });
+
+        // Se o cliente informou/atualizou um e-mail via app, registramos como confirmado
+        // (diferencia dos e-mails inventados gerados na criação do cadastro no TopGestor).
+        if (apiRes.ok && typeof body?.email === "string" && body.email.trim()) {
+          const email = String(body.email).trim().toLowerCase();
+          const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+          const supaUrl = Deno.env.get("SUPABASE_URL");
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+          if (validEmail && supaUrl && serviceKey) {
+            try {
+              await fetch(
+                `${supaUrl}/rest/v1/confirmed_customer_emails?on_conflict=customer_id`,
+                {
+                  method: "POST",
+                  headers: {
+                    apikey: serviceKey,
+                    Authorization: `Bearer ${serviceKey}`,
+                    "Content-Type": "application/json",
+                    Prefer: "resolution=merge-duplicates,return=minimal",
+                  },
+                  body: JSON.stringify({
+                    customer_id: Number(id),
+                    email,
+                    confirmed_at: new Date().toISOString(),
+                  }),
+                },
+              );
+            } catch (e) {
+              console.error("confirm-email upsert failed:", e);
+            }
+          }
+        }
         break;
       }
 
