@@ -412,71 +412,9 @@ const Dashboard = () => {
           </p>
         </button>
 
-        {/* MINHA CONTA — entrada única para dados, faturas, suporte e pedidos */}
-        <button
-          onClick={() => openAccount("dados")}
-          className="card-elevated w-full p-4 text-left transition-all hover:scale-[1.005] active:scale-[0.99] relative"
-        >
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-gradient-to-br from-primary/20 to-primary/5 shrink-0 border border-primary/20">
-              <User className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-foreground">Minha conta</p>
-                {profileIncomplete && (
-                  <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse"
-                    style={{ background: "hsl(var(--warning) / 0.18)", color: "hsl(var(--warning))" }}
-                  >
-                    AÇÃO
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                Gerencie perfil, faturas e ajuda
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          </div>
+        {/* Minha conta / Como instalar / Suporte movidos para o menu lateral (ícone ☰ no topo) */}
 
-          <div className="mt-3 pt-3 border-t border-border flex items-center justify-around gap-1">
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <User className="h-3.5 w-3.5" /> Dados
-            </div>
-            <span className="text-muted-foreground/30">·</span>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Receipt className="h-3.5 w-3.5" /> Faturas
-            </div>
-            <span className="text-muted-foreground/30">·</span>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <HelpCircle className="h-3.5 w-3.5" /> Suporte
-            </div>
-            <span className="text-muted-foreground/30">·</span>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Plus className="h-3.5 w-3.5" /> Pedir
-            </div>
-          </div>
-        </button>
 
-        {/* COMO INSTALAR */}
-        <button
-          onClick={() => navigate("/instalacao")}
-          className="card-elevated w-full p-4 text-left transition-all hover:scale-[1.005] active:scale-[0.99]"
-        >
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-gradient-to-br from-accent/20 to-accent/5 shrink-0 border border-accent/20">
-              <Download className="h-5 w-5 text-accent" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Como instalar</p>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                Apps recomendados para Smart TV, TV Box e celular
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          </div>
-        </button>
 
         {/* LANÇAMENTOS — informativo, no final */}
         <div>
