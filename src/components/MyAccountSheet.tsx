@@ -118,20 +118,16 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
   const handleSave = async () => {
     const trimmed = name.trim();
     const phoneDigits = onlyDigits(whatsapp);
-    const cpfDigits = onlyDigits(cpf);
     const trimmedEmail = email.trim().toLowerCase();
 
-    if (trimmed.length < 3) return toast.error("Informe seu nome completo.");
+    if (trimmed.split(" ").filter(Boolean).length < 2) return toast.error("Informe seu nome completo.");
     if (phoneDigits.length < 10) return toast.error("WhatsApp inválido.");
-    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
-      return toast.error("E-mail inválido.");
-    if (cpfDigits && cpfDigits.length !== 11) return toast.error("CPF inválido.");
+    if (!trimmedEmail) return toast.error("Informe seu e-mail.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return toast.error("E-mail inválido.");
 
     setSaving(true);
     try {
-      const patch: Record<string, unknown> = { name: trimmed, whatsapp: phoneDigits };
-      if (trimmedEmail) patch.email = trimmedEmail;
-      if (cpfDigits) patch.cpf = cpfDigits;
+      const patch: Record<string, unknown> = { name: trimmed, whatsapp: phoneDigits, email: trimmedEmail };
       await updateCustomer(customer.id, patch);
       const data = await getCustomer(customer.id);
       login((data.data || data) as Customer);
