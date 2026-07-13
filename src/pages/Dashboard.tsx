@@ -93,6 +93,18 @@ const Dashboard = () => {
   const hasValidName = (customer?.name || "").trim().split(" ").filter(Boolean).length >= 2;
   const profileIncomplete = !!customer && (!hasValidPhone || !hasValidName);
 
+  const hasEmail = !!String((customer as any)?.email || "").trim();
+  const emailBannerKey = customer ? `loreall_email_banner_dismissed_${customer.id}` : "";
+  const [emailBannerDismissed, setEmailBannerDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !emailBannerKey) return false;
+    return localStorage.getItem(emailBannerKey) === "1";
+  });
+  const showEmailBanner = !!customer && !hasEmail && !emailBannerDismissed && !profileIncomplete;
+  const dismissEmailBanner = () => {
+    if (emailBannerKey) localStorage.setItem(emailBannerKey, "1");
+    setEmailBannerDismissed(true);
+  };
+
   // Auto-abre "Meus dados" 1x por sessão quando incompleto
   useEffect(() => {
     if (!customer || !profileIncomplete) return;
