@@ -6,7 +6,7 @@ import {
   LogOut,
   AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
   CalendarDays, Monitor, Zap, User, ChevronRight, Receipt, HelpCircle, Plus,
-  Mail, X, Download, Menu
+  Mail, X, Download, Menu, KeyRound, Copy, Eye, EyeOff, Check
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/store/authStore";
@@ -67,6 +67,19 @@ const Dashboard = () => {
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountTab, setAccountTab] = useState<"dados" | "faturas">("dados");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [copied, setCopied] = useState<"user" | "pass" | null>(null);
+
+  const copyCred = async (value: string, which: "user" | "pass") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(which);
+      toast.success(which === "user" ? "Usuário copiado!" : "Senha copiada!");
+      setTimeout(() => setCopied((c) => (c === which ? null : c)), 1500);
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  };
 
   const openAccount = (tab: "dados" | "faturas") => {
     setAccountTab(tab);
@@ -362,6 +375,82 @@ const Dashboard = () => {
             </div>
           );
         })()}
+
+        {/* MEUS DADOS DE ACESSO — destaque para copiar usuário/senha */}
+        <div
+          className="rounded-2xl p-4 relative overflow-hidden border"
+          style={{
+            borderColor: "hsl(var(--primary) / 0.35)",
+            background:
+              "linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--primary) / 0.04))",
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="rounded-full p-1.5 bg-primary/20 shrink-0">
+                <KeyRound className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-primary uppercase tracking-wider leading-none">
+                  Meus dados de acesso
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+                  Use no app do seu player
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Usuário</div>
+              <div className="flex items-center gap-2 rounded-lg bg-background/80 border border-border px-3 py-2">
+                <div className="flex-1 text-sm font-mono font-semibold text-foreground truncate select-all">
+                  {String((customer as any)?.usuario || "—")}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyCred(String((customer as any)?.usuario || ""), "user")}
+                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Copiar usuário"
+                  style={{ minHeight: 32, minWidth: 32 }}
+                >
+                  {copied === "user" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Senha</div>
+              <div className="flex items-center gap-2 rounded-lg bg-background/80 border border-border px-3 py-2">
+                <div className="flex-1 text-sm font-mono font-semibold text-foreground truncate select-all">
+                  {showPass
+                    ? String((customer as any)?.password || "—")
+                    : "•".repeat(Math.min(12, String((customer as any)?.password || "").length) || 6)}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPass((v) => !v)}
+                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
+                  style={{ minHeight: 32, minWidth: 32 }}
+                >
+                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => copyCred(String((customer as any)?.password || ""), "pass")}
+                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Copiar senha"
+                  style={{ minHeight: 32, minWidth: 32 }}
+                >
+                  {copied === "pass" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
 
         {/* ALERTA — apenas quando urgente; texto natural */}
         {days < 0 ? (
