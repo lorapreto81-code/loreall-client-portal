@@ -193,6 +193,38 @@ const Dashboard = () => {
           </button>
         )}
 
+        {/* CADASTRO DE E-MAIL — banner dispensável, só quando perfil já está OK */}
+        {showEmailBanner && (
+          <div
+            className="w-full rounded-xl p-3.5 flex items-center gap-3 border animate-in fade-in slide-in-from-top duration-300 relative"
+            style={{
+              borderColor: "hsl(var(--primary) / 0.35)",
+              background: "hsl(var(--primary) / 0.06)",
+            }}
+          >
+            <div className="rounded-full p-2 shrink-0 bg-primary/15">
+              <Mail className="h-4 w-4 text-primary" />
+            </div>
+            <button
+              onClick={() => openAccount("dados")}
+              className="min-w-0 flex-1 text-left"
+            >
+              <p className="text-sm font-semibold text-foreground">Cadastre seu e-mail oficial</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Em breve o login será por e-mail. Adicione agora e não perca o acesso.
+              </p>
+            </button>
+            <button
+              onClick={dismissEmailBanner}
+              className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+              aria-label="Dispensar"
+              style={{ minHeight: 32, minWidth: 32 }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* CARD DO PLANO — status único, sem duplicar em outro lugar */}
         {(() => {
           const pill = getStatusPill(days);
