@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  X, User, Phone, Mail, IdCard, Loader2, Receipt,
+  X, User, Phone, Mail, Loader2, Receipt,
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
 } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
@@ -38,13 +38,6 @@ const formatPhone = (v: string) => {
   if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 };
-const formatCpf = (v: string) => {
-  const d = onlyDigits(v).slice(0, 11);
-  if (d.length <= 3) return d;
-  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
-  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
-  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-};
 
 function fmtBRL(n: number) {
   return Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -74,7 +67,6 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
-  const [cpf, setCpf] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Faturas
@@ -92,7 +84,6 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     const raw = (customer as any).whatsapp || (customer as any).celular || "";
     setWhatsapp(formatPhone(String(raw)));
     setEmail(String((customer as any).email || ""));
-    setCpf(formatCpf(String((customer as any).cpf || "")));
   }, [open, customer]);
 
   useEffect(() => {
@@ -127,20 +118,16 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
   const handleSave = async () => {
     const trimmed = name.trim();
     const phoneDigits = onlyDigits(whatsapp);
-    const cpfDigits = onlyDigits(cpf);
     const trimmedEmail = email.trim().toLowerCase();
 
-    if (trimmed.length < 3) return toast.error("Informe seu nome completo.");
+    if (trimmed.split(" ").filter(Boolean).length < 2) return toast.error("Informe seu nome completo.");
     if (phoneDigits.length < 10) return toast.error("WhatsApp inválido.");
-    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
-      return toast.error("E-mail inválido.");
-    if (cpfDigits && cpfDigits.length !== 11) return toast.error("CPF inválido.");
+    if (!trimmedEmail) return toast.error("Informe seu e-mail.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return toast.error("E-mail inválido.");
 
     setSaving(true);
     try {
-      const patch: Record<string, unknown> = { name: trimmed, whatsapp: phoneDigits };
-      if (trimmedEmail) patch.email = trimmedEmail;
-      if (cpfDigits) patch.cpf = cpfDigits;
+      const patch: Record<string, unknown> = { name: trimmed, whatsapp: phoneDigits, email: trimmedEmail };
       await updateCustomer(customer.id, patch);
       const data = await getCustomer(customer.id);
       login((data.data || data) as Customer);
@@ -234,7 +221,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <Mail className="h-3.5 w-3.5" /> E-mail <span className="opacity-60">(opcional)</span>
+                    <Mail className="h-3.5 w-3.5" /> E-mail
                   </label>
                   <input
                     value={email}
@@ -244,19 +231,9 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     placeholder="voce@email.com"
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <IdCard className="h-3.5 w-3.5" /> CPF <span className="opacity-60">(opcional)</span>
-                  </label>
-                  <input
-                    value={cpf}
-                    onChange={(e) => setCpf(formatCpf(e.target.value))}
-                    inputMode="numeric"
-                    maxLength={14}
-                    className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
-                    placeholder="000.000.000-00"
-                  />
-                </div>
+                <p className="text-[10px] text-muted-foreground -mt-1">
+                  CPF só será solicitado ao ativar o Pix Automático.
+                </p>
               </div>
               <button
                 onClick={handleSave}
