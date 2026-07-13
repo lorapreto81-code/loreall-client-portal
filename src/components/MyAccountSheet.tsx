@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import {
   X, User, Phone, Mail, Loader2, Receipt,
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
-  KeyRound, Copy, Eye, EyeOff, Check,
+  KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2,
 } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
