@@ -94,7 +94,8 @@ const Dashboard = () => {
   const rawPhone = String((customer as any)?.whatsapp || (customer as any)?.celular || "").replace(/\D/g, "");
   const hasValidPhone = rawPhone.length >= 10; // exige DDD + número
   const hasValidName = (customer?.name || "").trim().split(" ").filter(Boolean).length >= 2;
-  const profileIncomplete = !!customer && (!hasValidPhone || !hasValidName);
+  const hasEmailValid = !!String((customer as any)?.email || "").trim();
+  const profileIncomplete = !!customer && (!hasValidPhone || !hasValidName || !hasEmailValid);
 
   const hasEmail = !!String((customer as any)?.email || "").trim();
   const emailBannerKey = customer ? `loreall_email_banner_dismissed_${customer.id}` : "";
