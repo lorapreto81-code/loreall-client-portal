@@ -362,6 +362,25 @@ const Dashboard = () => {
           </div>
         </button>
 
+        {/* COMO INSTALAR */}
+        <button
+          onClick={() => navigate("/instalacao")}
+          className="card-elevated w-full p-4 text-left transition-all hover:scale-[1.005] active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-gradient-to-br from-accent/20 to-accent/5 shrink-0 border border-accent/20">
+              <Download className="h-5 w-5 text-accent" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Como instalar</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Apps recomendados para Smart TV, TV Box e celular
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </div>
+        </button>
+
         {/* LANÇAMENTOS — informativo, no final */}
         <div>
           <div className="flex items-center gap-2 mb-2.5 px-1">
