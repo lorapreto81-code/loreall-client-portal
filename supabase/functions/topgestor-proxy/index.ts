@@ -240,6 +240,44 @@ Deno.serve(async (req) => {
         );
       }
 
+      case "optimize-access": {
+        // Recria a linha no TopGestor mantendo a MESMA senha.
+        // Uso: cliente aperta "Otimizar velocidade" no app.
+        const id = url.searchParams.get("id");
+        if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+        // 1) Busca cliente atual para pegar a senha
+        const getRes = await fetch(`${API_BASE}/customers/${id}`, { headers: apiHeaders(token) });
+        if (!getRes.ok) {
+          const t = await getRes.text();
+          return new Response(JSON.stringify({ error: "Cliente não encontrado", detail: t }), {
+            status: getRes.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const getJson = await getRes.json().catch(() => ({} as any));
+        const cust = (getJson?.data ?? getJson) as any;
+        const password = cust?.password || cust?.senha;
+        if (!password) {
+          return new Response(JSON.stringify({ error: "Senha atual não disponível" }), {
+            status: 422,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // 2) Recria a linha mantendo a mesma senha
+        const recRes = await fetch(`${API_BASE}/lines/recreate/${id}`, {
+          method: "PATCH",
+          headers: apiHeaders(token),
+          body: JSON.stringify({ password }),
+        });
+        const recBody = await recRes.text();
+        return new Response(recBody || JSON.stringify({ success: recRes.ok }), {
+          status: recRes.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
