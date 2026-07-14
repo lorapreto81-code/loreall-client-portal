@@ -285,3 +285,17 @@
 }
 .animate-loreall-rise      { animation: loreall-rise 9s ease-in-out infinite; }
 .animate-loreall-rise-slow { animation: loreall-rise-slow 13s ease-in-out infinite; }
+
+/* Hide "Edit with Lovable" badge on published site */
+#lovable-badge,
+[id^="lovable-badge"],
+a[href*="lovable.dev"][href*="badge"],
+a[href*="lovable.dev/?utm"],
+a[href*="lovable.app"][target="_blank"][class*="badge" i],
+div[class*="lovable-badge" i],
+iframe[src*="lovable.dev"][src*="badge"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
