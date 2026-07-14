@@ -19,6 +19,7 @@ import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
+import OptimizeAccessCard from "@/components/OptimizeAccessCard";
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
 
@@ -404,6 +405,11 @@ const Dashboard = () => {
           <Zap className="h-5 w-5 group-hover:scale-110 transition-transform" />
           Renovar acesso
         </button>
+
+
+        {/* OTIMIZAR ACESSO — recria a linha mantendo mesma senha */}
+        <OptimizeAccessCard customerId={customer.id} />
+
 
 
         {/* INDIQUE E GANHE */}
