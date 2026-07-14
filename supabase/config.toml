@@ -21,5 +21,8 @@ verify_jwt = false
 [functions.reseller-admin]
 verify_jwt = false
 
+[functions.reseller-poll-pending]
+verify_jwt = false
+
 [functions.admin-mark-payment-paid]
 verify_jwt = false
