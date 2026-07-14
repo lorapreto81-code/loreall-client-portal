@@ -406,8 +406,7 @@ const Dashboard = () => {
         </button>
 
 
-        {/* OTIMIZAR ACESSO — recria a linha mantendo mesma senha */}
-        <OptimizeAccessCard customerId={customer.id} />
+
 
 
 
