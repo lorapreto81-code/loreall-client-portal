@@ -114,95 +114,35 @@ Deno.serve(async (req) => {
     const credits = Math.max(minC, Math.min(maxC, requested));
     const amount = Number((credits * price).toFixed(2));
 
-    const provider = await getProvider(supabase);
+    // CPF é opcional: se não informado, gera um CPF válido automaticamente
+    const cpf = onlyDigits(body.cpf) || generateValidCpf();
+    const phone = normalizePhone(whatsapp) || "11999999999";
+    const token = await getSyncToken(supabase);
+    const base = (await getSyncBaseUrl(supabase)).replace(/\/+$/, "");
+    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`;
 
-    // ============ SyncPay ============
-    if (provider === "syncpay") {
-      // CPF é opcional: se não informado, gera um CPF válido automaticamente
-      const cpf = onlyDigits(body.cpf) || generateValidCpf();
-      const phone = normalizePhone(whatsapp) || "11999999999";
-      const token = await getSyncToken(supabase);
-      const base = (await getSyncBaseUrl(supabase)).replace(/\/+$/, "");
-      const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`;
-
-      const spRes = await fetch(`${base}/api/partner/v1/cash-in`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          amount,
-          description: `Recarga ${credits} créditos - ${link.warez_username}`,
-          webhook_url: webhookUrl,
-          client: { name: link.warez_username, cpf, email: finalEmail, phone },
-        }),
-      });
-      const spData = await spRes.json().catch(() => ({}));
-      if (!spRes.ok) {
-        console.error("[reseller-create-pix] SyncPay error", spRes.status, spData);
-        return new Response(JSON.stringify({ error: spData?.message || "Erro SyncPay", details: spData }), {
-          status: spRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const tx = spData?.data || spData;
-      const txId = tx.id || tx.identifier || tx.reference_id;
-      const qrText = tx.pix_code || tx.qr_code_text || tx.qr_code || tx.copyPaste || "";
-      const qrUrl = tx.qr_code_url || tx.qr_code_image || tx.qrcode || null;
-      const expiresAt = parseExpiresAt(tx.expires_at || tx.qr_code_expires_at);
-
-      const { data: inserted, error: insertErr } = await supabase
-        .from("reseller_credit_purchases")
-        .insert({
-          reseller_link_id: link.id,
-          warez_username: link.warez_username,
-          warez_user_id: link.warez_user_id,
-          whatsapp, email: finalEmail,
-          package_credits: credits, amount,
-          provider: "syncpay",
-          provider_transaction_id: String(txId),
-          qr_code_url: qrUrl,
-          qr_code_text: qrText,
-          qr_code_expires_at: expiresAt,
-          status: "pending", recharge_status: "pending",
-          ip_address: ipAddress,
-        })
-        .select()
-        .single();
-      if (insertErr) throw insertErr;
-
-      return new Response(JSON.stringify({
-        success: true,
-        purchase_id: inserted.id,
-        qr_code_url: inserted.qr_code_url,
-        qr_code_text: inserted.qr_code_text,
-        expires_at: inserted.qr_code_expires_at,
-        amount: inserted.amount,
-        package_credits: inserted.package_credits,
-        warez_username: inserted.warez_username,
-        provider: "syncpay",
-      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // ============ Fast Depix (default) ============
-    const apiKey = Deno.env.get("FASTDEPIX_RESELLER_API_KEY") || Deno.env.get("FASTDEPIX_API_KEY");
-    if (!apiKey) throw new Error("FASTDEPIX_API_KEY not configured");
-
-    const fdRes = await fetch(`${FAST_BASE}/transactions`, {
+    const spRes = await fetch(`${base}/api/partner/v1/cash-in`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
         amount,
         description: `Recarga ${credits} créditos - ${link.warez_username}`,
-        user: { name: link.warez_username, email: finalEmail },
+        webhook_url: webhookUrl,
+        client: { name: link.warez_username, cpf, email: finalEmail, phone },
       }),
     });
-    const fdData = await fdRes.json().catch(() => ({}));
-    if (!fdRes.ok) {
-      console.error("[reseller-create-pix] FD error", fdRes.status, fdData);
-      return new Response(JSON.stringify({ error: fdData?.message || "Erro ao criar PIX no Fast Depix", details: fdData }), {
-        status: fdRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const spData = await spRes.json().catch(() => ({}));
+    if (!spRes.ok) {
+      console.error("[reseller-create-pix] SyncPay error", spRes.status, spData);
+      return new Response(JSON.stringify({ error: spData?.message || "Erro SyncPay", details: spData }), {
+        status: spRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const tx = fdData?.data || fdData?.transaction || fdData;
-    const expiresAt = parseExpiresAt(tx.qr_code_expires_at);
+    const tx = spData?.data || spData;
+    const txId = tx.id || tx.identifier || tx.reference_id;
+    const qrText = tx.pix_code || tx.qr_code_text || tx.qr_code || tx.copyPaste || "";
+    const qrUrl = tx.qr_code_url || tx.qr_code_image || tx.qrcode || null;
+    const expiresAt = parseExpiresAt(tx.expires_at || tx.qr_code_expires_at);
 
     const { data: inserted, error: insertErr } = await supabase
       .from("reseller_credit_purchases")
@@ -212,10 +152,10 @@ Deno.serve(async (req) => {
         warez_user_id: link.warez_user_id,
         whatsapp, email: finalEmail,
         package_credits: credits, amount,
-        provider: "fastdepix",
-        fastdepix_transaction_id: tx.id,
-        qr_code_url: tx.qr_code,
-        qr_code_text: tx.qr_code_text,
+        provider: "syncpay",
+        provider_transaction_id: String(txId),
+        qr_code_url: qrUrl,
+        qr_code_text: qrText,
         qr_code_expires_at: expiresAt,
         status: "pending", recharge_status: "pending",
         ip_address: ipAddress,
@@ -233,7 +173,7 @@ Deno.serve(async (req) => {
       amount: inserted.amount,
       package_credits: inserted.package_credits,
       warez_username: inserted.warez_username,
-      provider: "fastdepix",
+      provider: "syncpay",
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
