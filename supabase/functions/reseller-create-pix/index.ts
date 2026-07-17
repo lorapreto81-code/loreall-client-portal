@@ -1,13 +1,10 @@
-// PIX para recarga de revendedor. Roteia entre Fast Depix e SyncPay
-// conforme `system_config.pix_provider_resellers`.
+// PIX para recarga de revendedor — apenas SyncPay.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const FAST_BASE = "https://fastdepix.space/api/v1";
 
 function parseExpiresAt(raw: string | undefined | null): string {
   if (!raw) return new Date(Date.now() + 15 * 60 * 1000).toISOString();
@@ -77,10 +74,6 @@ async function getSyncToken(supabase: ReturnType<typeof createClient>): Promise<
   return syncToken.token;
 }
 
-async function getProvider(supabase: ReturnType<typeof createClient>): Promise<"syncpay" | "fastdepix"> {
-  const { data } = await supabase.from("system_config").select("config_value").eq("config_key", "pix_provider_resellers").maybeSingle();
-  return ((data?.config_value || "fastdepix").toLowerCase() === "syncpay") ? "syncpay" : "fastdepix";
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
