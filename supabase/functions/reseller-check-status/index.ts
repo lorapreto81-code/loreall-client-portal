@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
+    let underReview = false;
     let liveStatus = p.status;
 
     // Polling ao vivo (SyncPay)

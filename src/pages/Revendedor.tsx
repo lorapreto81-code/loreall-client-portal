@@ -70,7 +70,7 @@ export default function Revendedor() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // email removed — Fast Depix gets a synthetic fallback in the edge function
+  // email é gerado automaticamente no backend caso não informado
   const [credits, setCredits] = useState<number>(10);
   const [generating, setGenerating] = useState(false);
 

@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FAST_BASE = "https://fastdepix.space/api/v1";
+
 
 interface Body {
   action: "pending" | "status" | "history";
@@ -14,9 +14,9 @@ interface Body {
   limit?: number;
 }
 
-// Consulta ao vivo o status na adquirente (SyncPay ou FastDepix) e,
-// se o PIX já foi pago, dispara o syncpay-webhook para reaproveitar
-// TODA a lógica de renovação no TopGestor + indicações.
+// Consulta ao vivo o status na SyncPay e, se o PIX já foi pago, dispara o
+// syncpay-webhook para reaproveitar TODA a lógica de renovação no TopGestor
+// + indicações.
 async function pollAndSyncIfPaid(
   supabase: ReturnType<typeof createClient>,
   payment: Record<string, any>,
@@ -25,11 +25,10 @@ async function pollAndSyncIfPaid(
 
   const paidStates = ["paid", "approved", "completed", "success", "succeeded"];
   const expiredStates = ["expired", "cancelled", "canceled", "failed", "refunded"];
-  const provider: string = String(payment.provider || "fastdepix");
   let liveStr = "";
 
   try {
-    if (provider === "syncpay" && payment.provider_transaction_id) {
+    if (payment.provider_transaction_id) {
       const clientId = Deno.env.get("SYNCPAY_CLIENT_ID");
       const clientSecret = Deno.env.get("SYNCPAY_CLIENT_SECRET");
       if (clientId && clientSecret) {
@@ -56,17 +55,6 @@ async function pollAndSyncIfPaid(
           }
         }
       }
-    } else if (payment.fastdepix_transaction_id) {
-      const apiKey = Deno.env.get("FASTDEPIX_API_KEY");
-      if (apiKey) {
-        const r = await fetch(`${FAST_BASE}/transactions/${payment.fastdepix_transaction_id}`, {
-          headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-        });
-        if (r.ok) {
-          const data = await r.json().catch(() => ({}));
-          liveStr = String((data?.data || data)?.status || "").toLowerCase();
-        }
-      }
     }
   } catch (e) {
     console.error("[payment-status] poll error", e);
@@ -76,7 +64,7 @@ async function pollAndSyncIfPaid(
   if (paidStates.includes(liveStr)) {
     // Dispara o webhook do SyncPay com o txId — a função já cuida de marcar
     // como pago e renovar no TopGestor (mesma lógica do FastDepix).
-    const txId = payment.provider_transaction_id || payment.fastdepix_transaction_id;
+    const txId = payment.provider_transaction_id;
     try {
       await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`, {
         method: "POST",
