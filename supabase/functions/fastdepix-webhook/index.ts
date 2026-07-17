@@ -327,76 +327,80 @@ Deno.serve(async (req) => {
     else if (event === "transaction.expired") newStatus = "expired";
     else if (event === "transaction.cancelled") newStatus = "cancelled";
 
-    // Idempotência: já está pago, não reprocessa renovação
     const wasPaid = payment.fastdepix_status === "paid";
     const becomingPaid = newStatus === "paid" && !wasPaid;
 
-    const updates: Record<string, unknown> = { fastdepix_status: newStatus };
-    if (becomingPaid) updates.paid_at = new Date().toISOString();
-
-    let renewalResponse: unknown = null;
-
-    if (becomingPaid) {
-      const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
-      if (!tgToken) {
-        console.error("[fastdepix-webhook] TOPGESTOR_API_TOKEN not configured");
-      } else {
-        // 1) Renova o indicado (cliente que pagou)
-        try {
-          const tgRes = await fetch(`${TG_BASE}/customers/${payment.customer_id}/renew`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${tgToken}`,
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282, send_whatsapp: true }),
-          });
-          renewalResponse = await tgRes.json().catch(() => ({}));
-          if (tgRes.ok) {
-            updates.renewed_at = new Date().toISOString();
-            console.log("[fastdepix-webhook] customer renewed", payment.customer_id);
-          } else {
-            console.error("[fastdepix-webhook] TG renew failed", tgRes.status, renewalResponse);
-          }
-        } catch (e) {
-          console.error("[fastdepix-webhook] TG renew exception", e);
-          renewalResponse = { error: e instanceof Error ? e.message : "unknown" };
-        }
-        updates.renewal_response = renewalResponse;
-
-        // 2) Processa indicação (se este pagamento veio com referral_code)
-        const refCode: string | null = payment?.metadata?.referral_code || null;
-        if (refCode) {
-          try {
-            await processReferralOnPayment(supabase, tgToken, payment, refCode);
-          } catch (e) {
-            console.error("[fastdepix-webhook] referral processing failed", e);
-          }
-        }
-
-        // 3) Libera indicações pendentes do tipo "pending_referrer_renewal"
-        // onde ESTE customer (que acabou de pagar/renovar) é o INDICADOR
-        try {
-          await releasePendingReferrals(supabase, tgToken, payment.customer_id);
-        } catch (e) {
-          console.error("[fastdepix-webhook] release pending failed", e);
-        }
+    // Caminho "não é virar pago": só atualiza status simples
+    if (!becomingPaid) {
+      if (newStatus !== payment.fastdepix_status) {
+        await supabase.from("payments").update({ fastdepix_status: newStatus }).eq("id", payment.id);
       }
-    }
-
-    const { error: updErr } = await supabase
-      .from("payments")
-      .update(updates)
-      .eq("id", payment.id);
-
-    if (updErr) {
-      console.error("[fastdepix-webhook] DB update error", updErr);
-      return new Response(JSON.stringify({ error: updErr.message }), {
-        status: 500,
+      return new Response(JSON.stringify({ ok: true, status: newStatus }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // LOCK ATÔMICO: só um processo consegue mudar pending → paid.
+    // Webhooks duplicados / polling concorrente saem daqui sem chamar /renew.
+    const nowIso = new Date().toISOString();
+    const { data: locked } = await supabase
+      .from("payments")
+      .update({ fastdepix_status: "paid", paid_at: nowIso })
+      .eq("id", payment.id)
+      .eq("fastdepix_status", "pending")
+      .select()
+      .maybeSingle();
+
+    if (!locked) {
+      console.log("[fastdepix-webhook] already processed, skipping renew", payment.id);
+      return new Response(JSON.stringify({ ok: true, already_processed: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let renewalResponse: unknown = null;
+    const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
+    if (!tgToken) {
+      console.error("[fastdepix-webhook] TOPGESTOR_API_TOKEN not configured");
+    } else {
+      try {
+        const tgRes = await fetch(`${TG_BASE}/customers/${payment.customer_id}/renew`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tgToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282, send_whatsapp: true }),
+        });
+        renewalResponse = await tgRes.json().catch(() => ({}));
+        if (tgRes.ok) {
+          await supabase
+            .from("payments")
+            .update({ renewed_at: new Date().toISOString(), renewal_response: renewalResponse })
+            .eq("id", payment.id);
+          console.log("[fastdepix-webhook] customer renewed", payment.customer_id);
+        } else {
+          await supabase.from("payments").update({ renewal_response: renewalResponse }).eq("id", payment.id);
+          console.error("[fastdepix-webhook] TG renew failed", tgRes.status, renewalResponse);
+        }
+      } catch (e) {
+        console.error("[fastdepix-webhook] TG renew exception", e);
+        renewalResponse = { error: e instanceof Error ? e.message : "unknown" };
+        await supabase.from("payments").update({ renewal_response: renewalResponse }).eq("id", payment.id);
+      }
+
+      const refCode: string | null = payment?.metadata?.referral_code || null;
+      if (refCode) {
+        try { await processReferralOnPayment(supabase, tgToken, payment, refCode); }
+        catch (e) { console.error("[fastdepix-webhook] referral processing failed", e); }
+      }
+      try { await releasePendingReferrals(supabase, tgToken, payment.customer_id); }
+      catch (e) { console.error("[fastdepix-webhook] release pending failed", e); }
+    }
+
 
     return new Response(JSON.stringify({ ok: true, status: newStatus }), {
       status: 200,
