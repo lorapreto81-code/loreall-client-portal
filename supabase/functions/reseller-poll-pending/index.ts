@@ -1,6 +1,6 @@
 // Fallback automático: varre reseller_credit_purchases com status='pending'
-// consulta o provedor (Syncpay/FastDepix) e, se estiver pago, marca como paid
-// e dispara reseller-process-recharge. Rodar via pg_cron.
+// consulta o SyncPay e, se estiver pago, marca como paid e dispara
+// reseller-process-recharge. Rodar via pg_cron.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -8,7 +8,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FAST_BASE = "https://fastdepix.space/api/v1";
 const PAID = ["paid", "approved", "completed", "success", "succeeded"];
 const EXPIRED = ["expired", "cancelled", "canceled", "failed", "refunded"];
 
@@ -63,7 +62,7 @@ Deno.serve(async (req) => {
   // varre pendentes das últimas 24h (evita reprocessar QRs muito antigos)
   const { data: pendings, error } = await supabase
     .from("reseller_credit_purchases")
-    .select("id, provider, provider_transaction_id, fastdepix_transaction_id, status, recharge_status, created_at")
+    .select("id, provider, provider_transaction_id, status, recharge_status, created_at")
     .eq("status", "pending")
     .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
     .order("created_at", { ascending: false })
@@ -83,29 +82,15 @@ Deno.serve(async (req) => {
   for (const p of pendings ?? []) {
     let liveStr = "";
     try {
-      const provider = String(p.provider || "fastdepix");
-      if (provider === "syncpay" && p.provider_transaction_id) {
-        if (!syncToken) syncToken = await getSyncpayToken(syncBase);
-        if (!syncToken) continue;
-        const r = await fetch(`${syncBase}/api/partner/v1/transaction/${p.provider_transaction_id}`, {
-          headers: { Authorization: `Bearer ${syncToken}`, Accept: "application/json" },
-        });
-        if (r.ok) {
-          const d = await r.json().catch(() => ({}));
-          liveStr = String((d?.data || d)?.status || "").toLowerCase();
-        }
-      } else if (p.fastdepix_transaction_id) {
-        const apiKey = Deno.env.get("FASTDEPIX_RESELLER_API_KEY") || Deno.env.get("FASTDEPIX_API_KEY");
-        if (!apiKey) continue;
-        const r = await fetch(`${FAST_BASE}/transactions/${p.fastdepix_transaction_id}`, {
-          headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-        });
-        if (r.ok) {
-          const d = await r.json().catch(() => ({}));
-          liveStr = String((d?.data || d)?.status || "").toLowerCase();
-        }
-      } else {
-        continue;
+      if (!p.provider_transaction_id) continue;
+      if (!syncToken) syncToken = await getSyncpayToken(syncBase);
+      if (!syncToken) continue;
+      const r = await fetch(`${syncBase}/api/partner/v1/transaction/${p.provider_transaction_id}`, {
+        headers: { Authorization: `Bearer ${syncToken}`, Accept: "application/json" },
+      });
+      if (r.ok) {
+        const d = await r.json().catch(() => ({}));
+        liveStr = String((d?.data || d)?.status || "").toLowerCase();
       }
     } catch (e) {
       console.error("[poll] provider error", p.id, e);

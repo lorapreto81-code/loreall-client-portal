@@ -70,7 +70,7 @@ export default function Revendedor() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // email removed — Fast Depix gets a synthetic fallback in the edge function
+  // email é gerado automaticamente no backend caso não informado
   const [credits, setCredits] = useState<number>(10);
   const [generating, setGenerating] = useState(false);
 
@@ -456,7 +456,7 @@ export default function Revendedor() {
 
             {underReview && (
               <div className="text-xs text-center text-amber-700 bg-amber-50 rounded-lg py-2 px-3">
-                Pagamento em análise pela Fast Depix...
+                Pagamento em análise...
               </div>
             )}
             {status?.status === "paid" && !isRecharged && !isFailed && (

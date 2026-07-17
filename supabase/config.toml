@@ -1,6 +1,6 @@
 project_id = "qknlbgpesxirghlvalty"
 
-[functions.fastdepix-webhook]
+[functions.create-pix]
 verify_jwt = false
 
 [functions.syncpay-webhook]

@@ -38,7 +38,7 @@ interface Props {
   onClose: () => void;
 }
 
-const PIX_MAX_AMOUNT = 500; // Fast Depix exige CPF para >= R$ 500
+const PIX_MAX_AMOUNT = 500; // Limite máximo por transação PIX
 
 const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const { customer, login } = useAuthStore();

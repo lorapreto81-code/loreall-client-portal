@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FAST_BASE = "https://fastdepix.space/api/v1";
+
 
 async function callProcessRecharge(purchaseId: string) {
   const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/reseller-process-recharge`;
@@ -53,12 +53,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     let underReview = false;
     let liveStatus = p.status;
-    const provider: string = String(p.provider || "fastdepix");
 
-    // Polling ao vivo conforme o provedor
+    // Polling ao vivo (SyncPay)
     if (p.status === "pending") {
       const paidStates = ["paid", "approved", "completed", "success", "succeeded"];
       const expiredStates = ["expired", "cancelled", "canceled", "failed", "refunded"];
@@ -66,7 +64,7 @@ Deno.serve(async (req) => {
       let liveStr = "";
 
       try {
-        if (provider === "syncpay" && p.provider_transaction_id) {
+        if (p.provider_transaction_id) {
           const clientId = Deno.env.get("SYNCPAY_CLIENT_ID");
           const clientSecret = Deno.env.get("SYNCPAY_CLIENT_SECRET");
           if (clientId && clientSecret) {
@@ -85,17 +83,6 @@ Deno.serve(async (req) => {
                 const data = await r.json().catch(() => ({}));
                 liveStr = String((data?.data || data)?.status || "").toLowerCase();
               }
-            }
-          }
-        } else if (p.fastdepix_transaction_id) {
-          const apiKey = Deno.env.get("FASTDEPIX_RESELLER_API_KEY") || Deno.env.get("FASTDEPIX_API_KEY");
-          if (apiKey) {
-            const r = await fetch(`${FAST_BASE}/transactions/${p.fastdepix_transaction_id}`, {
-              headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-            });
-            if (r.ok) {
-              const data = await r.json().catch(() => ({}));
-              liveStr = String((data?.data || data)?.status || "").toLowerCase();
             }
           }
         }

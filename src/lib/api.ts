@@ -70,7 +70,7 @@ export async function renewCustomer(
   return callProxy("renew-customer", { id: String(customerId) }, { method: "POST", body });
 }
 
-// ----- Fast Depix (PIX) -----
+// ----- PIX (SyncPay) -----
 export interface CreatePixResponse {
   payment_id: string;
   qr_code_url: string;
@@ -88,7 +88,7 @@ export async function createPixPayment(body: {
   amount: number;
   referral_code?: string;
 }): Promise<CreatePixResponse> {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/fastdepix-create-pix`, {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/create-pix`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

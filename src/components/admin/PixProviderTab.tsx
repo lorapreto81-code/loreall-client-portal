@@ -3,11 +3,10 @@ import { resellerAdmin } from "@/lib/resellerAdmin";
 import { toast } from "sonner";
 import { Loader2, Save, Zap, Users, ServerCog, Copy, Check, ArrowLeftRight } from "lucide-react";
 
-type Provider = "fastdepix" | "syncpay";
+type Provider = "syncpay";
 
 const PROVIDERS: { id: Provider; label: string; short: string; color: string; paused?: boolean }[] = [
   { id: "syncpay", label: "SyncPay", short: "SP", color: "from-indigo-500 to-purple-600" },
-  { id: "fastdepix", label: "Fast Depix", short: "FD", color: "from-emerald-500 to-teal-600", paused: true },
 ];
 
 export default function PixProviderTab() {
