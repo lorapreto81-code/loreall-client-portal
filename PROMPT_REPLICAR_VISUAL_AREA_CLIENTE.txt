@@ -1,0 +1,92 @@
+# PROMPT — Replicar Área do Cliente (visual + lógica TopGestor)
+
+Cole o texto abaixo no chat do outro projeto Lovable. Ele vai usar @mention para puxar os arquivos diretamente daqui e replicar exatamente a mesma área do cliente, com o mesmo backend (TopGestor + SyncPay), sem mudar nada visual.
+
+---
+
+Olá! Preciso que você replique **fielmente** a Área do Cliente do meu outro projeto Lovable neste projeto aqui. Nada muda: mesma UI, mesmo fluxo, mesma lógica de backend (TopGestor + SyncPay). Apenas migre.
+
+## 1) Puxe os arquivos do projeto de origem
+Use as ferramentas de cross-project (`cross_project--list_project_dir`, `cross_project--read_project_file`, `cross_project--copy_project_asset`) apontando para o projeto que eu vou mencionar com @ (mesmo workspace).
+
+### Copie exatamente estes arquivos (mantendo os mesmos caminhos):
+
+**Páginas (src/pages/):**
+- `Login.tsx`
+- `Dashboard.tsx`
+- `Instalacao.tsx`
+- `IndicacaoTeste.tsx`
+- `Welcome.tsx`
+- `NotFound.tsx`
+- `Index.tsx`
+
+**Componentes (src/components/):**
+- `MyAccountSheet.tsx`
+- `MyInvoicesSheet.tsx`
+- `MyPlanSection.tsx`
+- `ReferralSheet.tsx`
+- `RenewalBottomSheet.tsx`
+- `RenewalSection.tsx`
+- `ProfileSheet.tsx`
+- `LaunchesBanner.tsx`
+- `LancamentosCarousel.tsx`
+- `NoticeBanner.tsx`
+- `ExpirationPopup.tsx`
+- `StatusBadge.tsx`
+- `NavLink.tsx`
+
+**Libs e utils (src/lib/, src/hooks/):**
+- `src/lib/api.ts`
+- `src/lib/doc.ts` (máscara e validação CPF/CNPJ)
+- `src/lib/utils.ts`
+- `src/hooks/use-theme.ts`
+- Qualquer outro hook usado por Dashboard/Login
+
+**Estilos e config:**
+- `src/index.css` (tokens de design, gradientes dourados do "Indique e ganhe", tema escuro)
+- `tailwind.config.ts`
+- `src/App.tsx` (para pegar as rotas: `/`, `/login`, `/instalacao`, `/indicacao`, `/welcome`)
+
+**Assets:**
+- Todos os arquivos em `src/assets/` (logo, banners, imagens do "Indique e ganhe" e da instalação)
+
+## 2) Replique as Edge Functions
+Puxe e recrie estas edge functions com o **mesmo código**:
+- `topgestor-proxy` — proxy para a API TopGestor (login por email/celular/usuário, dados do cliente, atualizar dados, salvar email confirmado)
+- `create-pix` — cria cobrança PIX via SyncPay
+- `syncpay-webhook` — webhook do SyncPay com **lock atômico** (`UPDATE ... WHERE status='pending' AND renewed_at IS NULL RETURNING *`) e dedup por `provider_transaction_id`
+- `payment-status` — polling de status de pagamento
+
+## 3) Banco de dados (Lovable Cloud)
+Aplique migração criando as tabelas com RLS + GRANTs:
+- `payments` (com `provider_transaction_id UNIQUE`, `renewed_at`, `status`, cpf, valor, plano, customer_id, etc.)
+- `confirmed_customer_emails` (customer_id, email, confirmed_at)
+- `syncpay_plans`, `syncpay_subscriptions` (se usar)
+- `referral_codes`, `referrals` (sistema Indique e Ganhe — bônus vai para o INDICADOR, não o indicado; requer status='ativo' e >3 dias restantes; senão fica `pending_referrer_renewal`)
+- `system_config`
+
+## 4) Secrets necessários
+Peça ao usuário e salve via `add_secret`:
+- `TOPGESTOR_API_TOKEN` (usado somente no backend, nunca no client)
+- `SYNCPAY_CLIENT_ID`, `SYNCPAY_CLIENT_SECRET`
+- `SYNCPAY_WEBHOOK_SECRET`
+
+## 5) Regras críticas a preservar (NÃO ALTERAR)
+- Token TopGestor **somente no backend**, todo acesso via `topgestor-proxy`
+- `POST /customers/{id}/renew` só pode ser chamado **após** `transaction.paid` confirmado no webhook
+- Dedup obrigatório por `provider_transaction_id` — mesmo pagamento nunca renova 2x
+- Login aceita **Email, Celular ou Usuário** (campo único inteligente)
+- Ao cadastrar email, atualizar também no TopGestor via proxy
+- Meus Dados pede apenas: Nome, WhatsApp e Email. **CPF só no fluxo do PIX**
+- Botão "Otimizar acesso" só existe para clientes Warez (via Warez API), **não** via TopGestor
+- Referral: +30 dias grátis para o indicador
+- Visual: tema escuro por padrão, destaque dourado no "Indique e Ganhe", badge verde "Grátis" no +30 dias, banner promocional no login, credenciais de acesso no MyAccountSheet com ícones (usuário + cadeado) e gradiente destacado
+
+## 6) Validação final
+Depois de replicar, verifique:
+- Build passa sem erros
+- Rotas `/login`, `/` (dashboard), `/instalacao`, `/indicacao` funcionam
+- Tema escuro consistente
+- Logo e assets aparecendo
+
+Comece listando os arquivos do projeto de origem que eu vou mencionar, e me mostre um plano curto antes de replicar tudo. Obrigado!
