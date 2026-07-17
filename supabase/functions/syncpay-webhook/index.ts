@@ -316,11 +316,15 @@ Deno.serve(async (req) => {
       else if (isExpired) next = rawStatus === "refunded" ? "refunded" : "expired";
 
       if (next === "paid" && purchase.status !== "paid") {
+        // LOCK ATÔMICO + DEDUP: só processa uma vez por transação.
+        // `recharge_status != 'recharged'` evita creditar de novo caso o
+        // processo de recarga já tenha completado.
         const { data: locked } = await supabase
           .from("reseller_credit_purchases")
           .update({ status: "paid", paid_at: new Date().toISOString() })
           .eq("id", purchase.id)
           .eq("status", "pending")
+          .neq("recharge_status", "recharged")
           .select()
           .maybeSingle();
         if (locked) {
@@ -334,6 +338,10 @@ Deno.serve(async (req) => {
               body: JSON.stringify({ purchase_id: purchase.id }),
             });
           } catch (e) { console.error("[syncpay-webhook] reseller invoke failed", e); }
+        } else {
+          console.log("[syncpay-webhook] reseller already processed, skipping", {
+            purchase_id: purchase.id, tx: txId,
+          });
         }
       } else if (next !== purchase.status) {
         await supabase.from("reseller_credit_purchases").update({ status: next }).eq("id", purchase.id);
@@ -360,19 +368,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    // LOCK ATÔMICO: só um processo consegue mudar pending → paid.
-    // Evita renovar 2-3x quando SyncPay reenvia webhook ou o polling do
-    // cliente dispara essa mesma função em paralelo.
+    // LOCK ATÔMICO + DEDUP por provider_transaction_id:
+    // - Só um processo consegue mudar pending → paid.
+    // - Cláusula `renewed_at IS NULL` garante que nunca chamamos /renew duas
+    //   vezes para o mesmo pagamento, mesmo em reenvios de webhook,
+    //   polling paralelo do cliente ou eventos duplicados da SyncPay.
     const { data: locked } = await supabase
       .from("payments")
       .update({ fastdepix_status: "paid", paid_at: new Date().toISOString() })
       .eq("id", payment.id)
       .eq("fastdepix_status", "pending")
+      .is("renewed_at", null)
       .select()
       .maybeSingle();
 
     if (!locked) {
-      console.log("[syncpay-webhook] already processed, skipping renew", payment.id);
+      console.log("[syncpay-webhook] already processed, skipping renew", {
+        payment_id: payment.id,
+        tx: txId,
+      });
       return new Response(JSON.stringify({ ok: true, kind: "customer", already_processed: true }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
