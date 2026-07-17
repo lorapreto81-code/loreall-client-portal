@@ -350,39 +350,64 @@ Deno.serve(async (req) => {
 
     const wasPaid = payment.fastdepix_status === "paid";
     const becomingPaid = newStatus === "paid" && !wasPaid;
-    const updates: Record<string, unknown> = { fastdepix_status: newStatus };
-    if (becomingPaid) updates.paid_at = new Date().toISOString();
 
-    if (becomingPaid) {
-      const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
-      if (tgToken) {
-        try {
-          const tgRes = await fetch(`${TG_BASE}/customers/${payment.customer_id}/renew`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${tgToken}`,
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282, send_whatsapp: true }),
-          });
-          const rr = await tgRes.json().catch(() => ({}));
-          updates.renewal_response = rr;
-          if (tgRes.ok) updates.renewed_at = new Date().toISOString();
-          else console.error("[syncpay-webhook] TG renew failed", tgRes.status, rr);
-        } catch (e) { console.error("[syncpay-webhook] TG renew exception", e); }
-
-        const refCode: string | null = payment?.metadata?.referral_code || null;
-        if (refCode) {
-          try { await processReferralOnPayment(supabase, tgToken, payment, refCode); }
-          catch (e) { console.error("[syncpay-webhook] referral failed", e); }
-        }
-        try { await releasePendingReferrals(supabase, tgToken, payment.customer_id); }
-        catch (e) { console.error("[syncpay-webhook] release pending failed", e); }
+    if (!becomingPaid) {
+      if (newStatus !== payment.fastdepix_status) {
+        await supabase.from("payments").update({ fastdepix_status: newStatus }).eq("id", payment.id);
       }
+      return new Response(JSON.stringify({ ok: true, kind: "customer", status: newStatus }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    await supabase.from("payments").update(updates).eq("id", payment.id);
+    // LOCK ATÔMICO: só um processo consegue mudar pending → paid.
+    // Evita renovar 2-3x quando SyncPay reenvia webhook ou o polling do
+    // cliente dispara essa mesma função em paralelo.
+    const { data: locked } = await supabase
+      .from("payments")
+      .update({ fastdepix_status: "paid", paid_at: new Date().toISOString() })
+      .eq("id", payment.id)
+      .eq("fastdepix_status", "pending")
+      .select()
+      .maybeSingle();
+
+    if (!locked) {
+      console.log("[syncpay-webhook] already processed, skipping renew", payment.id);
+      return new Response(JSON.stringify({ ok: true, kind: "customer", already_processed: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
+    if (tgToken) {
+      try {
+        const tgRes = await fetch(`${TG_BASE}/customers/${payment.customer_id}/renew`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tgToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282, send_whatsapp: true }),
+        });
+        const rr = await tgRes.json().catch(() => ({}));
+        const patch: Record<string, unknown> = { renewal_response: rr };
+        if (tgRes.ok) patch.renewed_at = new Date().toISOString();
+        else console.error("[syncpay-webhook] TG renew failed", tgRes.status, rr);
+        await supabase.from("payments").update(patch).eq("id", payment.id);
+      } catch (e) {
+        console.error("[syncpay-webhook] TG renew exception", e);
+      }
+
+      const refCode: string | null = payment?.metadata?.referral_code || null;
+      if (refCode) {
+        try { await processReferralOnPayment(supabase, tgToken, payment, refCode); }
+        catch (e) { console.error("[syncpay-webhook] referral failed", e); }
+      }
+      try { await releasePendingReferrals(supabase, tgToken, payment.customer_id); }
+      catch (e) { console.error("[syncpay-webhook] release pending failed", e); }
+    }
+
 
     return new Response(JSON.stringify({ ok: true, kind: "customer", status: newStatus }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
