@@ -1,5 +1,5 @@
 // SyncPay webhook handler — recebe eventos cashin.create / cashin.update
-// e dispara a mesma lógica de "pagamento confirmado" usada pelo Fast Depix
+// e dispara a lógica de "pagamento confirmado" (renovação TopGestor + indicações)
 // (renovação de cliente no TopGestor + indicações, ou recarga de revendedor WAREZ).
 
 import { createClient } from "npm:@supabase/supabase-js@2";

@@ -456,7 +456,7 @@ export default function Revendedor() {
 
             {underReview && (
               <div className="text-xs text-center text-amber-700 bg-amber-50 rounded-lg py-2 px-3">
-                Pagamento em análise pela Fast Depix...
+                Pagamento em análise...
               </div>
             )}
             {status?.status === "paid" && !isRecharged && !isFailed && (
