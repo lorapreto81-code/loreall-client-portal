@@ -90,12 +90,13 @@ export async function processRecharge(
     }
   }
 
-  // Lock: marca processing antes de chamar, evita double-charge
+  // Lock atômico: só aceita estados "não iniciados" para evitar double-charge
+  // em chamadas concorrentes (webhook + poll ao mesmo tempo).
   const { data: locked } = await supabase
     .from("reseller_credit_purchases")
     .update({ recharge_status: "processing" })
     .eq("id", purchaseId)
-    .neq("recharge_status", "recharged")
+    .in("recharge_status", ["pending", "failed", "awaiting_credits"])
     .select()
     .maybeSingle();
 
