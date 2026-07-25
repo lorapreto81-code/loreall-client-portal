@@ -24,6 +24,21 @@ export async function processRecharge(
   if (purchase.recharge_status === "recharged") return { ok: true, alreadyDone: true };
   if (purchase.status !== "paid") return { ok: false, error: `Pagamento não confirmado (status=${purchase.status})` };
 
+  // ---- Ajustes pendentes de créditos (débitos/créditos de correção) ----
+  const { data: pendingAdjustments } = await supabase
+    .from("reseller_credit_adjustments")
+    .select("id, delta, reason")
+    .eq("reseller_link_id", purchase.reseller_link_id)
+    .eq("status", "pending");
+
+  const adjustmentIds: string[] = (pendingAdjustments || []).map((a: { id: string }) => a.id);
+  const netDelta: number = (pendingAdjustments || []).reduce((s: number, a: { delta: number }) => s + Number(a.delta || 0), 0);
+  const adjustedCredits = Math.max(0, Number(purchase.package_credits) + netDelta);
+  const adjustmentNote =
+    netDelta !== 0
+      ? `Ajuste aplicado: ${netDelta > 0 ? "+" : ""}${netDelta} crédito(s). ${(pendingAdjustments || []).map((a: { reason: string }) => a.reason).join(" | ")}`
+      : null;
+
   const baseUrl = await getConfig(supabase, "warez_api_url");
   const token = await getConfig(supabase, "warez_api_token");
   const adminUserId = await getConfig(supabase, "warez_admin_user_id");
