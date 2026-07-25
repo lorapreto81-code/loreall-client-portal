@@ -190,6 +190,57 @@ export type Database = {
           },
         ]
       }
+      reseller_credit_adjustments: {
+        Row: {
+          applied_at: string | null
+          applied_purchase_id: string | null
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          reseller_link_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_purchase_id?: string | null
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          reseller_link_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_purchase_id?: string | null
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          reseller_link_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_credit_adjustments_applied_purchase_id_fkey"
+            columns: ["applied_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_credit_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_credit_adjustments_reseller_link_id_fkey"
+            columns: ["reseller_link_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reseller_credit_purchases: {
         Row: {
           amount: number
