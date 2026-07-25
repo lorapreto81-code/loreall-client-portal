@@ -214,12 +214,27 @@ export async function processRecharge(
     return { ok: false, error: friendlyMsg, status, data: respJson };
   }
 
+  if (adjustmentIds.length > 0) {
+    await supabase
+      .from("reseller_credit_adjustments")
+      .update({ status: "applied", applied_purchase_id: purchaseId, applied_at: new Date().toISOString() })
+      .in("id", adjustmentIds);
+  }
+
+  const finalResp = {
+    ...(respJson as Record<string, unknown> || {}),
+    adjustment_applied: netDelta !== 0,
+    adjustment_delta: netDelta,
+    credits_sent: adjustedCredits,
+    note: adjustmentNote,
+  };
+
   await supabase
     .from("reseller_credit_purchases")
     .update({
       recharge_status: "recharged",
       recharged_at: new Date().toISOString(),
-      warez_response: respJson as Record<string, unknown>,
+      warez_response: finalResp as Record<string, unknown>,
       error_message: null,
     })
     .eq("id", purchaseId);
