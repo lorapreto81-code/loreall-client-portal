@@ -42,6 +42,12 @@ interface StatusData {
   id: string;
   status: string;
   recharge_status: string;
+  warez_response?: {
+    adjustment_applied?: boolean;
+    adjustment_delta?: number;
+    credits_sent?: number;
+    note?: string | null;
+  } | null;
   error_message: string | null;
   under_review?: boolean;
 }
