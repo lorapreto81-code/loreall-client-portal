@@ -117,10 +117,30 @@ export async function processRecharge(
 
   if (!locked) return { ok: true, alreadyDone: true };
 
+  // Se ajuste zerou os créditos, não chama Warez — apenas marca como recarregada e aplica os ajustes.
+  if (adjustedCredits <= 0) {
+    if (adjustmentIds.length > 0) {
+      await supabase
+        .from("reseller_credit_adjustments")
+        .update({ status: "applied", applied_purchase_id: purchaseId, applied_at: new Date().toISOString() })
+        .in("id", adjustmentIds);
+    }
+    await supabase
+      .from("reseller_credit_purchases")
+      .update({
+        recharge_status: "recharged",
+        recharged_at: new Date().toISOString(),
+        warez_response: { adjustment_applied: true, adjustment_delta: netDelta, credits_sent: 0, note: adjustmentNote } as Record<string, unknown>,
+        error_message: null,
+      })
+      .eq("id", purchaseId);
+    return { ok: true, data: { adjustment_applied: true, credits_sent: 0, adjustment_delta: netDelta } };
+  }
+
   const endpoint = `${baseUrl.replace(/\/+$/, "")}/users/credits/${purchase.warez_user_id}`;
   const reqBody = {
-    credits: purchase.package_credits,
-    notes: `Recarga compra #${String(purchase.id).slice(0, 8)}`,
+    credits: adjustedCredits,
+    notes: `Recarga compra #${String(purchase.id).slice(0, 8)}${netDelta !== 0 ? ` (ajuste ${netDelta > 0 ? "+" : ""}${netDelta})` : ""}`,
   };
   const t0 = Date.now();
   let status = 0;
