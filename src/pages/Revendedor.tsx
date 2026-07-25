@@ -498,19 +498,39 @@ export default function Revendedor() {
         )}
 
 
-        {isRecharged && (
-          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center space-y-4">
-            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-            <h2 className="text-xl font-bold text-gray-900">Créditos adicionados!</h2>
-            <p className="text-sm text-gray-600">
-              +{pix?.package_credits} créditos no painel{" "}
-              <span className="font-mono text-gray-900">{pix?.warez_username}</span>.
-            </p>
-            <button onClick={reset} className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm">
-              Recarregar novamente
-            </button>
-          </div>
-        )}
+        {isRecharged && (() => {
+          const adj = status?.warez_response;
+          const hasAdjustment = adj?.adjustment_applied && typeof adj?.adjustment_delta === "number" && adj.adjustment_delta !== 0;
+          const creditsSent = typeof adj?.credits_sent === "number" ? adj.credits_sent : pix?.package_credits;
+          return (
+            <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center space-y-4">
+              <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Créditos adicionados!</h2>
+              <p className="text-sm text-gray-600 dark:text-slate-300">
+                +{creditsSent} créditos no painel{" "}
+                <span className="font-mono text-gray-900 dark:text-white">{pix?.warez_username}</span>.
+              </p>
+              {hasAdjustment && (
+                <div className="text-left rounded-xl border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 p-3 space-y-1">
+                  <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                    ⚠️ Ajuste aplicado nesta recarga
+                  </p>
+                  <p className="text-xs text-amber-800/90 dark:text-amber-200/90 leading-snug">
+                    Foram descontados <strong>{Math.abs(adj!.adjustment_delta!)} crédito(s)</strong> referentes a uma recarga anterior creditada em duplicidade no painel Warez. Por isso você recebeu {creditsSent} em vez de {pix?.package_credits} créditos nesta compra.
+                  </p>
+                  {adj?.note && (
+                    <p className="text-[10px] text-amber-700/80 dark:text-amber-300/70 mt-1">
+                      {adj.note}
+                    </p>
+                  )}
+                </div>
+              )}
+              <button onClick={reset} className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm">
+                Recarregar novamente
+              </button>
+            </div>
+          );
+        })()}
 
         {isExpired && (
           <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center space-y-4">
