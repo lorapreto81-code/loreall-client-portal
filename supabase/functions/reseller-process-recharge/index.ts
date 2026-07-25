@@ -24,6 +24,21 @@ export async function processRecharge(
   if (purchase.recharge_status === "recharged") return { ok: true, alreadyDone: true };
   if (purchase.status !== "paid") return { ok: false, error: `Pagamento não confirmado (status=${purchase.status})` };
 
+  // ---- Ajustes pendentes de créditos (débitos/créditos de correção) ----
+  const { data: pendingAdjustments } = await supabase
+    .from("reseller_credit_adjustments")
+    .select("id, delta, reason")
+    .eq("reseller_link_id", purchase.reseller_link_id)
+    .eq("status", "pending");
+
+  const adjustmentIds: string[] = (pendingAdjustments || []).map((a: { id: string }) => a.id);
+  const netDelta: number = (pendingAdjustments || []).reduce((s: number, a: { delta: number }) => s + Number(a.delta || 0), 0);
+  const adjustedCredits = Math.max(0, Number(purchase.package_credits) + netDelta);
+  const adjustmentNote =
+    netDelta !== 0
+      ? `Ajuste aplicado: ${netDelta > 0 ? "+" : ""}${netDelta} crédito(s). ${(pendingAdjustments || []).map((a: { reason: string }) => a.reason).join(" | ")}`
+      : null;
+
   const baseUrl = await getConfig(supabase, "warez_api_url");
   const token = await getConfig(supabase, "warez_api_token");
   const adminUserId = await getConfig(supabase, "warez_admin_user_id");
@@ -80,8 +95,8 @@ export async function processRecharge(
       related_payment_id: purchaseId,
     });
 
-    if (availableCredits !== null && availableCredits < purchase.package_credits) {
-      const msg = `Saldo insuficiente no painel: ${availableCredits} disponíveis, ${purchase.package_credits} necessários. Aguardando recarga do painel.`;
+    if (availableCredits !== null && availableCredits < adjustedCredits) {
+      const msg = `Saldo insuficiente no painel: ${availableCredits} disponíveis, ${adjustedCredits} necessários. Aguardando recarga do painel.`;
       await supabase
         .from("reseller_credit_purchases")
         .update({ recharge_status: "awaiting_credits", error_message: msg })
@@ -102,10 +117,30 @@ export async function processRecharge(
 
   if (!locked) return { ok: true, alreadyDone: true };
 
+  // Se ajuste zerou os créditos, não chama Warez — apenas marca como recarregada e aplica os ajustes.
+  if (adjustedCredits <= 0) {
+    if (adjustmentIds.length > 0) {
+      await supabase
+        .from("reseller_credit_adjustments")
+        .update({ status: "applied", applied_purchase_id: purchaseId, applied_at: new Date().toISOString() })
+        .in("id", adjustmentIds);
+    }
+    await supabase
+      .from("reseller_credit_purchases")
+      .update({
+        recharge_status: "recharged",
+        recharged_at: new Date().toISOString(),
+        warez_response: { adjustment_applied: true, adjustment_delta: netDelta, credits_sent: 0, note: adjustmentNote } as Record<string, unknown>,
+        error_message: null,
+      })
+      .eq("id", purchaseId);
+    return { ok: true, data: { adjustment_applied: true, credits_sent: 0, adjustment_delta: netDelta } };
+  }
+
   const endpoint = `${baseUrl.replace(/\/+$/, "")}/users/credits/${purchase.warez_user_id}`;
   const reqBody = {
-    credits: purchase.package_credits,
-    notes: `Recarga compra #${String(purchase.id).slice(0, 8)}`,
+    credits: adjustedCredits,
+    notes: `Recarga compra #${String(purchase.id).slice(0, 8)}${netDelta !== 0 ? ` (ajuste ${netDelta > 0 ? "+" : ""}${netDelta})` : ""}`,
   };
   const t0 = Date.now();
   let status = 0;
@@ -179,12 +214,27 @@ export async function processRecharge(
     return { ok: false, error: friendlyMsg, status, data: respJson };
   }
 
+  if (adjustmentIds.length > 0) {
+    await supabase
+      .from("reseller_credit_adjustments")
+      .update({ status: "applied", applied_purchase_id: purchaseId, applied_at: new Date().toISOString() })
+      .in("id", adjustmentIds);
+  }
+
+  const finalResp = {
+    ...(respJson as Record<string, unknown> || {}),
+    adjustment_applied: netDelta !== 0,
+    adjustment_delta: netDelta,
+    credits_sent: adjustedCredits,
+    note: adjustmentNote,
+  };
+
   await supabase
     .from("reseller_credit_purchases")
     .update({
       recharge_status: "recharged",
       recharged_at: new Date().toISOString(),
-      warez_response: respJson as Record<string, unknown>,
+      warez_response: finalResp as Record<string, unknown>,
       error_message: null,
     })
     .eq("id", purchaseId);

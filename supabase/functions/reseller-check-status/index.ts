@@ -137,6 +137,7 @@ Deno.serve(async (req) => {
         qr_code_text: r.qr_code_text,
         qr_code_expires_at: r.qr_code_expires_at,
         under_review: underReview,
+        warez_response: r.warez_response,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
