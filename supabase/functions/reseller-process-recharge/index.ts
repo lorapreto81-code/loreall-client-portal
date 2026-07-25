@@ -95,8 +95,8 @@ export async function processRecharge(
       related_payment_id: purchaseId,
     });
 
-    if (availableCredits !== null && availableCredits < purchase.package_credits) {
-      const msg = `Saldo insuficiente no painel: ${availableCredits} disponíveis, ${purchase.package_credits} necessários. Aguardando recarga do painel.`;
+    if (availableCredits !== null && availableCredits < adjustedCredits) {
+      const msg = `Saldo insuficiente no painel: ${availableCredits} disponíveis, ${adjustedCredits} necessários. Aguardando recarga do painel.`;
       await supabase
         .from("reseller_credit_purchases")
         .update({ recharge_status: "awaiting_credits", error_message: msg })
