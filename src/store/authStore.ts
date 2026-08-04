@@ -17,8 +17,9 @@ export interface Customer {
 
 interface AuthState {
   customer: Customer | null;
+  token: string | null;
   isAuthenticated: boolean;
-  login: (customer: Customer) => void;
+  login: (customer: Customer, token?: string) => void;
   logout: () => void;
 }
 
@@ -26,10 +27,19 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       customer: null,
+      token: null,
       isAuthenticated: false,
-      login: (customer) => set({ customer, isAuthenticated: true }),
-      logout: () => set({ customer: null, isAuthenticated: false }),
+      login: (customer, token) =>
+        set((state) => ({
+          customer,
+          token: token ?? state.token,
+          isAuthenticated: true,
+        })),
+      logout: () => set({ customer: null, token: null, isAuthenticated: false }),
     }),
     { name: "loreall-auth" }
   )
 );
+
+/** Session token issued by the customer-auth edge function. */
+export const getCustomerToken = (): string | null => useAuthStore.getState().token;
