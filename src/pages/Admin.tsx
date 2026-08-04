@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { resellerAdmin } from "@/lib/resellerAdmin";
 import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat, Inbox } from "lucide-react";
 import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
 import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
@@ -11,8 +12,6 @@ import TrialSignupsTab from "@/components/admin/TrialSignupsTab";
 import PixProviderTab from "@/components/admin/PixProviderTab";
 import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
 import SyncpaySubscriptionsTab from "@/components/admin/SyncpaySubscriptionsTab";
-
-const ADMIN_PASSWORD = "@996157342Slyj";
 
 interface Notice {
   ativo: boolean;
@@ -40,6 +39,7 @@ const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(false);
   const [tab, setTab] = useState<Tab>("avisos");
 
   const [ativo, setAtivo] = useState(false);
@@ -56,18 +56,29 @@ const Admin = () => {
         /* ignore */
       }
     }
-    if (sessionStorage.getItem("admin_password") === ADMIN_PASSWORD) {
-      setAuthenticated(true);
+    if (sessionStorage.getItem("admin_password")) {
+      // Revalida a senha guardada no servidor antes de liberar o painel.
+      resellerAdmin
+        .getConfig()
+        .then(() => setAuthenticated(true))
+        .catch(() => sessionStorage.removeItem("admin_password"));
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem("admin_password", password);
+    if (!password) return;
+    setChecking(true);
+    // A senha é validada exclusivamente no servidor (edge functions).
+    sessionStorage.setItem("admin_password", password);
+    try {
+      await resellerAdmin.getConfig();
       setAuthenticated(true);
-    } else {
+    } catch {
+      sessionStorage.removeItem("admin_password");
       alert("Senha incorreta.");
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -93,8 +104,8 @@ const Admin = () => {
               className="w-full px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Senha de administrador"
             />
-            <button type="submit" className="w-full py-3 btn-primary-gradient font-semibold text-sm">
-              Entrar
+            <button type="submit" disabled={checking} className="w-full py-3 btn-primary-gradient font-semibold text-sm disabled:opacity-60">
+              {checking ? "Verificando..." : "Entrar"}
             </button>
           </form>
         </div>

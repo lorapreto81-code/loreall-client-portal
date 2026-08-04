@@ -214,7 +214,7 @@ const Login = () => {
                 </button>
 
                 <p className="text-[11px] text-muted-foreground text-center pt-1">
-                  Em breve o login também será por e-mail.
+                  Use a mesma senha do seu aplicativo de TV.
                 </p>
               </form>
 
