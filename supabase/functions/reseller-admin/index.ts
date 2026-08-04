@@ -1,11 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isAdminPassword } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-password",
 };
 
-const ADMIN_PASSWORD = "@996157342Slyj";
 
 function unauthorized() {
   return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
   try {
     const pwd = req.headers.get("x-admin-password");
-    if (pwd !== ADMIN_PASSWORD) return unauthorized();
+    if (!isAdminPassword(pwd)) return unauthorized();
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "";
