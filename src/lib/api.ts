@@ -1,5 +1,18 @@
+import { getCustomerToken } from "@/store/authStore";
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+/** Headers with the signed customer session token (required by protected functions). */
+export function authHeaders(): Record<string, string> {
+  const token = getCustomerToken();
+  return {
+    "Content-Type": "application/json",
+    apikey: ANON_KEY,
+    Authorization: `Bearer ${ANON_KEY}`,
+    ...(token ? { "x-customer-token": token } : {}),
+  };
+}
 
 async function callProxy(action: string, params: Record<string, string> = {}, options?: { method?: string; body?: Record<string, unknown> }) {
   const qp = new URLSearchParams({ action, ...params }).toString();
@@ -7,11 +20,7 @@ async function callProxy(action: string, params: Record<string, string> = {}, op
   
   const res = await fetch(url, {
     method: options?.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": ANON_KEY,
-      "Authorization": `Bearer ${ANON_KEY}`,
-    },
+    headers: authHeaders(),
     ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
   });
 
@@ -29,8 +38,25 @@ async function callProxy(action: string, params: Record<string, string> = {}, op
   return res.json();
 }
 
-export async function searchCustomer(query: string) {
-  return callProxy("search-customer", { query });
+export interface LoginAccount {
+  token: string;
+  customer: Record<string, unknown>;
+}
+
+/** Verifies the customer's credentials server-side and returns signed sessions. */
+export async function customerLogin(identifier: string, password: string): Promise<{ accounts: LoginAccount[] }> {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${ANON_KEY}`,
+    },
+    body: JSON.stringify({ identifier, password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+  return data as { accounts: LoginAccount[] };
 }
 
 export async function getCustomerInvoices(customerId: number, perPage = 10) {
@@ -90,11 +116,7 @@ export async function createPixPayment(body: {
 }): Promise<CreatePixResponse> {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/create-pix`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
+    headers: authHeaders(),
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
@@ -107,11 +129,7 @@ async function callReferrals(action: string, params: Record<string, string> = {}
   const qp = new URLSearchParams({ action, ...params }).toString();
   const res = await fetch(`${SUPABASE_URL}/functions/v1/referrals-api?${qp}`, {
     method: options?.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
+    headers: authHeaders(),
     ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
   });
   const data = await res.json().catch(() => ({}));

@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isAdminPassword } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +7,6 @@ const corsHeaders = {
 };
 
 const TG_BASE = "https://topgestor.me/api/v1";
-const ADMIN_PASSWORD = "@996157342Slyj";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { admin_password, payment_id } = body as { admin_password?: string; payment_id?: string };
 
-    if (admin_password !== ADMIN_PASSWORD) {
+    if (!isAdminPassword(admin_password)) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

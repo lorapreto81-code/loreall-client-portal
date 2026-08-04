@@ -1,3 +1,4 @@
+import { authHeaders } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { X, Receipt, Loader2, CheckCircle2, Clock, XCircle } from "lucide-react";
 
@@ -56,11 +57,7 @@ export default function MyInvoicesSheet({ open, onClose, customerId }: Props) {
       try {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/payment-status`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: ANON_KEY,
-            Authorization: `Bearer ${ANON_KEY}`,
-          },
+          headers: authHeaders(),
           body: JSON.stringify({ action: "history", customer_id: customerId, limit: 30 }),
         });
         const data = await res.json().catch(() => ({}));

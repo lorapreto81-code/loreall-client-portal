@@ -7,6 +7,7 @@
 //   sync-plans   (busca no SyncPay e espelha no banco local)
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isAdminPassword } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +15,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-admin-password",
 };
 
-const ADMIN_PASSWORD = "@996157342Slyj";
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
 
 function ok(data: unknown, status = 200) {
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
 
   try {
     const pwd = req.headers.get("x-admin-password");
-    if (pwd !== ADMIN_PASSWORD) return err("Unauthorized", 401);
+    if (!isAdminPassword(pwd)) return err("Unauthorized", 401);
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "";

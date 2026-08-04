@@ -1,11 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getCustomerSession, isAdminPassword } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-password",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-password, x-customer-token",
 };
 
-const ADMIN_PASSWORD = "@996157342Slyj";
 const TG_BASE = "https://topgestor.me/api/v1";
 
 function jsonRes(data: unknown, status = 200) {
@@ -63,6 +63,10 @@ Deno.serve(async (req) => {
       const customerName: string = body.customer_name || "";
       if (!customerId) return jsonRes({ error: "customer_id required" }, 400);
 
+      const session = await getCustomerSession(req);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401);
+      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403);
+
       const { data: existing } = await supabase
         .from("referral_codes")
         .select("*")
@@ -105,6 +109,10 @@ Deno.serve(async (req) => {
       const customerId = Number(url.searchParams.get("customer_id"));
       if (!customerId) return jsonRes({ error: "customer_id required" }, 400);
 
+      const session = await getCustomerSession(req);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401);
+      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403);
+
       const { data: referrals } = await supabase
         .from("referrals")
         .select("*")
@@ -137,7 +145,7 @@ Deno.serve(async (req) => {
     // ----- get-trial-config (admin) -----
     if (action === "get-trial-config") {
       const pwd = req.headers.get("x-admin-password");
-      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
       const cfg = await getConfigMap(supabase);
       return jsonRes({
         config: {
@@ -154,7 +162,7 @@ Deno.serve(async (req) => {
     // ----- update-trial-config (admin) -----
     if (action === "update-trial-config") {
       const pwd = req.headers.get("x-admin-password");
-      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
       const body = await req.json().catch(() => ({}));
       const entries: Record<string, string> = body.entries || {};
       const allowed = ["trial_enabled", "trial_product_id", "trial_plan_id", "trial_telas", "trial_days", "trial_support_whatsapp"];
@@ -170,7 +178,7 @@ Deno.serve(async (req) => {
     // ----- list-pending-trials (admin) -----
     if (action === "list-pending-trials") {
       const pwd = req.headers.get("x-admin-password");
-      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
       const { data } = await supabase
         .from("referrals")
         .select("*")
@@ -276,7 +284,7 @@ Deno.serve(async (req) => {
     // ----- list-signups (admin) -----
     if (action === "list-signups") {
       const pwd = req.headers.get("x-admin-password");
-      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
       const status = url.searchParams.get("status"); // pending | approved | rejected | null=all
       let q = supabase.from("trial_signups").select("*").order("created_at", { ascending: false }).limit(300);
       if (status) q = q.eq("status", status);
@@ -292,7 +300,7 @@ Deno.serve(async (req) => {
     //   3) create a referrals row (pending_payment) so referrer bonus is triggered on 1st PIX
     if (action === "approve-signup") {
       const pwd = req.headers.get("x-admin-password");
-      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
 
       const body = await req.json().catch(() => ({}));
       const signupId = String(body.signup_id || "").trim();
@@ -412,7 +420,7 @@ Deno.serve(async (req) => {
     // ----- reject-signup (admin) -----
     if (action === "reject-signup") {
       const pwd = req.headers.get("x-admin-password");
-      if (pwd !== ADMIN_PASSWORD) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
       const body = await req.json().catch(() => ({}));
       const signupId = String(body.signup_id || "").trim();
       const reason = String(body.reason || "").trim().slice(0, 300);
