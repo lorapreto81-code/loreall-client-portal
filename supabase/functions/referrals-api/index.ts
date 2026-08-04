@@ -63,6 +63,10 @@ Deno.serve(async (req) => {
       const customerName: string = body.customer_name || "";
       if (!customerId) return jsonRes({ error: "customer_id required" }, 400);
 
+      const session = await getCustomerSession(req);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401);
+      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403);
+
       const { data: existing } = await supabase
         .from("referral_codes")
         .select("*")
@@ -104,6 +108,10 @@ Deno.serve(async (req) => {
     if (action === "list-by-referrer") {
       const customerId = Number(url.searchParams.get("customer_id"));
       if (!customerId) return jsonRes({ error: "customer_id required" }, 400);
+
+      const session = await getCustomerSession(req);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401);
+      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403);
 
       const { data: referrals } = await supabase
         .from("referrals")
