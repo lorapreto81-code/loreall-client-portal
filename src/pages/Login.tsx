@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Search } from "lucide-react";
-import { searchCustomer } from "@/lib/api";
+import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Search, Lock } from "lucide-react";
+import { customerLogin, LoginAccount } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 import indiqueBanner from "@/assets/indique-ganhe-banner.jpg.asset.json";
 const logo = "/logo.png";
@@ -36,9 +36,10 @@ const maskName = (raw?: string) => {
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
-  const [matches, setMatches] = useState<Customer[]>([]);
+  const [matches, setMatches] = useState<LoginAccount[]>([]);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
 
@@ -55,8 +56,9 @@ const Login = () => {
     if (stored) setRefCode(stored);
   }, [navigate]);
 
-  const pickAccount = (c: Customer) => {
-    login(c);
+  const pickAccount = (account: LoginAccount) => {
+    const c = account.customer as unknown as Customer;
+    login(c, account.token);
     toast.success("Bem-vindo, " + c.name + "!");
     navigate("/welcome");
   };
@@ -68,40 +70,22 @@ const Login = () => {
       toast.error("Informe seu e-mail, celular ou usuário.");
       return;
     }
+    if (!password) {
+      toast.error("Informe sua senha de acesso.");
+      return;
+    }
     setLoading(true);
     try {
-      const isEmail = EMAIL_RE.test(id);
-      const digits = onlyDigits(id);
-      const isPhone = !isEmail && digits.length >= 8;
-      const query = isEmail ? id.toLowerCase() : isPhone ? digits : id;
-      const data = await searchCustomer(query);
-      const customers = Array.isArray(data)
-        ? data
-        : data?.data
-          ? Array.isArray(data.data) ? data.data : [data.data]
-          : [data];
-      const tail8 = digits.slice(-8);
-      const filtered = customers.filter((c: any) => {
-        if (isEmail) {
-          return String(c.email || "").toLowerCase() === id.toLowerCase();
-        }
-        if (isPhone) {
-          const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone]
-            .filter(Boolean)
-            .map((v: string) => onlyDigits(String(v)));
-          return phoneFields.some((p) => p.slice(-8) === tail8);
-        }
-        return c.usuario === id || c.username === id;
-      });
-      if (filtered.length === 0) {
-        toast.error("Não encontramos uma conta com esses dados.");
+      const { accounts } = await customerLogin(id, password);
+      if (!accounts || accounts.length === 0) {
+        toast.error("Dados de acesso inválidos.");
         return;
       }
-      if (filtered.length === 1) {
-        pickAccount(filtered[0]);
+      if (accounts.length === 1) {
+        pickAccount(accounts[0]);
         return;
       }
-      setMatches(filtered);
+      setMatches(accounts);
     } catch (err: any) {
       toast.error(err.message || "Erro ao acessar sua conta.");
     } finally {
@@ -143,12 +127,13 @@ const Login = () => {
                 Encontramos {matches.length} contas. Selecione qual deseja abrir:
               </p>
               <div className="space-y-2.5">
-                {matches.map((c) => {
+                {matches.map((account) => {
+                  const c = account.customer as unknown as Customer;
                   const planName = (c.plan as any)?.name || (c as any).product?.name || "—";
                   return (
                     <button
                       key={c.id}
-                      onClick={() => pickAccount(c)}
+                      onClick={() => pickAccount(account)}
                       className="w-full text-left p-3 rounded-lg border border-input bg-card hover:border-ring hover:bg-accent/40 transition-colors"
                     >
                       <div className="flex items-center gap-2 mb-1.5">
@@ -178,9 +163,11 @@ const Login = () => {
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4 leading-snug">
-                Acesse com seu <span className="font-semibold text-foreground">celular</span> ou
-                <span className="font-semibold text-foreground"> usuário</span> para consultar
-                seus dados e renovar seu plano.
+                Acesse com seu <span className="font-semibold text-foreground">celular</span>,
+                <span className="font-semibold text-foreground"> e-mail</span> ou
+                <span className="font-semibold text-foreground"> usuário</span> e a sua
+                <span className="font-semibold text-foreground"> senha de acesso</span> para
+                consultar seus dados e renovar seu plano.
               </p>
 
               {refCode && (
@@ -203,6 +190,18 @@ const Login = () => {
                     autoComplete="username"
                   />
                   <Search className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
+                    placeholder="Senha de acesso"
+                    autoComplete="current-password"
+                  />
+                  <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                 </div>
 
                 <button
