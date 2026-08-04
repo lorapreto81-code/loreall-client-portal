@@ -4,7 +4,6 @@ import { toast } from "sonner";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const ADMIN_PASSWORD = "@996157342Slyj";
 
 interface Signup {
   id: string;
@@ -42,7 +41,7 @@ async function callApi(action: string, params: Record<string, string> = {}, opti
       "Content-Type": "application/json",
       apikey: ANON_KEY,
       Authorization: `Bearer ${ANON_KEY}`,
-      "x-admin-password": ADMIN_PASSWORD,
+      "x-admin-password": sessionStorage.getItem("admin_password") || "",
     },
     ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
   });

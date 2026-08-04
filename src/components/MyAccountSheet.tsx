@@ -5,7 +5,7 @@ import {
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
   KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2,
 } from "lucide-react";
-import { updateCustomer, getCustomer } from "@/lib/api";
+import { updateCustomer, getCustomer, authHeaders } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -109,11 +109,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
       try {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/payment-status`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: ANON_KEY,
-            Authorization: `Bearer ${ANON_KEY}`,
-          },
+          headers: authHeaders(),
           body: JSON.stringify({ action: "history", customer_id: customerId, limit: 30 }),
         });
         const data = await res.json().catch(() => ({}));

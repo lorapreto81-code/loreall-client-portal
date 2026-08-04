@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer } from "@/lib/api";
+import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer, authHeaders } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { maskDoc, isValidDoc, onlyDigits as onlyDigitsDoc, detectDoc } from "@/lib/doc";
 import { useAuthStore, Customer } from "@/store/authStore";
@@ -217,6 +217,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
       try {
         const { data, error } = await supabase.functions.invoke("payment-status", {
           body: { action: "pending", customer_id: customer.id },
+          headers: authHeaders(),
         });
         if (cancelled || error) return;
         const p = (data as { payment?: { id: string; amount: number; qr_code_url: string | null; qr_code_text: string | null; qr_code_expires_at: string; fastdepix_status: string } })?.payment;
@@ -244,6 +245,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
       try {
         const { data, error } = await supabase.functions.invoke("payment-status", {
           body: { action: "status", payment_id: pix.payment_id, customer_id: customer.id },
+          headers: authHeaders(),
         });
         if (stop || error) return;
         const newStatus = (data as { fastdepix_status?: string })?.fastdepix_status;
