@@ -1,1 +1,0 @@
-UPDATE public.system_config SET config_value='https://mcapi.knewcms.com:2087', updated_at=now() WHERE config_key='warez_api_url' AND config_value IN ('https://wpainel.exemplo.com/api','COLE_SUA_URL_AQUI','');
