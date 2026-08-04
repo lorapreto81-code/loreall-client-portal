@@ -1,23 +1,14 @@
+import { getCustomerSession, isAdminRequest } from "../_shared/auth.ts";
+import { TG_API_BASE as API_BASE, tgHeaders, tgSearchCustomers } from "../_shared/tg.ts";
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-customer-token, x-admin-password",
 };
 
-const API_BASE = "https://topgestor.me/api/v1";
-
-async function getToken(): string {
-  const token = Deno.env.get("TOPGESTOR_API_TOKEN");
-  if (!token) throw new Error("TOPGESTOR_API_TOKEN not configured");
-  return token;
-}
-
-function apiHeaders(token: string): Record<string, string> {
-  return {
-    Authorization: `Bearer ${token}`,
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  };
-}
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 async function proxyResponse(res: Response): Promise<Response> {
   const body = await res.text();
@@ -27,130 +18,73 @@ async function proxyResponse(res: Response): Promise<Response> {
   });
 }
 
+// Fields a customer is allowed to change on their own account.
+const CUSTOMER_EDITABLE_FIELDS = ["name", "email", "whatsapp", "celular", "telefone", "cpf", "plan_id"];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const token = await getToken();
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
+
+    const admin = isAdminRequest(req);
+    const session = admin ? null : await getCustomerSession(req);
+
+    if (!admin && !session) return json({ error: "unauthorized" }, 401);
+
+    // Actions restricted to the admin panel.
+    const adminOnly = new Set(["search-customer", "list-customers"]);
+    if (adminOnly.has(action || "") && !admin) return json({ error: "forbidden" }, 403);
+
+    // Actions bound to a specific customer id — must be the caller's own id.
+    const ownedActions = new Set([
+      "get-customer",
+      "get-invoices",
+      "generate-payment-link",
+      "update-customer",
+      "renew-customer",
+    ]);
+    const id = url.searchParams.get("id");
+    if (ownedActions.has(action || "")) {
+      if (!id) return json({ error: "id required" }, 400);
+      if (!admin && Number(id) !== session!.sub) return json({ error: "forbidden" }, 403);
+    }
 
     let apiRes: Response;
 
     switch (action) {
       case "search-customer": {
         const query = url.searchParams.get("query");
-        if (!query) return new Response(JSON.stringify({ error: "query required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-        const digits = query.replace(/\D/g, "");
-        const isPhone = digits.length >= 8;
-
-        // Para telefones, tentamos várias variações em paralelo para tolerar
-        // formatos errados (espaços, com/sem DDD, com/sem 9, com/sem 55).
-        const buildPhoneVariants = (d: string): string[] => {
-          const set = new Set<string>();
-          set.add(d);
-          // remove código país 55 se vier com 12-13 dígitos
-          let local = d;
-          if ((local.length === 12 || local.length === 13) && local.startsWith("55")) {
-            local = local.slice(2);
-            set.add(local);
-          }
-          // últimos N dígitos
-          if (local.length >= 11) set.add(local.slice(-11));
-          if (local.length >= 10) set.add(local.slice(-10));
-          if (local.length >= 9) set.add(local.slice(-9));
-          if (local.length >= 8) set.add(local.slice(-8));
-
-          // Sem DDD: número puro (8 ou 9 dígitos)
-          const tail8 = local.slice(-8);
-          const tail9 = local.length >= 9 ? local.slice(-9) : "";
-
-          // Se temos DDD (>=10), gerar variantes com/sem o 9 após o DDD
-          if (local.length >= 10) {
-            const ddd = local.slice(0, 2);
-            const rest = local.slice(2);
-            // com 9 (celular)
-            if (rest.length === 8) set.add(ddd + "9" + rest);
-            // sem 9 (caso tenha sido digitado errado)
-            if (rest.length === 9 && rest.startsWith("9")) set.add(ddd + rest.slice(1));
-          }
-
-          set.add(tail8);
-          if (tail9) set.add(tail9);
-
-          // Limitar a 6 variantes para não estourar rate limit
-          return Array.from(set).filter((v) => v.length >= 8).slice(0, 6);
-        };
-
-        if (!isPhone) {
-          apiRes = await fetch(`${API_BASE}/customers/search/${encodeURIComponent(query)}`, { headers: apiHeaders(token) });
-          break;
-        }
-
-        const variants = buildPhoneVariants(digits);
-        const results = await Promise.all(
-          variants.map((v) =>
-            fetch(`${API_BASE}/customers/search/${encodeURIComponent(v)}`, { headers: apiHeaders(token) })
-              .then(async (r) => {
-                if (!r.ok) return [] as any[];
-                const j = await r.json().catch(() => null);
-                if (!j) return [] as any[];
-                const arr = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : j.data ? [j.data] : Array.isArray(j) ? j : [j];
-                return Array.isArray(arr) ? arr : [];
-              })
-              .catch(() => [] as any[])
-          )
-        );
-
-        const merged: any[] = [];
-        const seen = new Set<string>();
-        for (const list of results) {
-          for (const c of list) {
-            if (!c || typeof c !== "object") continue;
-            const key = String((c as any).id ?? JSON.stringify(c));
-            if (seen.has(key)) continue;
-            seen.add(key);
-            merged.push(c);
-          }
-        }
-
-        return new Response(JSON.stringify({ data: merged }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (!query) return json({ error: "query required" }, 400);
+        const merged = await tgSearchCustomers(query);
+        return json({ data: merged });
       }
 
       case "get-customer": {
-        const id = url.searchParams.get("id");
-        if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        apiRes = await fetch(`${API_BASE}/customers/${id}`, { headers: apiHeaders(token) });
+        apiRes = await fetch(`${API_BASE}/customers/${id}`, { headers: tgHeaders() });
         break;
       }
 
       case "get-invoices": {
-        const id = url.searchParams.get("id");
-        const perPage = url.searchParams.get("per_page") || "10";
-        if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        apiRes = await fetch(`${API_BASE}/customers/${id}/invoices?per_page=${perPage}`, { headers: apiHeaders(token) });
+        const perPage = String(Number(url.searchParams.get("per_page")) || 10);
+        apiRes = await fetch(`${API_BASE}/customers/${id}/invoices?per_page=${perPage}`, { headers: tgHeaders() });
         break;
       }
 
       case "generate-payment-link": {
-        const id = url.searchParams.get("id");
-        if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         apiRes = await fetch(`${API_BASE}/customers/${id}/payment-link`, {
           method: "POST",
-          headers: apiHeaders(token),
+          headers: tgHeaders(),
           body: JSON.stringify({}),
         });
         break;
       }
 
       case "get-plans": {
-        apiRes = await fetch(`${API_BASE}/plans`, { headers: apiHeaders(token) });
+        apiRes = await fetch(`${API_BASE}/plans`, { headers: tgHeaders() });
         break;
       }
 
@@ -164,17 +98,30 @@ Deno.serve(async (req) => {
         if (status) qp.set("status", status);
         if (search) qp.set("search", search);
         if (archived) qp.set("archived", archived);
-        apiRes = await fetch(`${API_BASE}/customers?${qp.toString()}`, { headers: apiHeaders(token) });
+        apiRes = await fetch(`${API_BASE}/customers?${qp.toString()}`, { headers: tgHeaders() });
         break;
       }
 
       case "update-customer": {
-        const id = url.searchParams.get("id");
-        if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        const body = await req.json();
+        const raw = await req.json().catch(() => ({}));
+        if (!raw || typeof raw !== "object" || Array.isArray(raw)) return json({ error: "invalid body" }, 400);
+
+        // Customers may only patch a safe allow-list of their own fields.
+        let body: Record<string, unknown> = raw as Record<string, unknown>;
+        if (!admin) {
+          body = {};
+          for (const f of CUSTOMER_EDITABLE_FIELDS) {
+            if (f in (raw as Record<string, unknown>)) body[f] = (raw as Record<string, unknown>)[f];
+          }
+          if (typeof body.email === "string" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) {
+            return json({ error: "invalid email" }, 400);
+          }
+          if (Object.keys(body).length === 0) return json({ error: "no updatable fields" }, 400);
+        }
+
         apiRes = await fetch(`${API_BASE}/customers/${id}`, {
           method: "PUT",
-          headers: apiHeaders(token),
+          headers: tgHeaders(),
           body: JSON.stringify(body),
         });
 
@@ -213,44 +160,30 @@ Deno.serve(async (req) => {
       }
 
       case "renew-customer": {
-        const id = url.searchParams.get("id");
-        if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         // IMPORTANT: do NOT call /renew (it extends the due date immediately).
         // Only generate the payment link — TopGestor renews automatically once paid.
         const linkRes = await fetch(`${API_BASE}/customers/${id}/payment-link`, {
           method: "POST",
-          headers: apiHeaders(token),
+          headers: tgHeaders(),
           body: JSON.stringify({}),
         });
         const linkData = await linkRes.json().catch(() => ({}));
-        if (!linkRes.ok) {
-          return new Response(JSON.stringify(linkData), {
-            status: linkRes.status,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+        if (!linkRes.ok) return json(linkData, linkRes.status);
         const checkoutUrl =
           linkData?.data?.checkout_url ||
           linkData?.checkout_url ||
           linkData?.data?.invoice?.checkout_url ||
           null;
-        return new Response(
-          JSON.stringify({ success: true, data: { ...(linkData?.data || {}), checkout_url: checkoutUrl } }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+        return json({ success: true, data: { ...(linkData?.data || {}), checkout_url: checkoutUrl } });
       }
 
       default:
-        return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return json({ error: "Invalid action" }, 400);
     }
 
     return proxyResponse(apiRes);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("topgestor-proxy error:", message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch (err) {
+    console.error("[topgestor-proxy] error", err instanceof Error ? err.message : err);
+    return json({ error: "Erro ao processar a requisição." }, 500);
   }
 });
