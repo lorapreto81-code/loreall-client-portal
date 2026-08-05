@@ -35,6 +35,45 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          customer_id: number | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          customer_id?: number | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          customer_id?: number | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
