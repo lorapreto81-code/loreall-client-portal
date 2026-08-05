@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Search, Lock } from "lucide-react";
+import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Lock } from "lucide-react";
 import { requestOtp, verifyOtp, LoginAccount } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 import indiqueBanner from "@/assets/indique-ganhe-banner.jpg.asset.json";
