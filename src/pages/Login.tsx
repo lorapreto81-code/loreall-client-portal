@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Search, Lock } from "lucide-react";
-import { customerLogin, LoginAccount } from "@/lib/api";
+import { requestOtp, verifyOtp, LoginAccount } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 import indiqueBanner from "@/assets/indique-ganhe-banner.jpg.asset.json";
 const logo = "/logo.png";
@@ -34,9 +34,19 @@ const maskName = (raw?: string) => {
     .join(" ");
 };
 
+const formatPhone = (raw: string) => {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
 const Login = () => {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [resendIn, setResendIn] = useState(0);
   const [loading, setLoading] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
   const [matches, setMatches] = useState<LoginAccount[]>([]);
@@ -47,14 +57,20 @@ const Login = () => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) {
-      const code = ref.trim().toUpperCase();
-      localStorage.setItem(REF_KEY, code);
-      navigate(`/indicacao/${code}`, { replace: true });
+      const c = ref.trim().toUpperCase();
+      localStorage.setItem(REF_KEY, c);
+      navigate(`/indicacao/${c}`, { replace: true });
       return;
     }
     const stored = localStorage.getItem(REF_KEY);
     if (stored) setRefCode(stored);
   }, [navigate]);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
 
   const pickAccount = (account: LoginAccount) => {
     const c = account.customer as unknown as Customer;
@@ -63,22 +79,41 @@ const Login = () => {
     navigate("/welcome");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const id = identifier.trim();
-    if (!id) {
-      toast.error("Informe seu e-mail, celular ou usuário.");
-      return;
-    }
-    if (!password) {
-      toast.error("Informe sua senha de acesso.");
+  const sendCode = async () => {
+    const digits = onlyDigits(phone);
+    if (digits.length < 10) {
+      toast.error("Informe seu WhatsApp com DDD.");
       return;
     }
     setLoading(true);
     try {
-      const { accounts } = await customerLogin(id, password);
+      const res = await requestOtp(digits);
+      toast.success(res.message || "Código enviado no seu WhatsApp.");
+      setStep("code");
+      setResendIn(60);
+    } catch (err: any) {
+      toast.error(err.message || "Não foi possível enviar o código.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step === "phone") {
+      await sendCode();
+      return;
+    }
+    const c = onlyDigits(code);
+    if (c.length !== 6) {
+      toast.error("Digite o código de 6 dígitos.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { accounts } = await verifyOtp(onlyDigits(phone), c);
       if (!accounts || accounts.length === 0) {
-        toast.error("Dados de acesso inválidos.");
+        toast.error("Conta não encontrada.");
         return;
       }
       if (accounts.length === 1) {
@@ -87,11 +122,12 @@ const Login = () => {
       }
       setMatches(accounts);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao acessar sua conta.");
+      toast.error(err.message || "Código inválido.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative overflow-hidden">
