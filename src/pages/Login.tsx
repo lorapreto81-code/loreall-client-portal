@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Search, Lock } from "lucide-react";
-import { customerLogin, LoginAccount } from "@/lib/api";
+import { Loader2, Gift, User, Calendar, Package, ArrowLeft, MessageCircle, Lock } from "lucide-react";
+import { requestOtp, verifyOtp, LoginAccount } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 import indiqueBanner from "@/assets/indique-ganhe-banner.jpg.asset.json";
 const logo = "/logo.png";
@@ -34,9 +34,19 @@ const maskName = (raw?: string) => {
     .join(" ");
 };
 
+const formatPhone = (raw: string) => {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
 const Login = () => {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [resendIn, setResendIn] = useState(0);
   const [loading, setLoading] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
   const [matches, setMatches] = useState<LoginAccount[]>([]);
@@ -47,14 +57,20 @@ const Login = () => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) {
-      const code = ref.trim().toUpperCase();
-      localStorage.setItem(REF_KEY, code);
-      navigate(`/indicacao/${code}`, { replace: true });
+      const c = ref.trim().toUpperCase();
+      localStorage.setItem(REF_KEY, c);
+      navigate(`/indicacao/${c}`, { replace: true });
       return;
     }
     const stored = localStorage.getItem(REF_KEY);
     if (stored) setRefCode(stored);
   }, [navigate]);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
 
   const pickAccount = (account: LoginAccount) => {
     const c = account.customer as unknown as Customer;
@@ -63,22 +79,41 @@ const Login = () => {
     navigate("/welcome");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const id = identifier.trim();
-    if (!id) {
-      toast.error("Informe seu e-mail, celular ou usuário.");
-      return;
-    }
-    if (!password) {
-      toast.error("Informe sua senha de acesso.");
+  const sendCode = async () => {
+    const digits = onlyDigits(phone);
+    if (digits.length < 10) {
+      toast.error("Informe seu WhatsApp com DDD.");
       return;
     }
     setLoading(true);
     try {
-      const { accounts } = await customerLogin(id, password);
+      const res = await requestOtp(digits);
+      toast.success(res.message || "Código enviado no seu WhatsApp.");
+      setStep("code");
+      setResendIn(60);
+    } catch (err: any) {
+      toast.error(err.message || "Não foi possível enviar o código.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step === "phone") {
+      await sendCode();
+      return;
+    }
+    const c = onlyDigits(code);
+    if (c.length !== 6) {
+      toast.error("Digite o código de 6 dígitos.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { accounts } = await verifyOtp(onlyDigits(phone), c);
       if (!accounts || accounts.length === 0) {
-        toast.error("Dados de acesso inválidos.");
+        toast.error("Conta não encontrada.");
         return;
       }
       if (accounts.length === 1) {
@@ -87,11 +122,12 @@ const Login = () => {
       }
       setMatches(accounts);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao acessar sua conta.");
+      toast.error(err.message || "Código inválido.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative overflow-hidden">
@@ -163,11 +199,18 @@ const Login = () => {
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4 leading-snug">
-                Acesse com seu <span className="font-semibold text-foreground">celular</span>,
-                <span className="font-semibold text-foreground"> e-mail</span> ou
-                <span className="font-semibold text-foreground"> usuário</span> e a sua
-                <span className="font-semibold text-foreground"> senha de acesso</span> para
-                consultar seus dados e renovar seu plano.
+                {step === "phone" ? (
+                  <>
+                    Digite seu <span className="font-semibold text-foreground">WhatsApp</span> e
+                    enviaremos um <span className="font-semibold text-foreground">código de acesso</span> para
+                    você entrar com segurança.
+                  </>
+                ) : (
+                  <>
+                    Enviamos um código de 6 dígitos para o WhatsApp{" "}
+                    <span className="font-semibold text-foreground">{formatPhone(phone)}</span>.
+                  </>
+                )}
               </p>
 
               {refCode && (
@@ -180,43 +223,68 @@ const Login = () => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-                    placeholder="Celular ou usuário"
-                    autoComplete="username"
-                  />
-                  <Search className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-                    placeholder="Senha de acesso"
-                    autoComplete="current-password"
-                  />
-                  <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
-                </div>
+                {step === "phone" ? (
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={formatPhone(phone)}
+                      onChange={(e) => setPhone(onlyDigits(e.target.value).slice(0, 11))}
+                      className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
+                      placeholder="(83) 99999-9999"
+                      autoComplete="tel"
+                    />
+                    <MessageCircle className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={code}
+                        onChange={(e) => setCode(onlyDigits(e.target.value).slice(0, 6))}
+                        className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-center text-lg font-bold tracking-[0.5em]"
+                        placeholder="000000"
+                        autoComplete="one-time-code"
+                        autoFocus
+                      />
+                      <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => { setStep("phone"); setCode(""); }}
+                        className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                      >
+                        <ArrowLeft className="h-3 w-3" /> Trocar número
+                      </button>
+                      <button
+                        type="button"
+                        disabled={resendIn > 0 || loading}
+                        onClick={sendCode}
+                        className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                      >
+                        {resendIn > 0 ? `Reenviar em ${resendIn}s` : "Reenviar código"}
+                      </button>
+                    </div>
+                  </>
+                )}
 
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full py-3.5 btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-wide"
                 >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin-slow" /> : <Search className="h-4 w-4" />}
-                  {loading ? "Consultando..." : "Acessar minha conta"}
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin-slow" /> : step === "phone" ? <MessageCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                  {loading ? "Aguarde..." : step === "phone" ? "Receber código" : "Entrar"}
                 </button>
 
                 <p className="text-[11px] text-muted-foreground text-center pt-1">
-                  Use a mesma senha do seu aplicativo de TV.
+                  O código chega pelo WhatsApp oficial da Loreall Play.
                 </p>
               </form>
+
 
               <a
                 href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
