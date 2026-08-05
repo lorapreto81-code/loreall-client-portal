@@ -59,6 +59,31 @@ export async function customerLogin(identifier: string, password: string): Promi
   return data as { accounts: LoginAccount[] };
 }
 
+async function callPublic(fn: string, body: Record<string, unknown>) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${ANON_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+  return data;
+}
+
+/** Sends a 6-digit login code to the customer's WhatsApp. */
+export async function requestOtp(phone: string): Promise<{ ok: boolean; expires_in: number; message: string }> {
+  return callPublic("otp-request", { phone });
+}
+
+/** Validates the code and returns signed sessions for the matching accounts. */
+export async function verifyOtp(phone: string, code: string): Promise<{ accounts: LoginAccount[] }> {
+  return callPublic("otp-verify", { phone, code });
+}
+
 export async function getCustomerInvoices(customerId: number, perPage = 10) {
   return callProxy("get-invoices", { id: String(customerId), per_page: String(perPage) });
 }
