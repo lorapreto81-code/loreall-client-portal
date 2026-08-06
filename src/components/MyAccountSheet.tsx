@@ -440,39 +440,6 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                         {renderStatusBadge(item)}
                       </div>
                     ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-                {!loading && !error && items.map((inv) => {
-                  const st = statusInfo(inv.fastdepix_status);
-                  const StIcon = st.Icon;
-                  const isPaid = ["paid","approved","completed"].includes(inv.fastdepix_status?.toLowerCase());
-                  return (
-                    <div key={inv.id} className="card-elevated p-3.5">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="text-sm font-semibold text-foreground truncate">{inv.plan_name}</div>
-                          <div className="text-[11px] text-muted-foreground">Criada em {fmtDateTime(inv.created_at)}</div>
-                        </div>
-                        <span
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-                          style={{ background: st.bg, color: st.color }}
-                        >
-                          <StIcon className="h-3 w-3" />
-                          {st.label.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between pt-2 border-t border-border">
-                        <div className="text-[11px] text-muted-foreground">
-                          {isPaid && inv.paid_at ? `Pago em ${fmtDate(inv.paid_at)}` : "Aguardando pagamento"}
-                        </div>
-                        <div className="text-base font-bold text-foreground">{fmtBRL(inv.amount)}</div>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           )}
