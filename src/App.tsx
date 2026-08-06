@@ -10,7 +10,7 @@ import Admin from "./pages/Admin";
 import Welcome from "./pages/Welcome";
 import Revendedor from "./pages/Revendedor";
 import IndicacaoTeste from "./pages/IndicacaoTeste";
-import Links from "./pages/Links";
+
 import Instalacao from "./pages/Instalacao";
 
 const queryClient = new QueryClient();
