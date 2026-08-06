@@ -22,19 +22,20 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const raw = typeof body.phone === "string" ? body.phone : "";
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
     const digits = onlyDigits(raw);
 
-    if (digits.length < 10 || digits.length > 13) {
-      return json({ error: "Informe um número de WhatsApp válido com DDD." }, 400);
+    if (!isEmail && (digits.length < 10 || digits.length > 13)) {
+      return json({ error: "Informe um número de WhatsApp válido ou e-mail." }, 400);
     }
 
-    const key = phoneKey(digits);
+    const key = isEmail ? raw.toLowerCase().trim() : phoneKey(digits);
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Rate limit per phone
+    // Rate limit per identifier
     const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
     const { count } = await supabase
       .from("otp_codes")
@@ -46,22 +47,28 @@ Deno.serve(async (req) => {
       return json({ error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." }, 429);
     }
 
-    const customers = await tgSearchCustomers(digits);
-    const matches = customers.filter((c) =>
-      [c.whatsapp, c.celular, c.phone, c.telefone]
+    const customers = await tgSearchCustomers(isEmail ? raw : digits);
+    const matches = customers.filter((c) => {
+      if (isEmail) {
+        const cEmail = String(c.email || "").toLowerCase().trim();
+        return cEmail === key;
+      }
+      return [c.whatsapp, c.celular, c.phone, c.telefone]
         .filter(Boolean)
         .map((v) => phoneKey(String(v)))
-        .some((p) => p === key)
-    );
+        .some((p) => p === key);
+    });
 
     const genericOk = {
       ok: true,
       expires_in: CODE_TTL_MINUTES * 60,
-      message: "Se o número estiver cadastrado, você receberá um código no WhatsApp.",
+      message: isEmail 
+        ? "Se o e-mail estiver cadastrado, você receberá um código no WhatsApp vinculado à conta." 
+        : "Se o número estiver cadastrado, você receberá um código no WhatsApp.",
     };
 
     if (matches.length === 0) {
-      // Do not reveal whether the number exists.
+      // Do not reveal whether the account exists.
       return json(genericOk);
     }
 
@@ -91,7 +98,9 @@ Deno.serve(async (req) => {
       `*${code}*\n\n` +
       `Válido por ${CODE_TTL_MINUTES} minutos. Nunca compartilhe este código com ninguém.`;
 
-    const sent = await sendWhatsappText(digits, text);
+    // Always send to the first match's WhatsApp number (TopGestor primary contact)
+    const targetPhone = onlyDigits(String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || ""));
+    const sent = await sendWhatsappText(targetPhone || digits, text);
     if (!sent) return json({ error: "Não foi possível enviar o código agora. Tente novamente." }, 502);
 
     return json(genericOk);

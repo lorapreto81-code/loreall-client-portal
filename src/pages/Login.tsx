@@ -80,14 +80,18 @@ const Login = () => {
   };
 
   const sendCode = async () => {
+    const isEmail = EMAIL_RE.test(phone);
     const digits = onlyDigits(phone);
-    if (digits.length < 10) {
-      toast.error("Informe seu WhatsApp com DDD.");
+    
+    if (!isEmail && digits.length < 10) {
+      toast.error("Informe seu WhatsApp com DDD ou um E-mail válido.");
       return;
     }
+    
+    const identifier = isEmail ? phone : digits;
     setLoading(true);
     try {
-      const res = await requestOtp(digits);
+      const res = await requestOtp(identifier);
       toast.success(res.message || "Código enviado no seu WhatsApp.");
       setStep("code");
       setResendIn(60);
@@ -111,7 +115,8 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      const { accounts } = await verifyOtp(onlyDigits(phone), c);
+      const identifier = EMAIL_RE.test(phone) ? phone : onlyDigits(phone);
+      const { accounts } = await verifyOtp(identifier, c);
       if (!accounts || accounts.length === 0) {
         toast.error("Conta não encontrada.");
         return;
@@ -201,14 +206,17 @@ const Login = () => {
               <p className="text-sm text-muted-foreground mb-4 leading-snug">
                 {step === "phone" ? (
                   <>
-                    Digite seu <span className="font-semibold text-foreground">WhatsApp</span> e
-                    enviaremos um <span className="font-semibold text-foreground">código de acesso</span> para
-                    você entrar com segurança.
+                    Digite seu <span className="font-semibold text-foreground">WhatsApp</span> ou <span className="font-semibold text-foreground">E-mail</span> para entrar.
+                    <span className="block mt-2 text-[11px] opacity-80">
+                      O código será enviado para o WhatsApp do titular da conta ou e-mail cadastrado.
+                    </span>
                   </>
                 ) : (
                   <>
-                    Enviamos um código de 6 dígitos para o WhatsApp{" "}
-                    <span className="font-semibold text-foreground">{formatPhone(phone)}</span>.
+                    Enviamos um código de 6 dígitos para{" "}
+                    <span className="font-semibold text-foreground">
+                      {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
+                    </span>.
                   </>
                 )}
               </p>
@@ -226,15 +234,21 @@ const Login = () => {
                 {step === "phone" ? (
                   <div className="relative">
                     <input
-                      type="tel"
-                      inputMode="numeric"
-                      value={formatPhone(phone)}
-                      onChange={(e) => setPhone(onlyDigits(e.target.value).slice(0, 11))}
+                      type="text"
+                      value={EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (EMAIL_RE.test(val) || (val.includes("@") && !onlyDigits(val))) {
+                          setPhone(val);
+                        } else {
+                          setPhone(onlyDigits(val).slice(0, 11));
+                        }
+                      }}
                       className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-                      placeholder="(83) 99999-9999"
-                      autoComplete="tel"
+                      placeholder="WhatsApp ou E-mail"
+                      autoComplete="username"
                     />
-                    <MessageCircle className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                   </div>
                 ) : (
                   <>
@@ -281,7 +295,7 @@ const Login = () => {
                 </button>
 
                 <p className="text-[11px] text-muted-foreground text-center pt-1">
-                  O código chega pelo WhatsApp oficial da Loreall Play.
+                  O código chega via WhatsApp ou E-mail cadastrado no sistema.
                 </p>
               </form>
 

@@ -19,14 +19,16 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const digits = onlyDigits(typeof body.phone === "string" ? body.phone : "");
+    const raw = typeof body.phone === "string" ? body.phone : "";
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+    const digits = onlyDigits(raw);
     const code = onlyDigits(typeof body.code === "string" ? body.code : "");
 
-    if (digits.length < 10 || code.length !== 6) {
-      return json({ error: "Código inválido." }, 400);
+    if ((!isEmail && digits.length < 10) || code.length !== 6) {
+      return json({ error: "Dados inválidos." }, 400);
     }
 
-    const key = phoneKey(digits);
+    const key = isEmail ? raw.toLowerCase().trim() : phoneKey(digits);
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -58,13 +60,17 @@ Deno.serve(async (req) => {
 
     await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
 
-    const customers = await tgSearchCustomers(digits);
-    const matches = customers.filter((c) =>
-      [c.whatsapp, c.celular, c.phone, c.telefone]
+    const customers = await tgSearchCustomers(isEmail ? raw : digits);
+    const matches = customers.filter((c) => {
+      if (isEmail) {
+        const cEmail = String(c.email || "").toLowerCase().trim();
+        return cEmail === key;
+      }
+      return [c.whatsapp, c.celular, c.phone, c.telefone]
         .filter(Boolean)
         .map((v) => phoneKey(String(v)))
-        .some((p) => p === key)
-    );
+        .some((p) => p === key);
+    });
 
     if (matches.length === 0) return json({ error: "Conta não encontrada." }, 404);
 
