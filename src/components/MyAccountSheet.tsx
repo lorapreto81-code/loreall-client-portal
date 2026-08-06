@@ -440,6 +440,8 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                         {renderStatusBadge(item)}
                       </div>
                     ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
