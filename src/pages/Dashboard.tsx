@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/store/authStore";
-import { formatDate } from "@/lib/format";
+import { formatDate, daysUntil } from "@/lib/format";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -21,9 +21,8 @@ import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
 import { useAuthGuard } from "@/features/auth/hooks/useAuthGuard";
 import { firstName } from "@/utils/formatters";
+import { logo, WHATSAPP_NUMBER, getStatusPill, telasLabel } from "@/utils/constants";
 
-const logo = "/logo.png";
-const WHATSAPP_NUMBER = "5583985591952";
 
 
 const Dashboard = () => {

@@ -7,6 +7,8 @@ import { useAuthStore, Customer } from "@/store/authStore";
 import indiqueBanner from "@/assets/indique-ganhe-banner.jpg.asset.json";
 import { onlyDigits, formatPhone } from "@/utils/formatters";
 import { AccountSelection } from "@/features/auth/components/AccountSelection";
+import { logo, REF_KEY, EMAIL_RE } from "@/utils/constants";
+
 
 const Login = () => {
   const [phone, setPhone] = useState("");
