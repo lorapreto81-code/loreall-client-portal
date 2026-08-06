@@ -59,18 +59,25 @@ Deno.serve(async (req) => {
         .some((p) => p === key);
     });
 
-    const genericOk = {
+    const getGenericOk = (hint?: string) => ({
       ok: true,
       expires_in: CODE_TTL_MINUTES * 60,
       message: isEmail 
         ? "Se o e-mail estiver cadastrado, você receberá um código no WhatsApp vinculado à conta." 
         : "Se o número estiver cadastrado, você receberá um código no WhatsApp.",
-    };
+      target_hint: hint,
+    });
 
     if (matches.length === 0) {
       // Do not reveal whether the account exists.
-      return json(genericOk);
+      return json(getGenericOk());
     }
+
+    const targetPhoneRaw = String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || "");
+    const targetPhoneDigits = onlyDigits(targetPhoneRaw);
+    const targetHint = targetPhoneDigits.length >= 4 
+      ? `****-${targetPhoneDigits.slice(-4)}` 
+      : targetPhoneDigits;
 
     const code = generateOtpCode();
     const code_hash = await hashOtp(code, key);
@@ -99,11 +106,10 @@ Deno.serve(async (req) => {
       `Válido por ${CODE_TTL_MINUTES} minutos. Nunca compartilhe este código com ninguém.`;
 
     // Always send to the first match's WhatsApp number (TopGestor primary contact)
-    const targetPhone = onlyDigits(String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || ""));
-    const sent = await sendWhatsappText(targetPhone || digits, text);
+    const sent = await sendWhatsappText(targetPhoneDigits || digits, text);
     if (!sent) return json({ error: "Não foi possível enviar o código agora. Tente novamente." }, 502);
 
-    return json(genericOk);
+    return json(getGenericOk(targetHint));
   } catch (err) {
     console.error("[otp-request] error", err instanceof Error ? err.message : err);
     return json({ error: "Não foi possível enviar o código." }, 500);
