@@ -80,14 +80,18 @@ const Login = () => {
   };
 
   const sendCode = async () => {
+    const isEmail = EMAIL_RE.test(phone);
     const digits = onlyDigits(phone);
-    if (digits.length < 10) {
-      toast.error("Informe seu WhatsApp com DDD.");
+    
+    if (!isEmail && digits.length < 10) {
+      toast.error("Informe seu WhatsApp com DDD ou um E-mail válido.");
       return;
     }
+    
+    const identifier = isEmail ? phone : digits;
     setLoading(true);
     try {
-      const res = await requestOtp(digits);
+      const res = await requestOtp(identifier);
       toast.success(res.message || "Código enviado no seu WhatsApp.");
       setStep("code");
       setResendIn(60);
