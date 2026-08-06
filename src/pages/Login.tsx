@@ -229,15 +229,21 @@ const Login = () => {
                 {step === "phone" ? (
                   <div className="relative">
                     <input
-                      type="tel"
-                      inputMode="numeric"
-                      value={formatPhone(phone)}
-                      onChange={(e) => setPhone(onlyDigits(e.target.value).slice(0, 11))}
+                      type="text"
+                      value={EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (EMAIL_RE.test(val) || (val.includes("@") && !onlyDigits(val))) {
+                          setPhone(val);
+                        } else {
+                          setPhone(onlyDigits(val).slice(0, 11));
+                        }
+                      }}
                       className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-                      placeholder="(83) 99999-9999"
-                      autoComplete="tel"
+                      placeholder="WhatsApp ou E-mail"
+                      autoComplete="username"
                     />
-                    <MessageCircle className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
                   </div>
                 ) : (
                   <>
