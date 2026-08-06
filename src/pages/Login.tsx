@@ -47,6 +47,8 @@ const Login = () => {
     navigate("/welcome");
   };
 
+  const [targetHint, setTargetHint] = useState<string | null>(null);
+
   const sendCode = async () => {
     const isEmail = EMAIL_RE.test(phone);
     const digits = onlyDigits(phone);
@@ -61,6 +63,9 @@ const Login = () => {
     try {
       const res = await requestOtp(identifier);
       toast.success(res.message || "Código enviado no seu WhatsApp.");
+      if (res.target_hint) {
+        setTargetHint(res.target_hint);
+      }
       setStep("code");
       setResendIn(60);
     } catch (err: any) {
@@ -147,7 +152,7 @@ const Login = () => {
                   <>
                     <p className="text-sm font-medium text-foreground mb-1">Verificação de Segurança</p>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    O seu código exclusivo de 6 dígitos foi enviado via <span className="text-primary font-bold">WhatsApp</span> para o número vinculado ao e-mail:{" "}
+                    O seu código exclusivo de 6 dígitos foi enviado para o WhatsApp de final <span className="text-primary font-bold">{targetHint || "..."}</span> vinculado ao acesso:{" "}
                     <span className="font-bold text-foreground">
                       {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
                     </span>.
