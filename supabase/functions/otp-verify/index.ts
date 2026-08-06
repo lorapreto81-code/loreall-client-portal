@@ -60,13 +60,17 @@ Deno.serve(async (req) => {
 
     await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
 
-    const customers = await tgSearchCustomers(digits);
-    const matches = customers.filter((c) =>
-      [c.whatsapp, c.celular, c.phone, c.telefone]
+    const customers = await tgSearchCustomers(isEmail ? raw : digits);
+    const matches = customers.filter((c) => {
+      if (isEmail) {
+        const cEmail = String(c.email || "").toLowerCase().trim();
+        return cEmail === key;
+      }
+      return [c.whatsapp, c.celular, c.phone, c.telefone]
         .filter(Boolean)
         .map((v) => phoneKey(String(v)))
-        .some((p) => p === key)
-    );
+        .some((p) => p === key);
+    });
 
     if (matches.length === 0) return json({ error: "Conta não encontrada." }, 404);
 
