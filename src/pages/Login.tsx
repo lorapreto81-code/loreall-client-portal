@@ -242,9 +242,11 @@ const Login = () => {
                   )}
                 </button>
 
-                <p className="text-[10px] text-muted-foreground text-center pt-2 font-medium">
-                  {step === "phone" ? "🔒 Acesso 100% seguro e protegido" : "Ainda não recebeu? Verifique seu WhatsApp."}
-                </p>
+                {step === "code" && (
+                  <p className="text-[10px] text-muted-foreground text-center pt-2 font-medium">
+                    Ainda não recebeu? Verifique seu WhatsApp.
+                  </p>
+                )}
               </form>
 
               <div className="mt-4 pt-4 border-t border-border/40">
@@ -280,8 +282,9 @@ const Login = () => {
           />
         </a>
 
-        <p className="text-[10px] text-muted-foreground/60 text-center font-medium">
-          © Loreall Play TV — Entretenimento Premium Sem Limites.
+        <p className="text-[10px] text-muted-foreground/60 text-center font-medium flex flex-col gap-1">
+          <span>🔒 Acesso 100% seguro e protegido</span>
+          <span>© Loreall Play TV — Entretenimento Premium Sem Limites.</span>
         </p>
       </div>
     </div>
