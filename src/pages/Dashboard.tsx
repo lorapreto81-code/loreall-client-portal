@@ -21,7 +21,9 @@ import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
 import { useAuthGuard } from "@/features/auth/hooks/useAuthGuard";
 import { firstName } from "@/utils/formatters";
-import { logo, WHATSAPP_NUMBER, getStatusPill, telasLabel } from "@/utils/constants";
+import { logo, WHATSAPP_NUMBER } from "@/utils/constants";
+import { PlanCard } from "@/features/dashboard/components/PlanCard";
+
 
 
 
