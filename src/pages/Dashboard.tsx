@@ -19,46 +19,17 @@ import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
-const logo = "/logo.png";
-const WHATSAPP_NUMBER = "5583985591952";
+import { useAuthGuard } from "@/features/auth/hooks/useAuthGuard";
+import { firstName } from "@/utils/formatters";
+import { logo, WHATSAPP_NUMBER, getStatusPill, telasLabel } from "@/utils/constants";
+import { PlanCard } from "@/features/dashboard/components/PlanCard";
 
-/** Formats a Brazilian phone number for display. */
-const formatPhone = (raw: string): string => {
-  const d = String(raw || "").replace(/\D/g, "");
-  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  if (d.length === 13) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}`;
-  return String(raw || "");
-};
 
-/** Returns color for days remaining */
-const getDaysColor = (days: number): string => {
-  if (days < 0) return "#E24B4A";
-  if (days < 7) return "#F09595";
-  if (days <= 15) return "#FAC775";
-  return "#5DCAA5";
-};
 
-/** Short status pill for the header. */
-const getStatusPill = (days: number): { label: string; bg: string; color: string } => {
-  if (days < 0) return { label: "Vencido", bg: "rgba(226,75,74,0.15)", color: "#E24B4A" };
-  if (days === 0) return { label: "Vence hoje", bg: "rgba(240,149,149,0.18)", color: "#E24B4A" };
-  if (days === 1) return { label: "1 dia", bg: "rgba(250,199,117,0.20)", color: "#B47700" };
-  if (days < 7) return { label: `${days} dias`, bg: "rgba(250,199,117,0.20)", color: "#B47700" };
-  return { label: "Ativo", bg: "rgba(93,202,165,0.15)", color: "#2E9A73" };
-};
 
-/** Plural for telas */
-const telasLabel = (n: number | string): string => {
-  const num = typeof n === "number" ? n : parseInt(String(n), 10) || 1;
-  return num === 1 ? "1 simultânea" : `${num} simultâneas`;
-};
-
-/** First name */
-const firstName = (name: string): string => (name || "").split(" ")[0];
 
 const Dashboard = () => {
-  const { customer, isAuthenticated, logout } = useAuthStore();
+  const { customer, isAuthenticated, logout } = useAuthGuard();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
@@ -326,44 +297,7 @@ const Dashboard = () => {
         )}
 
         {/* CARD DO PLANO — status único, sem duplicar em outro lugar */}
-        {(() => {
-          const pill = getStatusPill(days);
-          return (
-            <div className="card-elevated p-5 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
-
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Seu plano</p>
-                  <p className="text-xl font-bold text-foreground leading-tight truncate">{customer.plan?.name || "—"}</p>
-                </div>
-                <span
-                  className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
-                  style={{ background: pill.bg, color: pill.color }}
-                >
-                  {pill.label.toUpperCase()}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-3" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-                <div className="flex items-start gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-muted-foreground mb-0.5">Vence em</p>
-                    <p className="text-sm font-semibold text-foreground">{formatDate(customer.data_de_vencimento)}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Monitor className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-muted-foreground mb-0.5">Telas</p>
-                    <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        <PlanCard customer={customer} days={days} />
 
 
 
