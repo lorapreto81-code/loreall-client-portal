@@ -201,14 +201,17 @@ const Login = () => {
               <p className="text-sm text-muted-foreground mb-4 leading-snug">
                 {step === "phone" ? (
                   <>
-                    Digite seu <span className="font-semibold text-foreground">WhatsApp</span> e
-                    enviaremos um <span className="font-semibold text-foreground">código de acesso</span> para
-                    você entrar com segurança.
+                    Digite seu <span className="font-semibold text-foreground">WhatsApp</span> ou <span className="font-semibold text-foreground">E-mail</span> para entrar.
+                    <span className="block mt-2 text-[11px] opacity-80">
+                      O código será enviado para o WhatsApp do titular da conta ou e-mail cadastrado.
+                    </span>
                   </>
                 ) : (
                   <>
-                    Enviamos um código de 6 dígitos para o WhatsApp{" "}
-                    <span className="font-semibold text-foreground">{formatPhone(phone)}</span>.
+                    Enviamos um código de 6 dígitos para{" "}
+                    <span className="font-semibold text-foreground">
+                      {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
+                    </span>.
                   </>
                 )}
               </p>
