@@ -149,8 +149,37 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     }
   };
 
-  const paidCount = items.filter((i) => ["paid","approved","completed"].includes(i.fastdepix_status?.toLowerCase())).length;
+  const paidCount = items.filter((i) => ["paid", "approved", "completed"].includes(i.fastdepix_status?.toLowerCase())).length;
   const pendingCount = items.filter((i) => ["pending"].includes(i.fastdepix_status?.toLowerCase())).length;
+
+  const renderStatusBadge = (invoice: Invoice) => {
+    const info = statusInfo(invoice.fastdepix_status);
+    const StatusIcon = info.Icon;
+    const isPaid = ["paid", "approved", "completed"].includes(invoice.fastdepix_status?.toLowerCase());
+
+    return (
+      <div className="flex flex-col items-end gap-1.5">
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+          style={{ backgroundColor: info.bg, color: info.color }}
+        >
+          <StatusIcon className="h-3 w-3" />
+          {info.label.toUpperCase()}
+        </span>
+        {isPaid && (
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-[9px] text-muted-foreground leading-none">
+              Renovado em {fmtDateTime(invoice.renewed_at || invoice.paid_at)}
+            </span>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 rounded text-primary">
+              <Lock className="h-2.5 w-2.5" />
+              <span className="text-[8px] font-bold uppercase tracking-tight">Transação Segura</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -394,34 +423,25 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     <p className="text-xs text-muted-foreground/70 mt-1">Suas renovações via PIX aparecem aqui.</p>
                   </div>
                 )}
-                {!loading && !error && items.map((inv) => {
-                  const st = statusInfo(inv.fastdepix_status);
-                  const StIcon = st.Icon;
-                  const isPaid = ["paid","approved","completed"].includes(inv.fastdepix_status?.toLowerCase());
-                  return (
-                    <div key={inv.id} className="card-elevated p-3.5">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="text-sm font-semibold text-foreground truncate">{inv.plan_name}</div>
-                          <div className="text-[11px] text-muted-foreground">Criada em {fmtDateTime(inv.created_at)}</div>
+
+                {!loading && items.length > 0 && (
+                  <div className="space-y-2.5">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-border bg-card/50 p-3 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-foreground truncate">{item.plan_name}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                            {fmtDate(item.created_at)} · {fmtBRL(item.amount)}
+                          </div>
                         </div>
-                        <span
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-                          style={{ background: st.bg, color: st.color }}
-                        >
-                          <StIcon className="h-3 w-3" />
-                          {st.label.toUpperCase()}
-                        </span>
+                        {renderStatusBadge(item)}
                       </div>
-                      <div className="flex items-center justify-between pt-2 border-t border-border">
-                        <div className="text-[11px] text-muted-foreground">
-                          {isPaid && inv.paid_at ? `Pago em ${fmtDate(inv.paid_at)}` : "Aguardando pagamento"}
-                        </div>
-                        <div className="text-base font-bold text-foreground">{fmtBRL(inv.amount)}</div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
