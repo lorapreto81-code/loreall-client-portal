@@ -372,16 +372,23 @@ Deno.serve(async (req) => {
     // LOCK ATÔMICO + DEDUP por provider_transaction_id:
     // - Só um processo consegue mudar pending → paid.
     // - Cláusula `renewed_at IS NULL` garante que nunca chamamos /renew duas
-    //   vezes para o mesmo pagamento, mesmo em reenvios de webhook,
-    //   polling paralelo do cliente ou eventos duplicados da SyncPay.
-    const { data: locked } = await supabase
+    //   vezes para o mesmo pagamento.
+    const { data: locked, error: lockError } = await supabase
       .from("payments")
-      .update({ fastdepix_status: "paid", paid_at: new Date().toISOString() })
+      .update({ 
+        fastdepix_status: "paid", 
+        paid_at: new Date().toISOString() 
+      })
       .eq("id", payment.id)
       .eq("fastdepix_status", "pending")
       .is("renewed_at", null)
       .select()
       .maybeSingle();
+
+    if (lockError) {
+      console.error("[syncpay-webhook] lock error", lockError);
+      return new Response(JSON.stringify({ error: "lock failed" }), { status: 500, headers: corsHeaders });
+    }
 
     if (!locked) {
       console.log("[syncpay-webhook] already processed, skipping renew", {
@@ -396,6 +403,13 @@ Deno.serve(async (req) => {
     const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
     if (tgToken) {
       try {
+        // Double check renewed_at state to prevent race conditions during long HTTP calls
+        const { data: check } = await supabase.from("payments").select("renewed_at").eq("id", payment.id).single();
+        if (check?.renewed_at) {
+          console.log("[syncpay-webhook] race condition detected, already renewed", payment.id);
+          return new Response(JSON.stringify({ ok: true, already_renewed: true }), { status: 200, headers: corsHeaders });
+        }
+
         const tgRes = await fetch(`${TG_BASE}/customers/${payment.customer_id}/renew`, {
           method: "POST",
           headers: {
@@ -405,11 +419,19 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282, send_whatsapp: true }),
         });
+        
         const rr = await tgRes.json().catch(() => ({}));
-        const patch: Record<string, unknown> = { renewal_response: rr };
-        if (tgRes.ok) patch.renewed_at = new Date().toISOString();
-        else console.error("[syncpay-webhook] TG renew failed", tgRes.status, rr);
-        await supabase.from("payments").update(patch).eq("id", payment.id);
+        
+        if (tgRes.ok) {
+          // Marking renewed_at is the ultimate protection
+          await supabase.from("payments").update({ 
+            renewal_response: rr,
+            renewed_at: new Date().toISOString()
+          }).eq("id", payment.id).is("renewed_at", null);
+        } else {
+          console.error("[syncpay-webhook] TG renew failed", tgRes.status, rr);
+          await supabase.from("payments").update({ renewal_response: rr }).eq("id", payment.id);
+        }
       } catch (e) {
         console.error("[syncpay-webhook] TG renew exception", e);
       }
