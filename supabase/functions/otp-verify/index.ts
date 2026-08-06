@@ -19,10 +19,10 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const raw = typeof body.phone === "string" ? body.phone : "";
+    const raw = typeof body.phone === "string" ? body.phone.trim().slice(0, 100) : "";
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
-    const digits = onlyDigits(raw);
-    const code = onlyDigits(typeof body.code === "string" ? body.code : "");
+    const digits = onlyDigits(raw).slice(0, 13);
+    const code = onlyDigits(typeof body.code === "string" ? body.code : "").slice(0, 6);
 
     if ((!isEmail && digits.length < 10) || code.length !== 6) {
       return json({ error: "Dados inválidos." }, 400);
