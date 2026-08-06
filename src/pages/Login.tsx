@@ -108,7 +108,7 @@ const Login = () => {
       <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full bg-primary/15 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-sm relative z-10 flex flex-col gap-4">
+      <div className="w-full max-w-sm relative z-10 flex flex-col gap-6">
         {/* Logo compacta + Headline Persuasiva */}
         <div className="flex flex-col items-center gap-3 pt-1 text-center">
           <img src={logo} alt="Loreall Play TV" style={{ width: 80, height: "auto" }} />
@@ -124,8 +124,7 @@ const Login = () => {
 
 
         <div
-          className="rounded-2xl p-5 border border-border/60 bg-card/95 backdrop-blur-xl"
-          style={{ boxShadow: "0 20px 50px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03) inset" }}
+          className="rounded-3xl p-6 border border-white/5 bg-card/40 backdrop-blur-2xl premium-shadow"
         >
           {matches.length > 1 ? (
             <AccountSelection 
