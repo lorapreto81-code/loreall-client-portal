@@ -111,7 +111,15 @@ Deno.serve(async (req) => {
         if (!admin) {
           body = {};
           for (const f of CUSTOMER_EDITABLE_FIELDS) {
-            if (f in (raw as Record<string, unknown>)) body[f] = (raw as Record<string, unknown>)[f];
+            if (f in (raw as Record<string, unknown>)) {
+              const val = (raw as Record<string, unknown>)[f];
+              // Basic sanitization: strip HTML tags and limit string length
+              if (typeof val === "string") {
+                body[f] = val.replace(/<[^>]*>?/gm, "").trim().slice(0, 255);
+              } else {
+                body[f] = val;
+              }
+            }
           }
           if (typeof body.email === "string" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) {
             return json({ error: "invalid email" }, 400);

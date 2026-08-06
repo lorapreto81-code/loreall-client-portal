@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import CookieConsent from "./components/CookieConsent";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Welcome from "./pages/Welcome";
@@ -20,6 +21,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <CookieConsent />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />

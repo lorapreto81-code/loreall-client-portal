@@ -76,7 +76,9 @@ async function callPublic(fn: string, body: Record<string, unknown>) {
 
 /** Sends a 6-digit login code to the customer's WhatsApp. */
 export async function requestOtp(phone: string): Promise<{ ok: boolean; expires_in: number; message: string }> {
-  return callPublic("otp-request", { phone });
+  // Sanitize input before sending
+  const sanitized = phone.trim().slice(0, 100);
+  return callPublic("otp-request", { phone: sanitized });
 }
 
 /** Validates the code and returns signed sessions for the matching accounts. */

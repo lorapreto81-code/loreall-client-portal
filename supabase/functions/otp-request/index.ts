@@ -21,9 +21,9 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const raw = typeof body.phone === "string" ? body.phone : "";
+    const raw = typeof body.phone === "string" ? body.phone.trim().slice(0, 100) : "";
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
-    const digits = onlyDigits(raw);
+    const digits = onlyDigits(raw).slice(0, 13);
 
     if (!isEmail && (digits.length < 10 || digits.length > 13)) {
       return json({ error: "Informe um número de WhatsApp válido ou e-mail." }, 400);

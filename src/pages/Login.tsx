@@ -237,9 +237,9 @@ const Login = () => {
                       type="text"
                       value={EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
                       onChange={(e) => {
-                        const val = e.target.value;
+                        const val = e.target.value.trim().slice(0, 100); // Sanitize and limit
                         if (EMAIL_RE.test(val) || (val.includes("@") && !onlyDigits(val))) {
-                          setPhone(val);
+                          setPhone(val.toLowerCase());
                         } else {
                           setPhone(onlyDigits(val).slice(0, 11));
                         }
