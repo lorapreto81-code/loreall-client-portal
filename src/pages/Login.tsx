@@ -147,10 +147,10 @@ const Login = () => {
                   <>
                     <p className="text-sm font-medium text-foreground mb-1">Verificação de Segurança</p>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      O seu código exclusivo de 6 dígitos foi enviado para{" "}
-                      <span className="font-bold text-foreground">
-                        {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
-                      </span>.
+                    O seu código exclusivo de 6 dígitos foi enviado via <span className="text-primary font-bold">WhatsApp</span> para o número vinculado ao e-mail:{" "}
+                    <span className="font-bold text-foreground">
+                      {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
+                    </span>.
                     </p>
                   </>
                 )}
