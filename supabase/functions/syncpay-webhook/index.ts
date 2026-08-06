@@ -262,6 +262,7 @@ Deno.serve(async (req) => {
   const rawBody = await req.text();
   try {
     const payload = JSON.parse(rawBody || "{}");
+    if (!payload || typeof payload !== "object") throw new Error("Invalid JSON payload");
     const event = String(req.headers.get("event") || payload.event || "").toLowerCase();
     const data = payload.data || payload;
     const txId: string | undefined = data.id || data.identifier || data.reference_id;
