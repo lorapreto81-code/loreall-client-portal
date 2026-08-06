@@ -115,7 +115,8 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      const { accounts } = await verifyOtp(onlyDigits(phone), c);
+      const identifier = EMAIL_RE.test(phone) ? phone : onlyDigits(phone);
+      const { accounts } = await verifyOtp(identifier, c);
       if (!accounts || accounts.length === 0) {
         toast.error("Conta não encontrada.");
         return;
