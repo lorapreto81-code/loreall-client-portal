@@ -108,23 +108,23 @@ const Login = () => {
       <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full bg-primary/15 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-sm relative z-10 flex flex-col gap-6">
+      <div className="w-full max-w-sm relative z-10 flex flex-col gap-4">
         {/* Logo compacta + Headline Persuasiva */}
-        <div className="flex flex-col items-center gap-3 pt-1 text-center">
-          <img src={logo} alt="Loreall Play TV" style={{ width: 80, height: "auto" }} />
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold text-foreground leading-tight tracking-tight">
+        <div className="flex flex-col items-center gap-2 pt-1 text-center">
+          <img src={logo} alt="Loreall Play TV" style={{ width: 70, height: "auto" }} />
+          <div className="space-y-0.5">
+            <h1 className="text-lg font-bold text-foreground leading-tight tracking-tight">
               Acesse Seu <span className="text-primary">Mundo VIP</span>
             </h1>
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.2em]">
-              Sua Experiência Premium Começa Aqui
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-[0.2em]">
+              Sua Experiência Premium
             </p>
           </div>
         </div>
 
 
         <div
-          className="rounded-3xl p-6 border border-white/5 bg-card/40 backdrop-blur-2xl premium-shadow"
+          className="rounded-2xl p-5 border border-white/5 bg-card/60 backdrop-blur-2xl premium-shadow"
         >
           {matches.length > 1 ? (
             <AccountSelection 
@@ -225,7 +225,7 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 btn-primary-gradient font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full py-3.5 btn-primary-gradient font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -249,15 +249,15 @@ const Login = () => {
                 )}
               </form>
 
-              <div className="mt-4 pt-4 border-t border-border/40">
+              <div className="mt-3 pt-3 border-t border-border/20">
                 <a
                   href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
+                  className="w-full text-[11px] font-medium text-muted-foreground transition-colors flex items-center justify-center gap-1 group"
                 >
-                  <MessageCircle className="h-3 w-3" />
-                  Novo por aqui? Experimentar Grátis
+                  <span>Novo por aqui?</span>
+                  <span className="text-primary font-bold hover:underline decoration-2 underline-offset-2">Experimentar Grátis 📺</span>
                 </a>
               </div>
 
