@@ -10,7 +10,7 @@ import Admin from "./pages/Admin";
 import Welcome from "./pages/Welcome";
 import Revendedor from "./pages/Revendedor";
 import IndicacaoTeste from "./pages/IndicacaoTeste";
-import Links from "./pages/Links";
+
 import Instalacao from "./pages/Instalacao";
 
 const queryClient = new QueryClient();
@@ -22,7 +22,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Links />} />
+          <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -30,8 +30,8 @@ const App = () => (
           <Route path="/revendedor/:slug" element={<Revendedor />} />
           <Route path="/indicacao/:code" element={<IndicacaoTeste />} />
           <Route path="/indicacao" element={<IndicacaoTeste />} />
-          <Route path="/links" element={<Links />} />
-          <Route path="/bio" element={<Links />} />
+          <Route path="/links" element={<Navigate to="/" replace />} />
+          <Route path="/bio" element={<Navigate to="/" replace />} />
           <Route path="/instalacao" element={<Instalacao />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
