@@ -149,8 +149,37 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     }
   };
 
-  const paidCount = items.filter((i) => ["paid","approved","completed"].includes(i.fastdepix_status?.toLowerCase())).length;
+  const paidCount = items.filter((i) => ["paid", "approved", "completed"].includes(i.fastdepix_status?.toLowerCase())).length;
   const pendingCount = items.filter((i) => ["pending"].includes(i.fastdepix_status?.toLowerCase())).length;
+
+  const renderStatusBadge = (invoice: Invoice) => {
+    const info = statusInfo(invoice.fastdepix_status);
+    const StatusIcon = info.Icon;
+    const isPaid = ["paid", "approved", "completed"].includes(invoice.fastdepix_status?.toLowerCase());
+
+    return (
+      <div className="flex flex-col items-end gap-1.5">
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+          style={{ backgroundColor: info.bg, color: info.color }}
+        >
+          <StatusIcon className="h-3 w-3" />
+          {info.label.toUpperCase()}
+        </span>
+        {isPaid && (
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-[9px] text-muted-foreground leading-none">
+              Renovado em {fmtDateTime(invoice.renewed_at || invoice.paid_at)}
+            </span>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 rounded text-primary">
+              <Lock className="h-2.5 w-2.5" />
+              <span className="text-[8px] font-bold uppercase tracking-tight">Transação Segura</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div

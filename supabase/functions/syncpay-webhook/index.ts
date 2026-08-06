@@ -370,9 +370,9 @@ Deno.serve(async (req) => {
     }
 
     // LOCK ATÔMICO + DEDUP por provider_transaction_id:
-    // - Só um processo consegue mudar pending → paid.
-    // - Cláusula `renewed_at IS NULL` garante que nunca chamamos /renew duas
-    //   vezes para o mesmo pagamento.
+    // - Cláusula `fastdepix_status = 'pending'` garante que só um processo mude o estado.
+    // - Cláusula `renewed_at IS NULL` é o "lock final" de negócio.
+    // - Usamos uma transação SQL implícita via .update().eq().is() para garantir atomicidade no Postgres.
     const { data: locked, error: lockError } = await supabase
       .from("payments")
       .update({ 
@@ -391,10 +391,7 @@ Deno.serve(async (req) => {
     }
 
     if (!locked) {
-      console.log("[syncpay-webhook] already processed, skipping renew", {
-        payment_id: payment.id,
-        tx: txId,
-      });
+      console.log("[syncpay-webhook] skip: already processed or renewed", { payment_id: payment.id, tx: txId });
       return new Response(JSON.stringify({ ok: true, kind: "customer", already_processed: true }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -403,10 +400,10 @@ Deno.serve(async (req) => {
     const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
     if (tgToken) {
       try {
-        // Double check renewed_at state to prevent race conditions during long HTTP calls
+        // Double check: garante que nenhum outro processo (ex: checkout direto SyncPay) renovou enquanto rodávamos o lock
         const { data: check } = await supabase.from("payments").select("renewed_at").eq("id", payment.id).single();
         if (check?.renewed_at) {
-          console.log("[syncpay-webhook] race condition detected, already renewed", payment.id);
+          console.log("[syncpay-webhook] race protection: already renewed", payment.id);
           return new Response(JSON.stringify({ ok: true, already_renewed: true }), { status: 200, headers: corsHeaders });
         }
 
