@@ -72,11 +72,12 @@ export const LoginForm = ({
               type="text"
               value={EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
               onChange={(e) => {
-                const val = e.target.value.trim().slice(0, 100);
+                const raw = e.target.value.trim();
+                const val = raw.slice(0, 100);
                 if (EMAIL_RE.test(val) || (val.includes("@") && !onlyDigits(val))) {
                   onPhoneChange(val.toLowerCase());
                 } else {
-                  onPhoneChange(onlyDigits(val).slice(0, 11));
+                  onPhoneChange(onlyDigits(val).slice(0, 13));
                 }
               }}
               className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
