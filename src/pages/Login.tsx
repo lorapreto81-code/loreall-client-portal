@@ -295,7 +295,7 @@ const Login = () => {
                 </button>
 
                 <p className="text-[11px] text-muted-foreground text-center pt-1">
-                  O código chega pelo WhatsApp oficial da Loreall Play.
+                  O código chega via WhatsApp ou E-mail cadastrado no sistema.
                 </p>
               </form>
 
