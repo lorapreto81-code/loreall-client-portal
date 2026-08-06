@@ -98,7 +98,9 @@ Deno.serve(async (req) => {
       `*${code}*\n\n` +
       `Válido por ${CODE_TTL_MINUTES} minutos. Nunca compartilhe este código com ninguém.`;
 
-    const sent = await sendWhatsappText(digits, text);
+    // Always send to the first match's WhatsApp number (TopGestor primary contact)
+    const targetPhone = onlyDigits(String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || ""));
+    const sent = await sendWhatsappText(targetPhone || digits, text);
     if (!sent) return json({ error: "Não foi possível enviar o código agora. Tente novamente." }, 502);
 
     return json(genericOk);
