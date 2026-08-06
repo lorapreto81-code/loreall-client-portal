@@ -109,13 +109,19 @@ const Login = () => {
       <div className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-sm relative z-10 flex flex-col gap-4">
-        {/* Logo compacta + wordmark */}
-        <div className="flex flex-col items-center gap-1.5 pt-1">
-          <img src={logo} alt="Loreall Play TV" style={{ width: 64, height: "auto" }} />
-          <p className="text-[10px] font-semibold tracking-[0.4em] text-muted-foreground uppercase">
-            Seus dados de acesso
-          </p>
+        {/* Logo compacta + Headline Persuasiva */}
+        <div className="flex flex-col items-center gap-3 pt-1 text-center">
+          <img src={logo} alt="Loreall Play TV" style={{ width: 80, height: "auto" }} />
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold text-foreground leading-tight tracking-tight">
+              Acesse Seu <span className="text-primary">Mundo VIP</span>
+            </h1>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.2em]">
+              Sua Experiência Premium Começa Aqui
+            </p>
+          </div>
         </div>
+
 
         <div
           className="rounded-2xl p-5 border border-border/60 bg-card/95 backdrop-blur-xl"
@@ -129,32 +135,38 @@ const Login = () => {
             />
           ) : (
             <>
-              <p className="text-sm text-muted-foreground mb-4 leading-snug">
+              <div className="mb-5">
                 {step === "phone" ? (
                   <>
-                    Digite seu <span className="font-semibold text-foreground">WhatsApp</span> ou <span className="font-semibold text-foreground">E-mail</span> para entrar.
-                    <span className="block mt-2 text-[11px] opacity-80">
-                      O código será enviado para o WhatsApp do titular da conta ou e-mail cadastrado.
-                    </span>
+                    <p className="text-sm font-medium text-foreground mb-1">Identifique-se para continuar</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Informe seu <span className="text-foreground font-semibold">WhatsApp</span> ou <span className="text-foreground font-semibold">E-mail</span>. 
+                      Você receberá um <span className="text-primary font-bold">Código de Acesso Seguro</span> instantaneamente.
+                    </p>
                   </>
                 ) : (
                   <>
-                    Enviamos um código de 6 dígitos para{" "}
-                    <span className="font-semibold text-foreground">
-                      {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
-                    </span>.
+                    <p className="text-sm font-medium text-foreground mb-1">Verificação de Segurança</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      O seu código exclusivo de 6 dígitos foi enviado para{" "}
+                      <span className="font-bold text-foreground">
+                        {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
+                      </span>.
+                    </p>
                   </>
                 )}
-              </p>
+              </div>
 
               {refCode && (
-                <div className="mb-4 p-3 rounded-lg flex items-start gap-2.5" style={{ background: "rgba(123, 47, 212, 0.08)", border: "1px solid rgba(123, 47, 212, 0.2)" }}>
-                  <Gift className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#7B2FD4" }} />
-                  <div className="text-xs text-foreground">
-                    Você foi indicado com o código <span className="font-bold">{refCode}</span>. Ao renovar via PIX, seu indicador ganha 1 mês grátis.
+                <div className="mb-5 p-3.5 rounded-xl flex items-start gap-3 border border-primary/20 bg-primary/5 animate-pulse-subtle">
+                  <Gift className="h-5 w-5 text-primary shrink-0" />
+                  <div className="text-[11px] text-foreground leading-snug">
+                    <span className="font-bold text-primary">BÔNUS ATIVO:</span> Você foi convidado! 
+                    Ao garantir seu plano, você e seu amigo desbloqueiam <span className="font-bold underline">+30 dias de presente</span>.
                   </div>
                 </div>
               )}
+
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 {step === "phone" ? (
@@ -214,27 +226,46 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-wide"
+                  className="w-full py-4 btn-primary-gradient font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin-slow" /> : step === "phone" ? <MessageCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                  {loading ? "Aguarde..." : step === "phone" ? "Receber código" : "Entrar"}
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : step === "phone" ? (
+                    <>
+                      <MessageCircle className="h-5 w-5" />
+                      Obter Acesso Imediato
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-5 w-5" />
+                      Desbloquear Agora
+                    </>
+                  )}
                 </button>
 
-                <p className="text-[11px] text-muted-foreground text-center pt-1">
-                  O código chega via WhatsApp ou E-mail cadastrado no sistema.
+                <p className="text-[10px] text-muted-foreground text-center pt-2 font-medium">
+                  {step === "phone" ? "🔒 Acesso 100% seguro e protegido" : "Ainda não recebeu? Verifique seu WhatsApp."}
                 </p>
               </form>
 
+              <div className="mt-6 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-px flex-1 bg-border/50" />
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-bold">Novo por aqui?</span>
+                  <div className="h-px flex-1 bg-border/50" />
+                </div>
 
-              <a
-                href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 w-full py-2.5 flex items-center justify-center gap-2 rounded-lg border border-input bg-background text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Criar minha conta
-              </a>
+                <a
+                  href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 text-xs font-bold text-primary hover:bg-primary/10 transition-all duration-300 group"
+                >
+                  <MessageCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  Experimentar Grátis Agora
+                </a>
+              </div>
+
             </>
           )}
         </div>
@@ -256,8 +287,8 @@ const Login = () => {
           />
         </a>
 
-        <p className="text-[10px] text-muted-foreground/60 text-center">
-          © Loreall Play TV — Seu entretenimento em qualquer tela.
+        <p className="text-[10px] text-muted-foreground/60 text-center font-medium">
+          © Loreall Play TV — Entretenimento Premium Sem Limites.
         </p>
       </div>
     </div>
