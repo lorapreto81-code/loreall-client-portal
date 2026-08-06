@@ -247,21 +247,15 @@ const Login = () => {
                 </p>
               </form>
 
-              <div className="mt-6 flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-px flex-1 bg-border/50" />
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-bold">Novo por aqui?</span>
-                  <div className="h-px flex-1 bg-border/50" />
-                </div>
-
+              <div className="mt-4 pt-4 border-t border-border/40">
                 <a
                   href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3 flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 text-xs font-bold text-primary hover:bg-primary/10 transition-all duration-300 group"
+                  className="w-full text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
                 >
-                  <MessageCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Experimentar Grátis Agora
+                  <MessageCircle className="h-3 w-3" />
+                  Novo por aqui? Experimentar Grátis
                 </a>
               </div>
 
