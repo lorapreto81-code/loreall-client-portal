@@ -58,9 +58,11 @@ export const useLoginFlow = () => {
     setLoading(true);
     try {
       const res = await requestOtp(identifier);
-      toast.success(res.message || "Código enviado no seu WhatsApp.");
       if (res.target_hint) {
         setTargetHint(res.target_hint);
+        toast.success(`Código enviado no WhatsApp de final ${res.target_hint}`);
+      } else {
+        toast.success(res.message || "Código enviado no seu WhatsApp.");
       }
       setStep("code");
       setResendIn(60);

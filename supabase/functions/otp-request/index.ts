@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     });
 
     if (matches.length === 0) {
-      // Do not reveal whether the account exists.
+      // Do not reveal whether the account exists, but if we don't have a hint, we can't show it.
       return json(getGenericOk());
     }
 
