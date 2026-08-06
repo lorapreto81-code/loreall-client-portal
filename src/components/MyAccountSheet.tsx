@@ -423,6 +423,28 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     <p className="text-xs text-muted-foreground/70 mt-1">Suas renovações via PIX aparecem aqui.</p>
                   </div>
                 )}
+
+                {!loading && items.length > 0 && (
+                  <div className="space-y-2.5">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-border bg-card/50 p-3 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-foreground truncate">{item.plan_name}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                            {fmtDate(item.created_at)} · {fmtBRL(item.amount)}
+                          </div>
+                        </div>
+                        {renderStatusBadge(item)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
                 {!loading && !error && items.map((inv) => {
                   const st = statusInfo(inv.fastdepix_status);
                   const StIcon = st.Icon;
