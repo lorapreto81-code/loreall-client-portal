@@ -107,6 +107,20 @@ Deno.serve(async (req) => {
     const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
       req.headers.get("cf-connecting-ip") || null;
 
+    if (ipAddress) {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from("reseller_credit_purchases")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", ipAddress)
+        .gte("created_at", since);
+      if ((count ?? 0) > 10) {
+        return new Response(JSON.stringify({ error: "Limite de tentativas excedido para o seu IP. Aguarde uma hora." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const minC = Number(link.min_credits ?? 10);
     const maxC = Number(link.max_credits ?? 30);
     const price = Number(link.price_per_credit ?? link.amount / (link.credits || 1));

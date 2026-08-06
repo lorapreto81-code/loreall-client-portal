@@ -41,7 +41,11 @@ Deno.serve(async (req) => {
     });
 
     // Credential check: the customer must know their own access password.
-    const authenticated = matches.filter((c) => String(c.password ?? "") === password);
+    // Use timing-safe comparison or direct value check after filtering.
+    const authenticated = matches.filter((c) => {
+      const stored = String(c.password ?? "");
+      return stored === password && password.length > 0;
+    });
 
     if (authenticated.length === 0) {
       return json({ error: "Dados de acesso inválidos." }, 401);

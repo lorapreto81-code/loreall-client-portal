@@ -45,6 +45,7 @@ export interface LoginAccount {
 
 /** Verifies the customer's credentials server-side and returns signed sessions. */
 export async function customerLogin(identifier: string, password: string): Promise<{ accounts: LoginAccount[] }> {
+  if (!identifier.trim() || !password) throw new Error("Informe usuário e senha.");
   const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth`, {
     method: "POST",
     headers: {
