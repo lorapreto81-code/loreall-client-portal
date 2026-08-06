@@ -114,7 +114,7 @@ const Dashboard = () => {
       <NoticeBanner />
 
       {/* HEADER — só identidade e ações; status fica no card abaixo */}
-      <header className="bg-card/80 backdrop-blur-md sticky top-0 z-10 border-b border-border">
+      <header className="bg-card/40 backdrop-blur-2xl sticky top-0 z-10 border-b border-white/5 shadow-sm">
         <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
           <div className="flex items-center gap-2.5 min-w-0">
             <img src={logo} alt="Loreall Play TV" style={{ height: 32, width: "auto" }} />
@@ -126,7 +126,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="p-2 text-foreground bg-muted/60 hover:bg-muted transition-colors rounded-full border border-border"
+              className="p-2 text-foreground bg-muted/40 hover:bg-muted/60 transition-all rounded-full border border-white/5 hover:scale-110 active:scale-95"
               style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
               title={theme === "dark" ? "Modo claro" : "Modo escuro"}
             >
@@ -135,7 +135,7 @@ const Dashboard = () => {
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <button
-                  className="p-2 text-foreground bg-muted/60 hover:bg-muted transition-colors rounded-full border border-border relative"
+                  className="p-2 text-foreground bg-muted/40 hover:bg-muted/60 transition-all rounded-full border border-white/5 relative hover:scale-110 active:scale-95"
                   style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
                   title="Menu"
                   aria-label="Abrir menu"
