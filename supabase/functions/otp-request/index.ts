@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       return json({ error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." }, 429);
     }
 
-    const customers = await tgSearchCustomers(isEmail ? raw : digits);
+    const customers = await tgSearchCustomers(isEmail ? raw.slice(0, 100) : digits);
     const matches = customers.filter((c) => {
       if (isEmail) {
         const cEmail = String(c.email || "").toLowerCase().trim();

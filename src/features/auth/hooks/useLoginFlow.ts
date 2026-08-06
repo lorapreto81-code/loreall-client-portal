@@ -47,7 +47,7 @@ export const useLoginFlow = () => {
 
   const sendCode = async () => {
     const isEmail = EMAIL_RE.test(phone);
-    const digits = onlyDigits(phone);
+    const digits = onlyDigits(phone).slice(0, 13);
     
     if (!isEmail && digits.length < 10) {
       toast.error("Informe seu WhatsApp com DDD ou um E-mail válido.");
@@ -84,7 +84,7 @@ export const useLoginFlow = () => {
     }
     setLoading(true);
     try {
-      const identifier = EMAIL_RE.test(phone) ? phone : onlyDigits(phone);
+      const identifier = EMAIL_RE.test(phone) ? phone : onlyDigits(phone).slice(0, 13);
       const { accounts } = await verifyOtp(identifier, c);
       if (!accounts || accounts.length === 0) {
         toast.error("Conta não encontrada.");

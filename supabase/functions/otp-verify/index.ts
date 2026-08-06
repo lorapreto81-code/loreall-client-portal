@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
 
-    const customers = await tgSearchCustomers(isEmail ? raw : digits);
+    const customers = await tgSearchCustomers(isEmail ? raw.slice(0, 100) : digits);
     const matches = customers.filter((c) => {
       if (isEmail) {
         const cEmail = String(c.email || "").toLowerCase().trim();
