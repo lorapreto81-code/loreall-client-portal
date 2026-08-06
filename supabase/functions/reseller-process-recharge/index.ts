@@ -107,13 +107,16 @@ export async function processRecharge(
 
   // Lock atômico: só aceita estados "não iniciados" para evitar double-charge
   // em chamadas concorrentes (webhook + poll ao mesmo tempo).
-  const { data: locked } = await supabase
+  const { data: locked, error: lockError } = await supabase
     .from("reseller_credit_purchases")
     .update({ recharge_status: "processing" })
     .eq("id", purchaseId)
     .in("recharge_status", ["pending", "failed", "awaiting_credits"])
+    .is("recharged_at", null) // Adicionado proteção extra
     .select()
     .maybeSingle();
+
+  if (lockError) return { ok: false, error: "Lock failed" };
 
   if (!locked) return { ok: true, alreadyDone: true };
 
@@ -237,7 +240,8 @@ export async function processRecharge(
       warez_response: finalResp as Record<string, unknown>,
       error_message: null,
     })
-    .eq("id", purchaseId);
+    .eq("id", purchaseId)
+    .is("recharged_at", null); // Proteção final contra duplicidade
 
   return { ok: true, status, data: respJson };
 }
