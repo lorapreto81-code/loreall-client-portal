@@ -1,33 +1,30 @@
-import { corsHeaders as baseCors } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { tgSearchCustomers } from "../_shared/tg.ts";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
 import { generateOtpCode, hashOtp, onlyDigits, phoneKey } from "../_shared/otp.ts";
-
-const corsHeaders = {
-  ...baseCors,
-  "Access-Control-Allow-Headers": `${baseCors["Access-Control-Allow-Headers"] ?? "authorization, x-client-info, apikey, content-type"}, x-customer-token`,
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+import { otpRequestSchema } from "../_shared/validation.ts";
+import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 const CODE_TTL_MINUTES = 5;
-const MAX_REQUESTS_PER_WINDOW = 3;
+const MAX_REQUESTS_PER_IDENTIFIER = 3;
+const MAX_REQUESTS_PER_IP = 10;
 const WINDOW_MINUTES = 10;
 
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const raw = typeof body.phone === "string" ? body.phone.trim().slice(0, 100) : "";
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
-    const digits = onlyDigits(raw).slice(0, 13);
-
-    if (!isEmail && (digits.length < 10 || digits.length > 13)) {
-      return json({ error: "Informe um número de WhatsApp válido ou e-mail." }, 400);
+    const rawBody = await req.json().catch(() => ({}));
+    const parse = otpRequestSchema.safeParse(rawBody);
+    if (!parse.success) {
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
     }
+    
+    const raw = parse.data.phone.trim();
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+    const digits = onlyDigits(raw);
+
 
     const key = isEmail ? raw.toLowerCase().trim() : phoneKey(digits);
     const supabase = createClient(
@@ -37,15 +34,30 @@ Deno.serve(async (req) => {
 
     // Rate limit per identifier
     const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
-    const { count } = await supabase
+    const { count: identifierCount } = await supabase
       .from("otp_codes")
       .select("id", { count: "exact", head: true })
       .eq("phone", key)
       .gte("created_at", since);
 
-    if ((count ?? 0) >= MAX_REQUESTS_PER_WINDOW) {
-      return json({ error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." }, 429);
+    if ((identifierCount ?? 0) >= MAX_REQUESTS_PER_IDENTIFIER) {
+      return json({ error: "Muitas tentativas para este identificador. Aguarde alguns minutos." }, 429);
     }
+
+    // Rate limit per IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+    if (ip) {
+      const { count: ipCount } = await supabase
+        .from("otp_codes")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", ip)
+        .gte("created_at", since);
+      
+      if ((ipCount ?? 0) >= MAX_REQUESTS_PER_IP) {
+        return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429);
+      }
+    }
+
 
     const customers = await tgSearchCustomers(isEmail ? raw.slice(0, 100) : digits);
     const matches = customers.filter((c) => {

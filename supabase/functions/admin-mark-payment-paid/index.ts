@@ -1,32 +1,27 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isAdminPassword } from "../_shared/auth.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { adminMarkPaidSchema } from "../_shared/validation.ts";
+import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {
-    const body = await req.json();
-    const { admin_password, payment_id } = body as { admin_password?: string; payment_id?: string };
+    const rawBody = await req.json().catch(() => ({}));
+    const parse = adminMarkPaidSchema.safeParse(rawBody);
+    if (!parse.success) {
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
+    }
+    
+    const { admin_password, payment_id } = parse.data;
 
     if (!isAdminPassword(admin_password)) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "unauthorized" }, 401);
     }
-    if (!payment_id) {
-      return new Response(JSON.stringify({ error: "payment_id required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,

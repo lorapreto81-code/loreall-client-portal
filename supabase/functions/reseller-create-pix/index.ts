@@ -1,10 +1,8 @@
 // PIX para recarga de revendedor — apenas SyncPay.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { resellerCreatePixSchema } from "../_shared/validation.ts";
+import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 function parseExpiresAt(raw: string | undefined | null): string {
   if (!raw) return new Date(Date.now() + 15 * 60 * 1000).toISOString();
@@ -76,16 +74,18 @@ async function getSyncToken(supabase: ReturnType<typeof createClient>): Promise<
 
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const slug = String(body.slug || "").trim().toLowerCase();
-    if (!slug) {
-      return new Response(JSON.stringify({ error: "slug é obrigatório" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const rawBody = await req.json().catch(() => ({}));
+    const parse = resellerCreatePixSchema.safeParse(rawBody);
+    if (!parse.success) {
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
     }
+    
+    const body = parse.data;
+    const slug = body.slug.trim().toLowerCase();
+
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 

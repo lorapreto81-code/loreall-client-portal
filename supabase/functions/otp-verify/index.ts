@@ -1,32 +1,28 @@
-import { corsHeaders as baseCors } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { signCustomerToken } from "../_shared/auth.ts";
 import { tgSearchCustomers } from "../_shared/tg.ts";
 import { hashOtp, onlyDigits, phoneKey } from "../_shared/otp.ts";
-
-const corsHeaders = {
-  ...baseCors,
-  "Access-Control-Allow-Headers": `${baseCors["Access-Control-Allow-Headers"] ?? "authorization, x-client-info, apikey, content-type"}, x-customer-token`,
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+import { otpVerifySchema } from "../_shared/validation.ts";
+import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 const MAX_ATTEMPTS = 5;
 
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const raw = typeof body.phone === "string" ? body.phone.trim().slice(0, 100) : "";
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
-    const digits = onlyDigits(raw).slice(0, 13);
-    const code = onlyDigits(typeof body.code === "string" ? body.code : "").slice(0, 6);
-
-    if ((!isEmail && digits.length < 10) || code.length !== 6) {
-      return json({ error: "Dados inválidos." }, 400);
+    const rawBody = await req.json().catch(() => ({}));
+    const parse = otpVerifySchema.safeParse(rawBody);
+    if (!parse.success) {
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
     }
+    
+    const raw = parse.data.phone.trim();
+    const code = onlyDigits(parse.data.code);
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+    const digits = onlyDigits(raw);
+
 
     const key = isEmail ? raw.toLowerCase().trim() : phoneKey(digits);
     const supabase = createClient(
