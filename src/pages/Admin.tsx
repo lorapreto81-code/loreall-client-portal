@@ -22,26 +22,63 @@ interface Notice {
   atualizado_em: string;
 }
 
+type TabGroup = "revendedores" | "clientes" | "assinaturas" | "auditoria" | "config";
 type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
 
-const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
-  { id: "avisos", label: "Avisos", icon: Megaphone },
-  { id: "links", label: "Revendedores", icon: Link2 },
-  { id: "recargas", label: "Recargas", icon: ListChecks },
-  { id: "clientes", label: "Clientes", icon: Users },
-  { id: "assinaturas", label: "Planos Recorr.", icon: Repeat },
-  { id: "assinaturas-ativas", label: "Assinantes Ativos", icon: Users },
-  { id: "auditoria-acesso", label: "Acessos", icon: History },
-  { id: "auditoria-pagamento", label: "Auditoria", icon: RefreshCcw },
-  { id: "pix-provider", label: "Provedor PIX", icon: ArrowLeftRight },
-  { id: "config", label: "Configurações", icon: Settings },
+const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: { id: Tab; label: string; icon: typeof Megaphone }[] }[] = [
+  {
+    group: "revendedores",
+    label: "Revendedores",
+    icon: Link2,
+    tabs: [
+      { id: "links", label: "Links de Revenda", icon: Link2 },
+      { id: "recargas", label: "Histórico de Recargas", icon: ListChecks },
+    ]
+  },
+  {
+    group: "clientes",
+    label: "Clientes",
+    icon: Users,
+    tabs: [
+      { id: "clientes", label: "Pagamentos Diretos", icon: Users },
+      { id: "assinaturas-ativas", label: "Assinantes Ativos", icon: ShieldCheck },
+    ]
+  },
+  {
+    group: "assinaturas",
+    label: "Recorrência",
+    icon: Repeat,
+    tabs: [
+      { id: "assinaturas", label: "Planos SyncPay", icon: Repeat },
+    ]
+  },
+  {
+    group: "auditoria",
+    label: "Auditoria & Acessos",
+    icon: History,
+    tabs: [
+      { id: "auditoria-acesso", label: "Logs de Acesso OTP", icon: History },
+      { id: "auditoria-pagamento", label: "Logs de Renovação", icon: RefreshCcw },
+    ]
+  },
+  {
+    group: "config",
+    label: "Configurações",
+    icon: Settings,
+    tabs: [
+      { id: "avisos", label: "Comunicados/Avisos", icon: Megaphone },
+      { id: "pix-provider", label: "Provedores PIX", icon: ArrowLeftRight },
+      { id: "config", label: "Ajustes Gerais", icon: Settings },
+    ]
+  }
 ];
 
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [checking, setChecking] = useState(false);
-  const [tab, setTab] = useState<Tab>("avisos");
+  const [activeGroup, setActiveGroup] = useState<TabGroup | null>(null);
+  const [tab, setTab] = useState<Tab>("links");
 
   const [ativo, setAtivo] = useState(false);
   const [mensagem, setMensagem] = useState("");
@@ -123,28 +160,59 @@ const Admin = () => {
               <Database className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground leading-tight">Painel Administrativo</h1>
-              <p className="text-xs text-muted-foreground">Gerenciamento e controle do sistema</p>
+              <h1 className="text-xl font-bold text-foreground leading-tight">Gestão Admin</h1>
+              <p className="text-xs text-muted-foreground">Monitoramento e Controle</p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center justify-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/50">
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              const active = tab === t.id;
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {GROUPED_TABS.map((group) => {
+              const Icon = group.icon;
+              const isActive = activeGroup === group.group;
+              const hasActiveTabInGroup = group.tabs.some(t => t.id === tab);
+              
               return (
-                <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                    active
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-105"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {t.label}
-                </button>
+                <div key={group.group} className="relative group/menu">
+                  <button
+                    onClick={() => setActiveGroup(activeGroup === group.group ? null : group.group)}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                      hasActiveTabInGroup 
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20" 
+                        : "bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {group.label}
+                  </button>
+
+                  {isActive && (
+                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-card border border-border shadow-xl rounded-xl p-2 min-w-[200px] z-50 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex flex-col gap-1">
+                        {group.tabs.map((t) => {
+                          const SubIcon = t.icon;
+                          const isTabActive = tab === t.id;
+                          return (
+                            <button
+                              key={t.id}
+                              onClick={() => {
+                                setTab(t.id);
+                                setActiveGroup(null);
+                              }}
+                              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                                isTabActive
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                            >
+                              <SubIcon className="h-4 w-4" />
+                              {t.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
