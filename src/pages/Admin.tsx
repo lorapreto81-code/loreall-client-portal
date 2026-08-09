@@ -152,30 +152,30 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans selection:bg-primary/30">
       {/* Sidebar para PC / Topbar para Mobile */}
-      <aside className="w-full md:w-64 md:min-h-screen bg-card/50 border-b md:border-b-0 md:border-r border-border sticky top-0 z-30 backdrop-blur shrink-0">
-        <div className="p-4 md:p-6 flex md:flex-col items-center justify-between md:items-start gap-4 h-full overflow-y-auto">
-          <div className="flex items-center gap-3 mb-0 md:mb-8">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Database className="h-5 w-5 text-primary" />
+      <aside className="w-full md:w-72 md:min-h-screen bg-card/40 border-b md:border-b-0 md:border-r border-border/50 sticky top-0 z-30 backdrop-blur-2xl shrink-0">
+        <div className="p-5 md:p-8 flex md:flex-col items-center justify-between md:items-start gap-4 h-full overflow-y-auto">
+          <div className="flex items-center gap-4 mb-0 md:mb-12 group">
+            <div className="p-2.5 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors duration-300">
+              <Database className="h-6 w-6 text-primary" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground leading-tight">Gestão Admin</h1>
-              <p className="text-xs text-muted-foreground">Monitoramento</p>
+            <div className="hidden md:block">
+              <h1 className="text-xl font-bold text-foreground leading-tight tracking-tight">Loreall Admin</h1>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest opacity-70">Sistema de Gestão</p>
             </div>
           </div>
           
-          <nav className="hidden md:flex flex-col w-full gap-6">
+          <nav className="hidden md:flex flex-col w-full gap-8">
             {GROUPED_TABS.map((group) => {
               const Icon = group.icon;
               return (
-                <div key={group.group} className="space-y-2">
-                  <div className="flex items-center gap-2 px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                    <Icon className="h-3 w-3" />
+                <div key={group.group} className="space-y-3">
+                  <div className="flex items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
+                    <Icon className="h-3.5 w-3.5" />
                     {group.label}
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1.5">
                     {group.tabs.map((t) => {
                       const SubIcon = t.icon;
                       const isTabActive = tab === t.id;
@@ -183,13 +183,13 @@ const Admin = () => {
                         <button
                           key={t.id}
                           onClick={() => setTab(t.id)}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 group ${
                             isTabActive
-                              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
+                              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:translate-x-1"
                           }`}
                         >
-                          <SubIcon className="h-4 w-4" />
+                          <SubIcon className={`h-4 w-4 transition-transform duration-300 ${isTabActive ? "scale-110" : "group-hover:scale-110"}`} />
                           {t.label}
                         </button>
                       );
@@ -201,7 +201,7 @@ const Admin = () => {
           </nav>
 
           {/* Mobile Navigation (Scrollable horizontally) */}
-          <div className="flex md:hidden overflow-x-auto gap-2 pb-2 -mb-2 no-scrollbar">
+          <div className="flex md:hidden overflow-x-auto gap-3 pb-2 -mb-2 no-scrollbar">
             {GROUPED_TABS.map((group) => {
               const Icon = group.icon;
               const hasActiveTabInGroup = group.tabs.some(t => t.id === tab);
@@ -209,18 +209,18 @@ const Admin = () => {
                 <div key={group.group} className="relative shrink-0">
                   <button
                     onClick={() => setActiveGroup(activeGroup === group.group ? null : group.group)}
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                    className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                       hasActiveTabInGroup 
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm" 
-                        : "bg-muted/30 text-muted-foreground border-border/50"
+                        ? "bg-primary text-primary-foreground border-primary shadow-md" 
+                        : "bg-muted/40 text-muted-foreground border-border/40"
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="h-4 w-4" />
                     {group.label}
                   </button>
                   {activeGroup === group.group && (
-                    <div className="absolute top-full mt-2 left-0 bg-card border border-border shadow-xl rounded-xl p-2 min-w-[180px] z-50">
-                      <div className="flex flex-col gap-1">
+                    <div className="absolute top-full mt-3 left-0 bg-card/95 border border-border/60 shadow-2xl rounded-2xl p-2.5 min-w-[200px] z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex flex-col gap-1.5">
                         {group.tabs.map((t) => (
                           <button
                             key={t.id}
@@ -228,8 +228,8 @@ const Admin = () => {
                               setTab(t.id);
                               setActiveGroup(null);
                             }}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold ${
-                              tab === t.id ? "bg-primary/10 text-primary" : "text-muted-foreground"
+                            className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-[13px] font-semibold ${
+                              tab === t.id ? "bg-primary/10 text-primary" : "text-muted-foreground active:bg-muted/50"
                             }`}
                           >
                             <t.icon className="h-4 w-4" />
@@ -246,8 +246,16 @@ const Admin = () => {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-6 py-10 md:px-12 md:py-16">
+          <div className="mb-10 md:mb-16 animate-in fade-in slide-in-from-left-4 duration-700">
+            <h2 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">
+              {GROUPED_TABS.find(g => g.tabs.some(t => t.id === tab))?.label}
+            </h2>
+            <p className="text-muted-foreground text-sm md:text-base font-medium opacity-80">
+              {GROUPED_TABS.find(g => g.tabs.some(t => t.id === tab))?.tabs.find(t => t.id === tab)?.label}
+            </p>
+          </div>
           {tab === "avisos" && (
             <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="card-elevated p-8 space-y-6 border border-primary/5">
