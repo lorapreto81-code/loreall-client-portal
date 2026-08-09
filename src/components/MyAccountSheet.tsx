@@ -166,7 +166,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
           <StatusIcon className="h-3 w-3" />
           {info.label.toUpperCase()}
         </span>
-        {isPaid && (
+        {isPaid ? (
           <div className="flex flex-col items-end gap-0.5">
             <span className="text-[9px] text-muted-foreground leading-none">
               Renovado em {fmtDateTime(invoice.renewed_at || invoice.paid_at)}
@@ -175,6 +175,12 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
               <Lock className="h-2.5 w-2.5" />
               <span className="text-[8px] font-bold uppercase tracking-tight">Transação Segura</span>
             </div>
+          </div>
+        ) : invoice.fastdepix_status?.toLowerCase() === "pending" && (
+          <div className="flex flex-col items-end gap-1">
+            <p className="text-[9px] text-muted-foreground italic text-right max-w-[120px]">
+              Aguardando confirmação bancária para renovar seu acesso.
+            </p>
           </div>
         )}
       </div>
