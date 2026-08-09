@@ -166,7 +166,7 @@ const Admin = () => {
             </div>
           </div>
           
-          <nav className="hidden md:flex flex-col w-full gap-8">
+          <nav className="hidden md:flex flex-col w-full gap-8 overflow-y-auto pr-2 custom-scrollbar">
             {GROUPED_TABS.map((group) => {
               const Icon = group.icon;
               return (
