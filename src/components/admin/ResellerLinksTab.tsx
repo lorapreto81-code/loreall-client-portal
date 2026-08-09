@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
 import { toast } from "sonner";
-import { Loader2, Plus, Pencil, Trash2, Copy, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Copy, ExternalLink, Link2 } from "lucide-react";
 
 interface Link {
   id: string;
