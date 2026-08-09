@@ -1,25 +1,24 @@
-import { corsHeaders as baseCors } from "npm:@supabase/supabase-js@2/cors";
 import { signCustomerToken } from "../_shared/auth.ts";
 import { tgSearchCustomers } from "../_shared/tg.ts";
-
-const corsHeaders = { ...baseCors, "Access-Control-Allow-Headers": `${baseCors["Access-Control-Allow-Headers"] ?? "authorization, x-client-info, apikey, content-type"}, x-customer-token` };
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+import { loginSchema } from "../_shared/validation.ts";
+import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const identifier = typeof body.identifier === "string" ? body.identifier.trim() : "";
-    const password = typeof body.password === "string" ? body.password : "";
+    const rawBody = await req.json().catch(() => ({}));
+    const parse = loginSchema.safeParse(rawBody);
+    if (!parse.success) {
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
+    }
+    
+    const { identifier, password } = parse.data;
 
-    if (!identifier || identifier.length > 120) return json({ error: "Informe seu e-mail, celular ou usuário." }, 400);
-    if (!password || password.length > 200) return json({ error: "Informe sua senha." }, 400);
 
     const isEmail = EMAIL_RE.test(identifier);
     const digits = onlyDigits(identifier);
