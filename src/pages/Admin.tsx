@@ -152,10 +152,10 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans selection:bg-primary/30">
+    <div className="h-screen bg-background flex flex-col md:flex-row font-sans selection:bg-primary/30 overflow-hidden">
       {/* Sidebar para PC / Topbar para Mobile */}
-      <aside className="w-full md:w-72 md:min-h-screen bg-card/40 border-b md:border-b-0 md:border-r border-border/50 sticky top-0 z-30 backdrop-blur-2xl shrink-0">
-        <div className="p-5 md:p-8 flex md:flex-col items-center justify-between md:items-start gap-4 h-full overflow-y-auto">
+      <aside className="w-full md:w-72 h-auto md:h-full bg-card/40 border-b md:border-b-0 md:border-r border-border/50 sticky top-0 z-30 backdrop-blur-2xl shrink-0">
+        <div className="p-5 md:p-8 flex md:flex-col items-center justify-between md:items-start gap-4 h-full">
           <div className="flex items-center gap-4 mb-0 md:mb-12 group">
             <div className="p-2.5 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors duration-300">
               <Database className="h-6 w-6 text-primary" />
