@@ -105,10 +105,12 @@ const Admin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) return;
+    const trimmedPassword = password.trim();
+    if (!trimmedPassword) return;
     setChecking(true);
     // A senha é validada exclusivamente no servidor (edge functions).
-    sessionStorage.setItem("admin_password", password);
+    sessionStorage.setItem("admin_password", trimmedPassword);
+
     try {
       await resellerAdmin.getConfig();
       setAuthenticated(true);
