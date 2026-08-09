@@ -71,5 +71,9 @@ export function isAdminRequest(req: Request): boolean {
 
 export function isAdminPassword(provided: unknown): boolean {
   const expected = Deno.env.get("ADMIN_PASSWORD");
+  if (!expected) {
+    console.error("ADMIN_PASSWORD secret is NOT defined in environment");
+  }
   return !!expected && typeof provided === "string" && provided === expected;
 }
+
