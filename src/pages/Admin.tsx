@@ -214,6 +214,8 @@ const Admin = () => {
         {tab === "clientes" && <CustomersPaymentsTab />}
         {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
         {tab === "assinaturas-ativas" && <SyncpayActiveSubscribersTab />}
+        {tab === "auditoria-acesso" && <OtpAuditTab />}
+        {tab === "auditoria-pagamento" && <PaymentAuditTab />}
         {tab === "pix-provider" && <PixProviderTab />}
         {tab === "config" && <ResellerConfigTab />}
       </div>
