@@ -113,9 +113,18 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b border-border bg-card/50 sticky top-0 z-30 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <h1 className="text-lg font-bold text-foreground">Painel Admin</h1>
-          <div className="flex flex-wrap gap-1">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Database className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground leading-tight">Painel Administrativo</h1>
+              <p className="text-xs text-muted-foreground">Gerenciamento e controle do sistema</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/50">
             {TABS.map((t) => {
               const Icon = t.icon;
               const active = tab === t.id;
@@ -123,13 +132,13 @@ const Admin = () => {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     active
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-105"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-4 w-4" />
                   {t.label}
                 </button>
               );
