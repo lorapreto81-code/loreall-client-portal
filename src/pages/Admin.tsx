@@ -113,9 +113,18 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b border-border bg-card/50 sticky top-0 z-30 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <h1 className="text-lg font-bold text-foreground">Painel Admin</h1>
-          <div className="flex flex-wrap gap-1">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Database className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground leading-tight">Painel Administrativo</h1>
+              <p className="text-xs text-muted-foreground">Gerenciamento e controle do sistema</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/50">
             {TABS.map((t) => {
               const Icon = t.icon;
               const active = tab === t.id;
@@ -123,13 +132,13 @@ const Admin = () => {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     active
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-105"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-4 w-4" />
                   {t.label}
                 </button>
               );
@@ -140,28 +149,60 @@ const Admin = () => {
 
       <div className="max-w-6xl mx-auto px-4 py-6">
         {tab === "avisos" && (
-          <div className="max-w-xl mx-auto card-elevated p-6 space-y-5">
-            <h2 className="text-xl font-bold text-foreground">Painel de avisos</h2>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Aviso ativo</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
-                <div className="w-11 h-6 bg-muted peer-checked:bg-primary rounded-full transition" />
-                <div className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition ${ativo ? "translate-x-5" : ""}`} />
-              </label>
+          <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="card-elevated p-8 space-y-6 border border-primary/5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Megaphone className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">Comunicados ao Cliente</h2>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border/50">
+                <div className="space-y-0.5">
+                  <span className="text-sm font-semibold text-foreground">Status do Aviso</span>
+                  <p className="text-xs text-muted-foreground">Define se a mensagem será exibida na área do cliente</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
+                  <div className="w-12 h-6 bg-muted peer-checked:bg-primary rounded-full transition-colors duration-300" />
+                  <div className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${ativo ? "translate-x-6 shadow-sm" : ""}`} />
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  Mensagem do Banner
+                </label>
+                <textarea
+                  value={mensagem}
+                  onChange={(e) => setMensagem(e.target.value)}
+                  rows={5}
+                  placeholder="Digite aqui o comunicado importante para seus clientes..."
+                  className="w-full px-4 py-3 rounded-xl border border-input bg-card/50 text-foreground text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
+                />
+                <p className="text-[10px] text-muted-foreground italic text-right">
+                  Última atualização: {new Date().toLocaleDateString('pt-BR')} às {new Date().toLocaleTimeString('pt-BR')}
+                </p>
+              </div>
+
+              <button 
+                onClick={handleSaveAviso} 
+                className="w-full py-4 btn-primary-gradient font-bold text-sm inline-flex items-center justify-center gap-2 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                <Save className="h-4 w-4" /> 
+                Publicar Alterações
+              </button>
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Mensagem</label>
-              <textarea
-                value={mensagem}
-                onChange={(e) => setMensagem(e.target.value)}
-                rows={4}
-                className="w-full mt-1 px-3 py-2 rounded-lg border border-input bg-card text-foreground text-sm"
-              />
+            
+            <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 flex gap-3 items-start">
+              <div className="p-1 bg-primary/20 rounded-full mt-0.5">
+                <Settings className="h-3 w-3 text-primary" />
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <strong>Dica:</strong> Use avisos para informar sobre manutenções programadas, promoções de renovação ou novos canais adicionados à grade.
+              </p>
             </div>
-            <button onClick={handleSaveAviso} className="w-full py-3 btn-primary-gradient font-semibold text-sm inline-flex items-center justify-center gap-2">
-              <Save className="h-4 w-4" /> Salvar
-            </button>
           </div>
         )}
         {tab === "links" && <ResellerLinksTab />}
