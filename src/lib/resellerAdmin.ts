@@ -43,6 +43,7 @@ export const resellerAdmin = {
   listPayments: (params?: Record<string, string>) => call("list-payments", { params }),
   deletePayment: (id: string) => call("delete-payment", { method: "POST", body: { id } }),
   customersDashboard: () => call("customers-dashboard"),
+  listOtpLogs: () => call("list-otp-logs"),
 };
 
 export interface SyncpayPlan {
