@@ -1,30 +1,24 @@
 import { getCustomerSession, isAdminRequest } from "../_shared/auth.ts";
 import { TG_API_BASE as API_BASE, tgHeaders, tgSearchCustomers } from "../_shared/tg.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-customer-token, x-admin-password",
-};
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 async function proxyResponse(res: Response): Promise<Response> {
   const body = await res.text();
   return new Response(body, {
     status: res.status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...securityHeaders, "Content-Type": "application/json" },
   });
 }
+
 
 // Fields a customer is allowed to change on their own account.
 const CUSTOMER_EDITABLE_FIELDS = ["name", "email", "whatsapp", "celular", "telefone", "cpf", "plan_id"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: securityHeaders });
   }
+
 
   try {
     const url = new URL(req.url);
