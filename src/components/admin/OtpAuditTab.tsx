@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
-import { History, ShieldCheck, ShieldAlert, Phone, Calendar, User, Search, Filter, CheckCircle2, XCircle } from "lucide-react";
+import { History, ShieldCheck, ShieldAlert, Phone, Calendar, User, Search, Filter, CheckCircle2, XCircle, Info } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -12,10 +12,10 @@ interface OtpLog {
   consumed_at: string | null;
   ip_address: string | null;
   attempts: number;
-  // Extended fields from the join/logic we'll simulate or fetch
   customer_name?: string;
   renewal_status?: 'success' | 'error' | 'none';
   renewal_message?: string;
+  plan_name?: string;
 }
 
 const OtpAuditTab = () => {
@@ -30,7 +30,6 @@ const OtpAuditTab = () => {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      // Fetch both OTP logs and Payment logs to correlate
       const [otpData, paymentData] = await Promise.all([
         resellerAdmin.listOtpLogs(),
         resellerAdmin.listPayments()
@@ -39,19 +38,18 @@ const OtpAuditTab = () => {
       const otpLogs = otpData.logs || [];
       const payments = Array.isArray(paymentData) ? paymentData : (paymentData.payments || []);
 
-      // Correlate OTP attempts with successful renewals
       const enrichedLogs = otpLogs.map((log: any) => {
-        // Find if this customer had a successful renewal shortly after this OTP
         const logDate = new Date(log.created_at);
         const relatedPayment = payments.find((p: any) => 
           p.customer_id === log.customer_id && 
           new Date(p.created_at) > logDate &&
-          (new Date(p.created_at).getTime() - logDate.getTime()) < 3600000 // within 1 hour
+          (new Date(p.created_at).getTime() - logDate.getTime()) < 3600000 
         );
 
         return {
           ...log,
-          customer_name: relatedPayment?.customer_name || "Cliente TG",
+          customer_name: relatedPayment?.customer_name || "Cliente",
+          plan_name: relatedPayment?.plan_name,
           renewal_status: relatedPayment 
             ? (relatedPayment.renewed_at ? 'success' : (relatedPayment.fastdepix_status === 'paid' ? 'error' : 'none'))
             : 'none',
@@ -103,8 +101,8 @@ const OtpAuditTab = () => {
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-6 py-4 font-semibold text-foreground">Data/Hora</th>
                 <th className="px-6 py-4 font-semibold text-foreground">Cliente</th>
-                <th className="px-6 py-4 font-semibold text-foreground">Acesso WhatsApp</th>
-                <th className="px-6 py-4 font-semibold text-foreground">Status Acesso</th>
+                <th className="px-6 py-4 font-semibold text-foreground">WhatsApp</th>
+                <th className="px-6 py-4 font-semibold text-foreground">Acesso</th>
                 <th className="px-6 py-4 font-semibold text-foreground">Status TopGestor</th>
                 <th className="px-6 py-4 font-semibold text-foreground">IP</th>
               </tr>
@@ -113,7 +111,7 @@ const OtpAuditTab = () => {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
-                    Carregando registros de auditoria...
+                    Carregando registros...
                   </td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
@@ -147,12 +145,12 @@ const OtpAuditTab = () => {
                       {log.consumed_at ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">
                           <ShieldCheck className="h-3 w-3" />
-                          Autenticado
+                          Entrou
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">
                           <ShieldAlert className="h-3 w-3" />
-                          Pendente ({log.attempts})
+                          Código enviado ({log.attempts})
                         </span>
                       )}
                     </td>
@@ -161,22 +159,24 @@ const OtpAuditTab = () => {
                         <div className="flex flex-col">
                           <span className="inline-flex items-center gap-1 text-green-500 text-xs font-bold">
                             <CheckCircle2 className="h-3 w-3" />
-                            Renovado (+1 mês)
+                            Renovado OK
                           </span>
-                          <span className="text-[10px] text-muted-foreground">TopGestor OK</span>
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
+                            {log.plan_name || "Plano Ativo"}
+                          </span>
                         </div>
                       ) : log.renewal_status === 'error' ? (
                         <div className="flex flex-col">
                           <span className="inline-flex items-center gap-1 text-red-500 text-xs font-bold">
                             <XCircle className="h-3 w-3" />
-                            Erro na Renovação
+                            Falha na Renovação
                           </span>
-                          <span className="text-[10px] text-red-400/80 truncate max-w-[150px]" title={log.renewal_message}>
+                          <span className="text-[10px] text-red-400/80 truncate max-w-[120px]" title={log.renewal_message}>
                             {log.renewal_message || "Sem créditos/Erro API"}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-xs italic">Apenas Acesso</span>
+                        <span className="text-muted-foreground text-xs italic">Apenas Navegação</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-xs text-muted-foreground font-mono">
