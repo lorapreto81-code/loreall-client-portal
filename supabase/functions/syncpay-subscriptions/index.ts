@@ -212,6 +212,14 @@ Deno.serve(async (req) => {
         return ok({ success: true });
       }
 
+      case "list-all-subscribers": {
+        const { data: rows } = await supabase
+          .from("syncpay_subscriptions")
+          .select("*")
+          .order("created_at", { ascending: false });
+        return ok({ subscribers: rows || [] });
+      }
+
       default:
         return err(`Unknown action: ${action}`, 404);
     }

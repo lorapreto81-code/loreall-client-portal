@@ -13,6 +13,7 @@ const TG_BASE = "https://topgestor.me/api/v1";
 const BONUS_DAYS = 30;
 const MIN_DAYS_REMAINING_TO_CREDIT = 4;
 const REFERRAL_MESSAGE_ID = 58861;
+const RENEWAL_SUCCESS_MESSAGE_ID = 44282; // Comprovante de Renovação TopGestor
 
 // ---------- helpers de data ----------
 function parseTGDate(raw: string | null | undefined): Date | null {
@@ -228,7 +229,7 @@ async function handleSubscriptionEvent(
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({ plan_id: tgPlanId, message_id: 44282, send_whatsapp: true }),
+          body: JSON.stringify({ plan_id: tgPlanId, message_id: RENEWAL_SUCCESS_MESSAGE_ID, send_whatsapp: true }),
         });
         const rr = await tgRes.json().catch(() => ({}));
         await supabase.from("payments").insert({
@@ -414,7 +415,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({ plan_id: payment.plan_id, message_id: 44282, send_whatsapp: true }),
+          body: JSON.stringify({ plan_id: payment.plan_id, message_id: RENEWAL_SUCCESS_MESSAGE_ID, send_whatsapp: true }),
         });
         
         const rr = await tgRes.json().catch(() => ({}));
