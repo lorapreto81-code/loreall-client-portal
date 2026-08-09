@@ -392,7 +392,17 @@ Deno.serve(async (req) => {
           series_30d: series,
         });
       }
-
+      
+      case "list-otp-logs": {
+        const { data, error } = await supabase
+          .from("otp_codes")
+          .select("id, phone, customer_id, created_at, consumed_at, ip_address, attempts")
+          .order("created_at", { ascending: false })
+          .limit(300);
+        if (error) throw error;
+        return ok({ logs: data || [] });
+      }
+      
       default:
         return ok({ error: "ação inválida" }, 400);
     }

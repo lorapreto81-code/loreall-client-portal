@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
-import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat, Inbox } from "lucide-react";
+import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat, Inbox, ShieldCheck, History, RefreshCcw } from "lucide-react";
 import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
 import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
 import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
@@ -13,6 +13,8 @@ import PixProviderTab from "@/components/admin/PixProviderTab";
 import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
 import SyncpaySubscriptionsTab from "@/components/admin/SyncpaySubscriptionsTab";
 import SyncpayActiveSubscribersTab from "@/components/admin/SyncpayActiveSubscribersTab";
+import OtpAuditTab from "@/components/admin/OtpAuditTab";
+import PaymentAuditTab from "@/components/admin/PaymentAuditTab";
 
 interface Notice {
   ativo: boolean;
@@ -20,7 +22,7 @@ interface Notice {
   atualizado_em: string;
 }
 
-type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "pix-provider" | "config";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
 
 const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "avisos", label: "Avisos", icon: Megaphone },
@@ -29,6 +31,8 @@ const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "clientes", label: "Clientes", icon: Users },
   { id: "assinaturas", label: "Planos Recorr.", icon: Repeat },
   { id: "assinaturas-ativas", label: "Assinantes Ativos", icon: Users },
+  { id: "auditoria-acesso", label: "Acessos", icon: History },
+  { id: "auditoria-pagamento", label: "Auditoria", icon: RefreshCcw },
   { id: "pix-provider", label: "Provedor PIX", icon: ArrowLeftRight },
   { id: "config", label: "Configurações", icon: Settings },
 ];
@@ -210,6 +214,8 @@ const Admin = () => {
         {tab === "clientes" && <CustomersPaymentsTab />}
         {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
         {tab === "assinaturas-ativas" && <SyncpayActiveSubscribersTab />}
+        {tab === "auditoria-acesso" && <OtpAuditTab />}
+        {tab === "auditoria-pagamento" && <PaymentAuditTab />}
         {tab === "pix-provider" && <PixProviderTab />}
         {tab === "config" && <ResellerConfigTab />}
       </div>
