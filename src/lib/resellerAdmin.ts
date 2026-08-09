@@ -65,5 +65,6 @@ export const syncpayAdmin = {
   updatePlan: (body: Record<string, unknown>) => callSub("update-plan", { method: "POST", body }),
   archivePlan: (id: string) => callSub("archive-plan", { method: "POST", body: { id } }),
   listSubscribers: (plan_id: string) => callSub("list-subscribers", { params: { plan_id } }),
+  listAllSubscribers: () => callSub("list-all-subscribers"),
   cancelSubscription: (subscription_id: string) => callSub("cancel-subscription", { method: "POST", body: { subscription_id } }),
 };

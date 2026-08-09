@@ -201,15 +201,12 @@ Deno.serve(async (req) => {
         return ok({ subscribers: r.data.data || r.data.subscribers || [], local: local || [] });
       }
 
-      case "cancel-subscription": {
-        const { subscription_id } = body;
-        if (!subscription_id) return err("subscription_id required");
-        const r = await spFetch(`/subscriptions/${subscription_id}`, "DELETE");
-        if (!r.ok) return err(`SyncPay: ${r.status}`, r.status);
-        await supabase.from("syncpay_subscriptions")
-          .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
-          .eq("syncpay_subscription_id", subscription_id);
-        return ok({ success: true });
+      case "list-all-subscribers": {
+        const { data: rows } = await supabase
+          .from("syncpay_subscriptions")
+          .select("*")
+          .order("created_at", { ascending: false });
+        return ok({ subscribers: rows || [] });
       }
 
       default:
