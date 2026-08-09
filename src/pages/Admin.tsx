@@ -20,20 +20,15 @@ interface Notice {
   atualizado_em: string;
 }
 
-type Tab = "avisos" | "links" | "recargas" | "dashboard" | "clientes" | "clientes-dash" | "tg-clientes" | "config" | "indicacao" | "trial-signups" | "pix-provider" | "assinaturas" | "assinaturas-ativas";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "pix-provider" | "config";
 
 const TABS: { id: Tab; label: string; icon: typeof Megaphone }[] = [
   { id: "avisos", label: "Avisos", icon: Megaphone },
   { id: "links", label: "Revendedores", icon: Link2 },
   { id: "recargas", label: "Recargas", icon: ListChecks },
-  { id: "dashboard", label: "Dashboard rev.", icon: BarChart3 },
   { id: "clientes", label: "Clientes", icon: Users },
-  { id: "clientes-dash", label: "Dashboard cli.", icon: LineChart },
-  { id: "tg-clientes", label: "Clientes TG", icon: Database },
   { id: "assinaturas", label: "Planos Recorr.", icon: Repeat },
   { id: "assinaturas-ativas", label: "Assinantes Ativos", icon: Users },
-  { id: "trial-signups", label: "Testes grátis", icon: Inbox },
-  { id: "indicacao", label: "Indicação", icon: Gift },
   { id: "pix-provider", label: "Provedor PIX", icon: ArrowLeftRight },
   { id: "config", label: "Configurações", icon: Settings },
 ];
@@ -171,14 +166,9 @@ const Admin = () => {
         )}
         {tab === "links" && <ResellerLinksTab />}
         {tab === "recargas" && <ResellerPurchasesTab />}
-        {tab === "dashboard" && <ResellerDashboardTab />}
         {tab === "clientes" && <CustomersPaymentsTab />}
-        {tab === "clientes-dash" && <CustomersDashboardTab />}
-        {tab === "tg-clientes" && <TopGestorCustomersTab />}
         {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
         {tab === "assinaturas-ativas" && <SyncpayActiveSubscribersTab />}
-        {tab === "trial-signups" && <TrialSignupsTab />}
-        {tab === "indicacao" && <ReferralTrialConfigTab />}
         {tab === "pix-provider" && <PixProviderTab />}
         {tab === "config" && <ResellerConfigTab />}
       </div>
