@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Loader2, RefreshCw, User, Mail, Calendar, CheckCircle2, XCircle, CreditCard } from "lucide-react";
-import { syncpayAdmin } from "@/lib/syncpayAdmin";
+import { syncpayAdmin } from "@/lib/resellerAdmin";
 import { toast } from "sonner";
 
 interface Subscription {
