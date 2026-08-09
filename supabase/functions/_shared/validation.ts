@@ -28,3 +28,29 @@ export const otpVerifySchema = z.object({
   phone: z.string().min(1).max(120),
   code: z.string().min(6).max(6),
 });
+
+export const createPixSchema = z.object({
+  customer_id: z.number(),
+  customer_name: z.string().min(1).max(200),
+  customer_whatsapp: z.string().optional(),
+  customer_cpf: z.string().optional(),
+  customer_email: z.string().email().optional().or(z.literal("")),
+  plan_id: z.number(),
+  plan_name: z.string().min(1).max(200),
+  amount: z.number().min(10, "Valor mínimo R$ 10,00"),
+  referral_code: z.string().optional(),
+});
+
+export const resellerCreatePixSchema = z.object({
+  slug: z.string().min(1).max(100),
+  whatsapp: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  credits: z.number().optional(),
+  cpf: z.string().optional(),
+});
+
+export const adminMarkPaidSchema = z.object({
+  admin_password: z.string().min(1),
+  payment_id: z.string().uuid(),
+});
+

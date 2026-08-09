@@ -1,12 +1,10 @@
 // PIX para renovação de cliente — apenas SyncPay.
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { createPixSchema } from "../_shared/validation.ts";
+import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
+
 
 interface CreateBody {
   customer_id: number;
@@ -105,20 +103,17 @@ async function fetchCustomerInfo(customerId: number): Promise<{ cpf: string; ema
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {
-    const body = (await req.json()) as CreateBody;
-    if (!body.customer_id || !body.plan_id || !body.amount) {
-      return new Response(JSON.stringify({ error: "customer_id, plan_id e amount são obrigatórios" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const rawBody = await req.json().catch(() => ({}));
+    const parse = createPixSchema.safeParse(rawBody);
+    if (!parse.success) {
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
     }
-    if (body.amount < 10) {
-      return new Response(JSON.stringify({ error: "Valor mínimo R$ 10,00" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    
+    const body = parse.data;
+
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
