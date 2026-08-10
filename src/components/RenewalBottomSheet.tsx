@@ -110,24 +110,30 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   // filtrado pelo plano TopGestor atual do cliente. Mantém a UI simples.
   const recommendedSubPlan = useMemo<SyncpayPublicPlan | null>(() => {
     const all = subPlansQuery.data || [];
-    if (!currentPlanId) return all.length > 0 ? all[0] : null; // Return first sub plan if no current plan
+    if (all.length === 0) return null;
     
-    // Find sub plan matching the topgestor_plan_id
-    const matched = all.filter((sp) => sp.topgestor_plan_id === currentPlanId);
-    if (matched.length === 0) {
-      // Fallback: search by name/periodicity if direct ID match fails
+    // 1. Tentar encontrar plano recorrente que mapeia para o ID do plano atual do TopGestor
+    if (currentPlanId) {
+      const matched = all.filter((sp) => Number(sp.topgestor_plan_id) === Number(currentPlanId));
+      if (matched.length > 0) {
+        return matched.find((sp) => sp.billing_method === "pix_automatico") || matched[0];
+      }
+
+      // 2. Fallback: procurar por nome ou periodicidade se o ID não bater
       const currentPlan = allPlans.find(p => p.id === currentPlanId);
       if (currentPlan) {
         const name = getPlanName(currentPlan).toLowerCase();
-        const fallback = all.find(sp => name.includes(sp.name.toLowerCase()) || name.includes(sp.periodicity_days + " dias"));
+        const fallback = all.find(sp => 
+          name.includes(sp.name.toLowerCase()) || 
+          (sp.periodicity_days > 0 && name.includes(sp.periodicity_days + " dias"))
+        );
         if (fallback) return fallback;
       }
-      return all.length > 0 ? all[0] : null; 
     }
-    return (
-      matched.find((sp) => sp.billing_method === "pix_automatico") || matched[0]
-    );
-  }, [subPlansQuery.data, currentPlanId]);
+    
+    // 3. Se nada bater, mostrar o plano recorrente mais barato como sugestão
+    return all[0];
+  }, [subPlansQuery.data, currentPlanId, allPlans]);
 
   const openSubscribeForm = (sp: SyncpayPublicPlan) => {
     setSubForm(sp);
