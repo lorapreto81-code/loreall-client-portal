@@ -43,7 +43,7 @@ export class CustomerService extends BaseApi {
 
   static async getPlans(): Promise<any> {
     return this.request("topgestor-proxy?action=get-plans", {
-      headers: this.getHeaders({ isAdmin: true }),
+      headers: this.getHeaders(),
     });
   }
 }
