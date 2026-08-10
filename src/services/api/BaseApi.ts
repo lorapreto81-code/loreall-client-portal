@@ -36,23 +36,31 @@ export class BaseApi {
   }
 
   protected static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, options);
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, options);
 
-    if (response.status === 401) {
-      window.dispatchEvent(new CustomEvent("auth:unauthorized"));
-      throw new Error("Sessão expirada. Faça login novamente.");
+      if (response.status === 401) {
+        window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
+      if (response.status === 429) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Muitas requisições. Aguarde alguns minutos.");
+      }
+
+      const data = await response.json().catch(() => ({}));
+      
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `Erro ${response.status}`);
+      }
+
+      return data as T;
+    } catch (err: any) {
+      if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+        throw new Error("Erro de conexão. Verifique sua internet ou tente novamente em instantes.");
+      }
+      throw err;
     }
-
-    if (response.status === 429) {
-      throw new Error("Muitas requisições. Aguarde alguns segundos.");
-    }
-
-    const data = await response.json().catch(() => ({}));
-    
-    if (!response.ok) {
-      throw new Error(data.error || data.message || `Erro ${response.status}`);
-    }
-
-    return data as T;
   }
 }
