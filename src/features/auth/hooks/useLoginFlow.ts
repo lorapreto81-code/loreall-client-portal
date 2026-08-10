@@ -55,7 +55,7 @@ export const useLoginFlow = () => {
       return;
     }
     
-    const identifier = isEmail ? phone : digits;
+    const identifier = isEmail ? phone.toLowerCase().trim() : digits;
     setLoading(true);
     try {
       const res = await requestOtp(identifier);

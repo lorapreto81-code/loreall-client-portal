@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
       .gte("created_at", since);
 
     if ((identifierCount ?? 0) >= MAX_REQUESTS_PER_IDENTIFIER) {
+      console.warn(`[otp-request] Identifier rate limit hit for: ${key}`);
       return json({ error: "Muitas tentativas para este identificador. Aguarde alguns minutos." }, 429);
     }
 
@@ -59,6 +60,7 @@ Deno.serve(async (req) => {
         .gte("created_at", since);
       
       if ((ipCount ?? 0) >= MAX_REQUESTS_PER_IP) {
+        console.warn(`[otp-request] IP rate limit hit for: ${ip}`);
         return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429);
       }
     }
