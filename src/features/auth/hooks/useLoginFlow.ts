@@ -15,6 +15,7 @@ export const useLoginFlow = () => {
   const [refCode, setRefCode] = useState<string | null>(null);
   const [matches, setMatches] = useState<LoginAccount[]>([]);
   const [targetHint, setTargetHint] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState<string | null>(null);
   
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
@@ -60,7 +61,9 @@ export const useLoginFlow = () => {
       const res = await requestOtp(identifier);
       if (res.target_hint) {
         setTargetHint(res.target_hint);
-        toast.success(`Código enviado no WhatsApp de final ${res.target_hint}`);
+        setCustomerName(res.customer_name || null);
+        const welcome = res.customer_name ? `Olá, ${res.customer_name}! ` : "";
+        toast.success(`${welcome}Código enviado no WhatsApp de final ${res.target_hint}`);
       } else {
         toast.success(res.message || "Código enviado no seu WhatsApp.");
       }
@@ -117,6 +120,7 @@ export const useLoginFlow = () => {
     matches,
     setMatches,
     targetHint,
+    customerName,
     pickAccount,
     sendCode,
     handleSubmit

@@ -86,13 +86,14 @@ Deno.serve(async (req) => {
         .some((p) => p === key);
     });
 
-    const getGenericOk = (hint?: string) => ({
+    const getGenericOk = (hint?: string, name?: string) => ({
       ok: true,
       expires_in: CODE_TTL_MINUTES * 60,
       message: isEmail 
         ? "Se o e-mail estiver cadastrado, você receberá um código no WhatsApp vinculado à conta." 
         : "Se o número estiver cadastrado, você receberá um código no WhatsApp.",
       target_hint: hint,
+      customer_name: name,
     });
 
     if (matches.length === 0) {
@@ -136,7 +137,7 @@ Deno.serve(async (req) => {
     const sent = await sendWhatsappText(targetPhoneDigits || digits, text);
     if (!sent) return json({ error: "Não foi possível enviar o código agora. Tente novamente." }, 502);
 
-    return json(getGenericOk(targetHint));
+    return json(getGenericOk(targetHint, firstName));
   } catch (err) {
     console.error("[otp-request] error", err instanceof Error ? err.message : err);
     return json({ error: "Não foi possível enviar o código." }, 500);
