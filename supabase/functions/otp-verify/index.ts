@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
         return match;
       }
       const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
+      return phoneFields
         .filter(Boolean)
         .map((v) => phoneKey(String(v)))
         .some((p) => p === key);
