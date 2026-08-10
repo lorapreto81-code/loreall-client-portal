@@ -734,9 +734,14 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Nenhum plano disponível para {currentTelas} tela(s).
-          </p>
+          <div className="py-8 text-center">
+            <p className="text-sm text-muted-foreground font-medium">
+              Nenhum plano de renovação encontrado para sua conta.
+            </p>
+            <p className="text-[11px] text-muted-foreground/60 mt-2">
+              Isso pode ocorrer se seu plano atual for personalizado. Entre em contato com o suporte para renovar.
+            </p>
+          </div>
         )}
       </div>
     </div>
