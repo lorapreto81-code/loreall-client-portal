@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
 
       case "get-plans": {
         // Allow both admin and customers to see plans (needed for renewal bottom sheet)
-        const r = await fetch(`${API_BASE}/plans?per_page=200`, { headers: tgHeaders() });
+        const r = await fetch(`${API_BASE}/plans?per_page=200&status=ativo`, { headers: tgHeaders() });
         const rawData = await r.json().catch(() => ({}));
         console.log("[topgestor-proxy] rawData from TG:", JSON.stringify(rawData));
         const plans = Array.isArray(rawData) ? rawData : (rawData?.data || rawData?.plans || rawData?.list || []);
