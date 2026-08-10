@@ -109,7 +109,6 @@ export const computeRenewalCards = (
   }
 
   // Plano fora da tabela: oferecer somente o plano atual.
-  const currentPlan = allPlans.find((p) => p.id === currentPlanId);
   if (!currentPlan) return [];
   const name = getPlanName(currentPlan);
   const periodKey = detectCurrentPeriod(name);
