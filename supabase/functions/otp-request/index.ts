@@ -158,10 +158,10 @@ Deno.serve(async (req) => {
 
     const firstName = String(matches[0].name ?? "").trim().split(/\s+/)[0] || "";
     const text =
-      `🔐 *Loreall Play* — código de acesso\n\n` +
-      `${firstName ? `Olá, ${firstName}! ` : ""}Seu código é:\n\n` +
-      `*${code}*\n\n` +
-      `Válido por ${CODE_TTL_MINUTES} minutos. Nunca compartilhe este código com ninguém.`;
+      `🔐 *Loreall Play* — Acesso Seguro\n\n` +
+      `${firstName ? `Olá, *${firstName}*! ` : ""}Seu código de acesso é:\n\n` +
+      `🚀 *${code}*\n\n` +
+      `⏱️ Válido por ${CODE_TTL_MINUTES} minutos.`;
 
     // Always send to the first match's WhatsApp number (TopGestor primary contact)
     const sent = await sendWhatsappText(targetPhoneDigits || digits, text);
