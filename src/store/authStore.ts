@@ -10,9 +10,16 @@ export interface Customer {
   data_de_vencimento: string;
   telas: number | string;
   status?: string;
+  whatsapp?: string;
+  cpf?: string;
+  iptv_provider?: string;
+  data_vencimento_app?: string;
+  pontos?: number;
   plan?: { id: number; name: string; value: number | string };
   product?: { id: number; name: string };
+  meta?: { pontos?: number };
   [key: string]: unknown;
+
 }
 
 interface AuthState {
