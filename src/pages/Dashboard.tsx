@@ -2,16 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  LogOut,
-  AlertTriangle, Sun, Moon, Gift, MessageCircle, Film,
-  CalendarDays, Monitor, Zap, User, ChevronRight, Receipt, HelpCircle, Plus,
-  Mail, X, Download, Menu
-} from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useAuthStore } from "@/store/authStore";
-import { formatDate, daysUntil } from "@/lib/format";
-import RenewalBottomSheet from "@/components/RenewalBottomSheet";
+import { Zap, Gift } from "lucide-react";
 
 import { useTheme } from "@/hooks/use-theme";
 import NoticeBanner from "@/components/NoticeBanner";
@@ -19,57 +10,38 @@ import ExpirationPopup from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
-import { useAuthGuard } from "@/features/auth/hooks/useAuthGuard";
-import { firstName } from "@/utils/formatters";
-import { logo, WHATSAPP_NUMBER, getStatusPill, telasLabel } from "@/utils/constants";
+import RenewalBottomSheet from "@/components/RenewalBottomSheet";
+
 import { PlanCard } from "@/features/dashboard/components/PlanCard";
 import { RenewalHistory } from "@/features/dashboard/components/RenewalHistory";
-
-
-
-
+import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
+import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
+import { DashboardBanners } from "@/features/dashboard/components/DashboardBanners";
+import { DashboardStatusAlerts } from "@/features/dashboard/components/DashboardStatusAlerts";
+import { DashboardNavigation } from "@/features/dashboard/components/DashboardNavigation";
 
 const Dashboard = () => {
-  const { customer, isAuthenticated, logout } = useAuthGuard();
+  const {
+    customer,
+    days,
+    profileIncomplete,
+    renewalOpen, setRenewalOpen,
+    referralOpen, setReferralOpen,
+    accountOpen, setAccountOpen,
+    accountTab, setAccountTab,
+    menuOpen, setMenuOpen,
+    logout
+  } = useDashboardData();
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
-  const [renewalOpen, setRenewalOpen] = useState(false);
-  const [referralOpen, setReferralOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-  const [accountTab, setAccountTab] = useState<"dados" | "faturas">("dados");
-  const [menuOpen, setMenuOpen] = useState(false);
-
-
 
   const openAccount = (tab: "dados" | "faturas") => {
     setAccountTab(tab);
     setAccountOpen(true);
     setMenuOpen(false);
   };
-  
-  
-
-  useEffect(() => {
-    if (!isAuthenticated || !customer) navigate("/login", { replace: true });
-  }, [isAuthenticated, customer, navigate]);
-
-  useEffect(() => {
-    const handler = () => {
-      toast.error("Sessão expirada. Faça login novamente.");
-      logout();
-      navigate("/login");
-    };
-    window.addEventListener("auth:unauthorized", handler);
-    return () => window.removeEventListener("auth:unauthorized", handler);
-  }, [logout, navigate]);
-
-  // Dados do cliente — checagem de completude (hooks precisam vir antes de qualquer early return)
-  const rawPhone = String((customer as any)?.whatsapp || (customer as any)?.celular || "").replace(/\D/g, "");
-  const hasValidPhone = rawPhone.length >= 10; // exige DDD + número
-  const hasValidName = (customer?.name || "").trim().split(" ").filter(Boolean).length >= 2;
-  const hasEmailValid = !!String((customer as any)?.email || "").trim();
-  const profileIncomplete = !!customer && (!hasValidPhone || !hasValidName || !hasEmailValid);
 
   const hasEmail = !!String((customer as any)?.email || "").trim();
   const emailBannerKey = customer ? `loreall_email_banner_dismissed_${customer.id}` : "";
@@ -77,260 +49,65 @@ const Dashboard = () => {
     if (typeof window === "undefined" || !emailBannerKey) return false;
     return localStorage.getItem(emailBannerKey) === "1";
   });
+
   const showEmailBanner = !!customer && !hasEmail && !emailBannerDismissed && !profileIncomplete;
+
   const dismissEmailBanner = () => {
     if (emailBannerKey) localStorage.setItem(emailBannerKey, "1");
     setEmailBannerDismissed(true);
   };
 
-  // Auto-abre "Meus dados" 1x por sessão quando incompleto
   useEffect(() => {
     if (!customer || !profileIncomplete) return;
     const key = `loreall_profile_prompted_${customer.id}`;
     if (sessionStorage.getItem(key)) return;
     sessionStorage.setItem(key, "1");
-    const t = setTimeout(() => openAccount("dados"), 600);
-    return () => clearTimeout(t);
+    setTimeout(() => openAccount("dados"), 600);
   }, [profileIncomplete, customer]);
 
   if (!customer) return null;
-
-  const days = daysUntil(customer.data_de_vencimento);
-  const status = days < 0 ? "vencido" : (customer.status?.toLowerCase() || "ativo");
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   const handleRenewalClose = () => {
     setRenewalOpen(false);
     queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
   };
 
-  const isLoading = false;
-
   return (
     <div className="min-h-screen bg-background">
       <NoticeBanner />
 
-      {/* HEADER — só identidade e ações; status fica no card abaixo */}
-      <header className="bg-card/40 backdrop-blur-2xl sticky top-0 z-10 border-b border-white/5 shadow-sm">
-        <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <img src={logo} alt="Loreall Play TV" style={{ height: 32, width: "auto" }} />
-            <div className="hidden min-[360px]:block min-w-0">
-              <div className="text-[11px] text-muted-foreground leading-tight">Área do Cliente</div>
-              <div className="text-[13px] font-semibold text-foreground leading-tight truncate">Olá, {firstName(customer.name)}!</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-foreground bg-muted/40 hover:bg-muted/60 transition-all rounded-full border border-white/5 hover:scale-110 active:scale-95"
-              style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
-              title={theme === "dark" ? "Modo claro" : "Modo escuro"}
-            >
-              {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
-            </button>
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <button
-                  className="p-2 text-foreground bg-muted/40 hover:bg-muted/60 transition-all rounded-full border border-white/5 relative hover:scale-110 active:scale-95"
-                  style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
-                  title="Menu"
-                  aria-label="Abrir menu"
-                >
-                  <Menu className="h-[18px] w-[18px]" />
-                  {profileIncomplete && (
-                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-warning animate-pulse" />
-                  )}
-                </button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[85vw] max-w-[340px] p-0 flex flex-col">
-                <SheetHeader className="p-5 border-b border-border">
-                  <SheetTitle className="text-left flex items-center gap-3">
-                    <div className="rounded-full p-2 bg-primary/15">
-                      <User className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[11px] text-muted-foreground font-normal">Área do Cliente</div>
-                      <div className="text-sm font-semibold text-foreground truncate">{customer.name}</div>
-                    </div>
-                  </SheetTitle>
-                </SheetHeader>
-                <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
-                  <button
-                    onClick={() => openAccount("dados")}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
-                  >
-                    <User className="h-[18px] w-[18px] text-primary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground flex items-center gap-2">
-                        Meus dados
-                        {profileIncomplete && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "hsl(var(--warning) / 0.18)", color: "hsl(var(--warning))" }}>AÇÃO</span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground">Perfil, e-mail e WhatsApp</div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => openAccount("faturas")}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
-                  >
-                    <Receipt className="h-[18px] w-[18px] text-primary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">Faturas</div>
-                      <div className="text-[11px] text-muted-foreground">Histórico de pagamentos</div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => { setMenuOpen(false); navigate("/instalacao"); }}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
-                  >
-                    <Download className="h-[18px] w-[18px] text-accent shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">Como instalar</div>
-                      <div className="text-[11px] text-muted-foreground">Apps para Smart TV, Box e celular</div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                  <a
-                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Olá! Preciso de ajuda. Usuário: ${customer.usuario}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setMenuOpen(false)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
-                  >
-                    <HelpCircle className="h-[18px] w-[18px] text-primary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">Suporte</div>
-                      <div className="text-[11px] text-muted-foreground">Falar no WhatsApp</div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </a>
-                  <button
-                    onClick={() => { setReferralOpen(true); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
-                  >
-                    <Gift className="h-[18px] w-[18px] text-accent shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">Indique e ganhe</div>
-                      <div className="text-[11px] text-muted-foreground">+30 dias grátis por indicação</div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </nav>
-                <div className="p-3 border-t border-border">
-                  <button
-                    onClick={() => { setMenuOpen(false); handleLogout(); }}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 transition-colors text-left text-destructive"
-                  >
-                    <LogOut className="h-[18px] w-[18px] shrink-0" />
-                    <div className="text-sm font-medium">Sair da conta</div>
-                  </button>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader
+        customer={customer}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        menuOpen={menuOpen}
+        setMenuOpen={setMenuOpen}
+        profileIncomplete={profileIncomplete}
+      >
+        <DashboardNavigation
+          customer={customer}
+          profileIncomplete={profileIncomplete}
+          onOpenAccount={openAccount}
+          onNavigate={navigate}
+          onOpenReferral={() => setReferralOpen(true)}
+          onLogout={logout}
+          onCloseMenu={() => setMenuOpen(false)}
+        />
+      </DashboardHeader>
 
-      <main className="px-4 py-4 max-w-[480px] mx-auto" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {/* CONFIRME SEUS DADOS — prioridade máxima quando incompletos */}
-        {profileIncomplete && (
-          <button
-            onClick={() => openAccount("dados")}
-            className="w-full text-left rounded-xl p-4 flex items-center gap-3 border-2 animate-in fade-in slide-in-from-top duration-300"
-            style={{
-              borderColor: "hsl(var(--warning))",
-              background: "hsl(var(--warning) / 0.08)",
-            }}
-          >
-            <div className="rounded-full p-2.5 shrink-0" style={{ background: "hsl(var(--warning) / 0.18)" }}>
-              <AlertTriangle className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground">Confirme seus dados</p>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                {!hasValidPhone
-                  ? "Adicione seu WhatsApp com DDD para receber lembretes de renovação."
-                  : "Verifique se seu nome está completo."}
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          </button>
-        )}
+      <main className="px-4 py-4 max-w-[480px] mx-auto flex flex-col gap-[14px]">
+        <DashboardBanners
+          profileIncomplete={profileIncomplete}
+          hasValidPhone={String((customer as any)?.whatsapp || (customer as any)?.celular || "").replace(/\D/g, "").length >= 10}
+          showEmailBanner={showEmailBanner}
+          onOpenAccount={openAccount}
+          onDismissEmailBanner={dismissEmailBanner}
+        />
 
-        {/* CADASTRO DE E-MAIL — banner dispensável, só quando perfil já está OK */}
-        {showEmailBanner && (
-          <div
-            className="w-full rounded-xl p-3.5 flex items-center gap-3 border animate-in fade-in slide-in-from-top duration-300 relative"
-            style={{
-              borderColor: "hsl(var(--primary) / 0.35)",
-              background: "hsl(var(--primary) / 0.06)",
-            }}
-          >
-            <div className="rounded-full p-2 shrink-0 bg-primary/15">
-              <Mail className="h-4 w-4 text-primary" />
-            </div>
-            <button
-              onClick={() => openAccount("dados")}
-              className="min-w-0 flex-1 text-left"
-            >
-              <p className="text-sm font-semibold text-foreground">Cadastre seu e-mail oficial</p>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                Em breve o login será por e-mail. Adicione agora e não perca o acesso.
-              </p>
-            </button>
-            <button
-              onClick={dismissEmailBanner}
-              className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-              aria-label="Dispensar"
-              style={{ minHeight: 32, minWidth: 32 }}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {/* CARD DO PLANO — status único, sem duplicar em outro lugar */}
         <PlanCard customer={customer} days={days} />
 
+        <DashboardStatusAlerts days={days} />
 
-
-
-        {/* ALERTA — apenas quando urgente; texto natural */}
-        {days < 0 ? (
-          <div className="flex items-start gap-3 rounded-xl p-3.5 text-sm font-medium bg-destructive/10 text-destructive-foreground border border-destructive/20">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-destructive/15">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </div>
-            <p className="leading-snug pt-1">Seu acesso está vencido. Renove para continuar assistindo.</p>
-          </div>
-        ) : days === 0 ? (
-          <div className="flex items-start gap-3 rounded-xl p-3.5 text-sm font-medium bg-warning/10 text-warning-foreground border border-warning/20">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/15">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-            </div>
-            <p className="leading-snug pt-1">Seu acesso vence hoje. Renove agora para não ficar sem sinal.</p>
-          </div>
-        ) : days < 7 ? (
-          <div className="flex items-start gap-3 rounded-xl p-3.5 text-sm font-medium bg-warning/10 text-warning-foreground border border-warning/20">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/15">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-            </div>
-            <p className="leading-snug pt-1">
-              {days === 1 ? "Falta 1 dia" : `Faltam ${days} dias`} para o vencimento. Renove agora!
-            </p>
-          </div>
-        ) : null}
-
-
-        {/* CTA PRINCIPAL */}
         <button
           onClick={() => setRenewalOpen(true)}
           className="group btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 w-full relative overflow-hidden"
@@ -340,12 +117,6 @@ const Dashboard = () => {
           Renovar acesso
         </button>
 
-
-
-
-
-
-        {/* INDIQUE E GANHE */}
         <button
           onClick={() => setReferralOpen(true)}
           className="card-elevated p-5 card-referral text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden"
@@ -359,39 +130,22 @@ const Dashboard = () => {
                 Grátis
               </span>
             </span>
-
           </div>
           <p className="text-sm referral-subtitle">
-          Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
+            Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
           </p>
         </button>
 
-        {/* HISTÓRICO DE RENOVAÇÕES */}
         <RenewalHistory customerId={customer.id} />
-
-        {/* Minha conta / Como instalar / Suporte movidos para o menu lateral (ícone ☰ no topo) */}
-
-
-
-        {/* LANÇAMENTOS — informativo, no final */}
-        <div>
-          <div className="flex items-center gap-2 mb-2.5 px-1">
-            <Film className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-semibold text-foreground">Lançamentos</h2>
-          </div>
-          <LaunchesBanner />
-        </div>
-
-        <div className="h-2" />
-
       </main>
 
-      <ExpirationPopup
-        days={days}
-        customerUsuario={customer.usuario}
-        onRenew={() => setRenewalOpen(true)}
-        isReady={!isLoading}
-      />
+      <footer className="px-4 py-8 pb-12 max-w-[480px] mx-auto text-center space-y-6">
+        <LaunchesBanner />
+        <div className="pt-4 border-t border-white/5 opacity-40">
+          <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">Loreall Play • 2026</p>
+        </div>
+      </footer>
+
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
       <MyAccountSheet
@@ -400,9 +154,13 @@ const Dashboard = () => {
         customerId={customer.id}
         initialTab={accountTab}
         customerUsuario={customer.usuario}
-        whatsappNumber={WHATSAPP_NUMBER}
       />
-
+      <ExpirationPopup 
+        days={days} 
+        customerUsuario={customer.usuario} 
+        onRenew={() => setRenewalOpen(true)} 
+        isReady={true} 
+      />
     </div>
   );
 };
