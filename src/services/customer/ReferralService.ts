@@ -24,14 +24,14 @@ export class ReferralService extends BaseApi {
   }
 
   static async getOrCreateReferralCode(customer_id: number, customer_name: string): Promise<{ code: string }> {
-    return this.callReferrals("get-or-create-code", {}, { method: "POST", body: { customer_id, customer_name } });
+    return this.callReferrals("get-or-create-code", {}, { method: "POST", body: { customer_id, customer_name } }) as Promise<{ code: string }>;
   }
 
   static async lookupReferralCode(code: string): Promise<{ valid: boolean; customer_id?: number; customer_name?: string; code?: string }> {
-    return this.callReferrals("lookup-code", { code });
+    return this.callReferrals("lookup-code", { code }) as Promise<{ valid: boolean; customer_id?: number; customer_name?: string; code?: string }>;
   }
 
   static async listReferralsByReferrer(customer_id: number): Promise<{ referrals: ReferralRow[]; credited: number; pending: number; total_days: number }> {
-    return this.callReferrals("list-by-referrer", { customer_id: String(customer_id) });
+    return this.callReferrals("list-by-referrer", { customer_id: String(customer_id) }) as Promise<{ referrals: ReferralRow[]; credited: number; pending: number; total_days: number }>;
   }
 }
