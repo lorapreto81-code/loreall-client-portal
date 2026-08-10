@@ -3,6 +3,7 @@
 // (renovação de cliente no TopGestor + indicações, ou recarga de revendedor WAREZ).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendWhatsappText } from "../_shared/uazapi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,7 +90,16 @@ async function processReferralOnPayment(
   if (isActive && daysLeft >= MIN_DAYS_REMAINING_TO_CREDIT && dueDate) {
     const r = await tgAddBonusDays(tgToken, referrerId, dueDate, BONUS_DAYS, REFERRAL_MESSAGE_ID);
     renewalResp = r.data;
-    if (r.ok) { status = "credited"; creditedAt = new Date().toISOString(); }
+    if (r.ok) { 
+      status = "credited"; 
+      creditedAt = new Date().toISOString(); 
+      // Notify referrer about the bonus
+      const msg = `🎁 *Loreall Play* — Bônus de Indicação!\n\n` +
+        `Parabéns, ${referrer.name}! Sua indicação para *${payment.customer_name}* foi concluída.\n\n` +
+        `Você ganhou *+30 dias* de acesso grátis como presente! 🚀`;
+      const phone = referrer.whatsapp || referrer.celular || referrer.phone || referrer.telefone;
+      if (phone) await sendWhatsappText(String(phone), msg);
+    }
     else rejection = `TG update failed: ${r.status}`;
   } else if (!isActive) rejection = `Indicador vencido/inativo (${daysLeft}d) - aguardar renovação`;
   else rejection = `Faltam ${daysLeft} dia(s) - aguardar renovação`;
@@ -458,6 +468,13 @@ Deno.serve(async (req) => {
             renewal_response: rr,
             renewed_at: new Date().toISOString()
           }).eq("id", payment.id).is("renewed_at", null);
+
+          // Notify customer about successful renewal
+          const msg = `✅ *Loreall Play* — Renovação Concluída!\n\n` +
+            `Olá, ${payment.customer_name}! Recebemos seu pagamento e seu acesso foi renovado com sucesso.\n\n` +
+            `Obrigado por escolher a Loreall Play! 📺`;
+          const phone = payment.customer_phone || payment.metadata?.customer?.phone;
+          if (phone) await sendWhatsappText(String(phone), msg);
         } else {
           console.error("[syncpay-webhook] TG renew failed", tgRes.status, rr);
           await supabase.from("payments").update({ renewal_response: rr }).eq("id", payment.id);
