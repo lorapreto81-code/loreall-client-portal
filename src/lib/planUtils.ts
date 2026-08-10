@@ -87,16 +87,27 @@ export const computeRenewalCards = (
   for (const period of PERIOD_MAP) {
     const candidates = allPlans.filter((p) => {
       const name = getPlanName(p);
-      if (!isStandardPlanName(name)) return false;
-      if (!matchesPeriod(name, period.keyword)) return false;
-
-      // If user has a plan with screen info, match it. 
-      // Otherwise, pick plans with 1 screen as default.
-      const screensToMatch = currentHasScreens ? currentTelas : 1;
-      return matchesScreenCount(name, screensToMatch);
+      // Try standard plan name first
+      if (isStandardPlanName(name)) {
+        if (!matchesPeriod(name, period.keyword)) return false;
+        const screensToMatch = currentHasScreens ? currentTelas : 1;
+        return matchesScreenCount(name, screensToMatch);
+      }
+      
+      // Fallback for non-standard plan names: just match the period keyword 
+      // if the name doesn't specify screens (or if it matches the screen count)
+      const hasScreens = hasAnyScreenTag(name);
+      if (matchesPeriod(name, period.keyword)) {
+        if (!hasScreens) return true; // Accept plans without screen tags as generic
+        const screensToMatch = currentHasScreens ? currentTelas : 1;
+        return matchesScreenCount(name, screensToMatch);
+      }
+      
+      return false;
     });
 
     if (candidates.length > 0) {
+      // Sort by value (cheapest first for that period)
       candidates.sort((a, b) => getPlanValue(a) - getPlanValue(b));
       standardSet[period.keyword] = candidates[0];
     }
