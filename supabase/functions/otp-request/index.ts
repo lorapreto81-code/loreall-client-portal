@@ -89,10 +89,13 @@ Deno.serve(async (req) => {
     const matches = customers.filter((c) => {
       const cEmail = String(c.email || "").toLowerCase().trim();
       const cName = String(c.name || "").toLowerCase().trim();
+      const localPart = key.split('@')[0];
       
       if (isEmail) {
-        // Case insensitive match on email or name
-        return cEmail === key || cName.includes(key.split('@')[0]);
+        // Broaden match: email equals key OR email contains localPart OR name contains localPart
+        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
+        console.log(`[otp-request] Checking customer "${cName}" (Email: ${cEmail}): match=${match}`);
+        return match;
       }
       
       const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
