@@ -75,7 +75,16 @@ Deno.serve(async (req) => {
 
 
     console.log(`[otp-request] Searching customers for: ${isEmail ? raw : digits}`);
-    const customers = await tgSearchCustomers(isEmail ? raw : digits);
+    let customers = await tgSearchCustomers(isEmail ? raw : digits);
+    
+    // If e-mail search yielded no results, try searching by the local part of the e-mail as a fallback
+    if (isEmail && customers.length === 0) {
+      const localPart = raw.split('@')[0];
+      if (localPart.length >= 3) {
+        console.log(`[otp-request] Fallback search for local part: ${localPart}`);
+        customers = await tgSearchCustomers(localPart);
+      }
+    }
     console.log(`[otp-request] Found ${customers.length} total search results.`);
     const matches = customers.filter((c) => {
       if (isEmail) {
