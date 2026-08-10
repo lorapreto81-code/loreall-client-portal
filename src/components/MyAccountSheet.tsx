@@ -3,10 +3,14 @@ import { toast } from "sonner";
 import {
   X, User, Phone, Mail, Loader2, Receipt,
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
-  KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2, Info, Calendar, ShieldCheck
+  KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2, Info, Calendar, ShieldCheck,
+  Monitor
 } from "lucide-react";
 import { updateCustomer, getCustomer, authHeaders } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
+import { onlyDigits } from "@/lib/otp";
+import { formatDate } from "@/lib/format";
+
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
