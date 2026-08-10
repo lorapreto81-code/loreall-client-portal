@@ -71,15 +71,19 @@ export const LoginForm = ({
           <div className="relative">
             <input
               type="text"
-              value={EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
+              value={EMAIL_RE.test(phone) || /[a-zA-Z]/.test(phone) ? phone : formatPhone(phone)}
               onChange={(e) => {
-                const raw = e.target.value.trim();
+                const raw = e.target.value;
                 const val = raw.slice(0, 100);
-                // Permissively handle typing email OR phone
-                if (val.includes("@") || /[a-zA-Z]/.test(val)) {
+                
+                // If it contains letters or @, treat as email/text
+                if (/[a-zA-Z]/.test(val) || val.includes("@")) {
                   onPhoneChange(val.toLowerCase());
+                } else if (val === "") {
+                  onPhoneChange("");
                 } else {
-                  // If it's digits or phone chars, clean to digits
+                  // If it's just numbers and phone formatting chars, keep it as digits
+                  // but ONLY if there are no letters.
                   onPhoneChange(onlyDigits(val).slice(0, 13));
                 }
               }}
