@@ -75,9 +75,11 @@ export const LoginForm = ({
               onChange={(e) => {
                 const raw = e.target.value.trim();
                 const val = raw.slice(0, 100);
-                if (EMAIL_RE.test(val) || (val.includes("@") && !onlyDigits(val))) {
+                // Permissively handle typing email OR phone
+                if (val.includes("@") || /[a-zA-Z]/.test(val)) {
                   onPhoneChange(val.toLowerCase());
                 } else {
+                  // If it's digits or phone chars, clean to digits
                   onPhoneChange(onlyDigits(val).slice(0, 13));
                 }
               }}
@@ -85,7 +87,7 @@ export const LoginForm = ({
               placeholder="WhatsApp ou E-mail"
               autoComplete="username"
             />
-            <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         ) : (
           <>
@@ -100,7 +102,7 @@ export const LoginForm = ({
                 autoComplete="one-time-code"
                 autoFocus
               />
-              <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <button
