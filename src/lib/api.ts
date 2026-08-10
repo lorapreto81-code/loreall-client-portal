@@ -1,7 +1,13 @@
 import { getCustomerToken } from "@/store/authStore";
+import { AuthService, OtpResponse, LoginAccount } from "@/services/auth/AuthService";
+import { CustomerService } from "@/services/customer/CustomerService";
+import { PaymentService, CreatePixResponse } from "@/services/customer/PaymentService";
+import { ReferralService, ReferralRow } from "@/services/customer/ReferralService";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+export type { LoginAccount, CreatePixResponse, ReferralRow };
 
 /** Headers with the signed customer session token (required by protected functions). */
 export function authHeaders(): Record<string, string> {
@@ -14,93 +20,49 @@ export function authHeaders(): Record<string, string> {
   };
 }
 
-function sanitize(val: any): any {
-  if (typeof val === "string") {
-    return val.replace(/<[^>]*>?/gm, "").trim().slice(0, 500);
-  }
-  return val;
-}
+/** Verifies the customer's credentials server-side and returns signed sessions. */
+export const customerLogin = (identifier: string, password: string) => AuthService.customerLogin(identifier, password);
 
+/** Sends a 6-digit login code to the customer's WhatsApp. */
+export const requestOtp = (phone: string) => AuthService.requestOtp(phone);
+
+/** Validates the code and returns signed sessions for the matching accounts. */
+export const verifyOtp = (phone: string, code: string) => AuthService.verifyOtp(phone, code);
+
+// Customer actions
+export const getCustomer = (id: number) => CustomerService.getCustomer(id);
+export const updateCustomer = (id: number, body: any) => CustomerService.updateCustomer(id, body);
+export const getPlans = () => CustomerService.getPlans();
+
+// Payment actions
+export const createPixPayment = (body: any) => PaymentService.createPix(body);
+export const renewCustomer = (id: number, body: any) => PaymentService.renewCustomer(id, body.plan_id);
+
+// Referral actions
+export const getOrCreateReferralCode = (id: number, name: string) => ReferralService.getOrCreateReferralCode(id, name);
+export const listReferralsByReferrer = (id: number) => ReferralService.listReferralsByReferrer(id);
+export const lookupReferralCode = (code: string) => ReferralService.lookupReferralCode(code);
+
+// Remaining legacy functions
 async function callProxy(action: string, params: Record<string, string> = {}, options?: { method?: string; body?: Record<string, unknown> }) {
   const qp = new URLSearchParams({ action, ...params }).toString();
   const url = `${SUPABASE_URL}/functions/v1/topgestor-proxy?${qp}`;
   
-  // Frontend Sanitization
-  let body = options?.body;
-  if (body && typeof body === "object") {
-    body = Object.fromEntries(
-      Object.entries(body).map(([k, v]) => [k, sanitize(v)])
-    );
-  }
-
   const res = await fetch(url, {
     method: options?.method || "GET",
     headers: authHeaders(),
-    ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
   });
-
 
   if (res.status === 401) {
     window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     throw new Error("Sessão expirada. Faça login novamente.");
-  }
-  if (res.status === 429) {
-    throw new Error("Muitas requisições. Aguarde alguns segundos.");
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || data.message || `Erro ${res.status}`);
   }
   return res.json();
-}
-
-export interface LoginAccount {
-  token: string;
-  customer: Record<string, unknown>;
-}
-
-/** Verifies the customer's credentials server-side and returns signed sessions. */
-export async function customerLogin(identifier: string, password: string): Promise<{ accounts: LoginAccount[] }> {
-  if (!identifier.trim() || !password) throw new Error("Informe usuário e senha.");
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
-    body: JSON.stringify({ identifier, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
-  return data as { accounts: LoginAccount[] };
-}
-
-async function callPublic(fn: string, body: Record<string, unknown>) {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
-  return data;
-}
-
-/** Sends a 6-digit login code to the customer's WhatsApp. */
-export async function requestOtp(phone: string): Promise<{ ok: boolean; expires_in: number; message: string; target_hint?: string; customer_name?: string }> {
-  // Sanitize input before sending
-  const sanitized = phone.trim().slice(0, 100);
-  return callPublic("otp-request", { phone: sanitized });
-}
-
-/** Validates the code and returns signed sessions for the matching accounts. */
-export async function verifyOtp(phone: string, code: string): Promise<{ accounts: LoginAccount[] }> {
-  return callPublic("otp-verify", { phone, code });
 }
 
 export async function getCustomerInvoices(customerId: number, perPage = 10) {
@@ -111,11 +73,7 @@ export async function generatePaymentLink(customerId: number) {
   return callProxy("generate-payment-link", { id: String(customerId) }, { method: "POST" });
 }
 
-export async function getPlans() {
-  return callProxy("get-plans");
-}
-
-export async function listCustomers(params: { per_page?: number; page?: number; status?: string; search?: string; archived?: boolean } = {}) {
+export async function listCustomers(params: any = {}) {
   const qp: Record<string, string> = {};
   if (params.per_page) qp.per_page = String(params.per_page);
   if (params.page) qp.page = String(params.page);
@@ -124,85 +82,3 @@ export async function listCustomers(params: { per_page?: number; page?: number; 
   if (params.archived) qp.archived = "true";
   return callProxy("list-customers", qp);
 }
-
-export async function updateCustomer(customerId: number, body: Record<string, unknown>) {
-  return callProxy("update-customer", { id: String(customerId) }, { method: "POST", body });
-}
-
-export async function getCustomer(customerId: number) {
-  return callProxy("get-customer", { id: String(customerId) });
-}
-
-export async function renewCustomer(
-  customerId: number,
-  body: { plan_id?: number; dias?: number; data_de_vencimento?: string; invoice_status?: string } = {}
-) {
-  return callProxy("renew-customer", { id: String(customerId) }, { method: "POST", body });
-}
-
-// ----- PIX (SyncPay) -----
-export interface CreatePixResponse {
-  payment_id: string;
-  qr_code_url: string;
-  qr_code_text: string;
-  expires_at: string;
-  amount: number;
-}
-
-export async function createPixPayment(body: {
-  customer_id: number;
-  customer_name: string;
-  customer_whatsapp?: string;
-  plan_id: number;
-  plan_name: string;
-  amount: number;
-  referral_code?: string;
-}): Promise<CreatePixResponse> {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/create-pix`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
-  return data as CreatePixResponse;
-}
-
-// ----- Referrals -----
-async function callReferrals(action: string, params: Record<string, string> = {}, options?: { method?: string; body?: Record<string, unknown> }) {
-  const qp = new URLSearchParams({ action, ...params }).toString();
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/referrals-api?${qp}`, {
-    method: options?.method || "GET",
-    headers: authHeaders(),
-    ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
-  return data;
-}
-
-export async function getOrCreateReferralCode(customer_id: number, customer_name: string): Promise<{ code: string }> {
-  return callReferrals("get-or-create-code", {}, { method: "POST", body: { customer_id, customer_name } });
-}
-
-export async function lookupReferralCode(code: string): Promise<{ valid: boolean; customer_id?: number; customer_name?: string; code?: string }> {
-  return callReferrals("lookup-code", { code });
-}
-
-export interface ReferralRow {
-  id: string;
-  referrer_customer_id: number;
-  referred_customer_id: number;
-  referred_customer_name: string | null;
-  referral_code: string;
-  bonus_days: number;
-  status: "pending_payment" | "pending_referrer_renewal" | "credited" | "rejected";
-  rejection_reason: string | null;
-  credited_at: string | null;
-  created_at: string;
-}
-
-export async function listReferralsByReferrer(customer_id: number): Promise<{ referrals: ReferralRow[]; credited: number; pending: number; total_days: number }> {
-  return callReferrals("list-by-referrer", { customer_id: String(customer_id) });
-}
-
