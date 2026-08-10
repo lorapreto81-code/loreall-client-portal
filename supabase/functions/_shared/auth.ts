@@ -63,10 +63,22 @@ export async function getCustomerSession(req: Request): Promise<CustomerSession 
   return await verifyCustomerToken(req.headers.get("x-customer-token"));
 }
 
+/**
+ * Constant-time comparison to prevent timing attacks.
+ */
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 export function isAdminRequest(req: Request): boolean {
   const expected = Deno.env.get("ADMIN_PASSWORD");
   const provided = req.headers.get("x-admin-password");
-  return !!expected && !!provided && provided === expected;
+  return !!expected && !!provided && constantTimeEqual(provided, expected);
 }
 
 export function isAdminPassword(provided: unknown): boolean {
@@ -74,6 +86,7 @@ export function isAdminPassword(provided: unknown): boolean {
   if (!expected) {
     console.error("ADMIN_PASSWORD secret is NOT defined in environment");
   }
-  return !!expected && typeof provided === "string" && provided === expected;
+  return !!expected && typeof provided === "string" && constantTimeEqual(provided, expected);
 }
+
 
