@@ -137,7 +137,7 @@ export default function SyncpaySubscriptionsTab() {
                     <option value="">— Não mapeado —</option>
                     {tgPlans.map((tp) => (
                       <option key={tp.id} value={tp.id}>
-                        {getPlanName(tp)} — {formatCurrency(getPlanValue(tp))}
+                        #{tp.id} - {getPlanName(tp)} ({formatCurrency(getPlanValue(tp))})
                       </option>
                     ))}
                   </select>
