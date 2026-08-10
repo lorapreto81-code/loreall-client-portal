@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     const admin = isAdminRequest(req);
     const session = admin ? null : await getCustomerSession(req);
 
-    if (!admin && !session) return json({ error: "unauthorized" }, 401);
+    if (!admin && !session && action !== "get-plans") return json({ error: "unauthorized" }, 401);
 
     // Actions restricted to the admin panel.
     const adminOnly = new Set(["search-customer", "list-customers"]);
