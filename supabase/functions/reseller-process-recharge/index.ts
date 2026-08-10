@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendWhatsappText } from "../_shared/uazapi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -242,6 +243,19 @@ export async function processRecharge(
     })
     .eq("id", purchaseId)
     .is("recharged_at", null); // Proteção final contra duplicidade
+
+  // Notify reseller about credits
+  try {
+    const { data: link } = await supabase.from("reseller_links").select("whatsapp, reseller_name").eq("id", purchase.reseller_link_id).maybeSingle();
+    if (link?.whatsapp) {
+      const msg = `💰 *Loreall Play* — Créditos Recebidos!\n\n` +
+        `Olá, ${link.reseller_name}! Sua compra de *${purchase.package_credits}* créditos foi confirmada e adicionada ao seu painel.\n\n` +
+        `Bom trabalho e ótimas vendas! 🚀`;
+      await sendWhatsappText(String(link.whatsapp), msg);
+    }
+  } catch (e) {
+    console.error("[reseller-process-recharge] whatsapp notification failed", e);
+  }
 
   return { ok: true, status, data: respJson };
 }
