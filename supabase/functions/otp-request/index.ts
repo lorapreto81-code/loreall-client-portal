@@ -23,12 +23,15 @@ Deno.serve(async (req) => {
       return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
     }
     
-    const raw = parse.data.phone.trim();
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
-    const digits = onlyDigits(raw);
+    const input = parse.data.phone.trim();
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+    const digits = onlyDigits(input);
+    
+    // Check for fictitious emails like "Loreallclientes" or "topgesotor@loreal"
+    // that might not have @ or domain correctly but were used in the old system.
+    const isFictitiousEmail = !isEmail && /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(input) && digits.length < 8;
 
-
-    const key = isEmail ? raw.toLowerCase().trim() : phoneKey(digits);
+    const key = (isEmail || isFictitiousEmail) ? input.toLowerCase().trim() : phoneKey(digits);
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -74,12 +77,12 @@ Deno.serve(async (req) => {
 
 
 
-    console.log(`[otp-request] Searching customers for: ${isEmail ? raw : digits}`);
-    let customers = await tgSearchCustomers(isEmail ? raw : digits);
+    console.log(`[otp-request] Searching customers for: ${key}`);
+    let customers = await tgSearchCustomers(key);
     
     // If e-mail search yielded no results, try searching by the local part of the e-mail as a fallback
-    if (isEmail && customers.length === 0) {
-      const localPart = raw.split('@')[0];
+    if ((isEmail || isFictitiousEmail) && customers.length === 0) {
+      const localPart = key.split('@')[0];
       if (localPart.length >= 3) {
         console.log(`[otp-request] Fallback search for local part: ${localPart}`);
         customers = await tgSearchCustomers(localPart);
@@ -91,7 +94,7 @@ Deno.serve(async (req) => {
       const cName = String(c.name || "").toLowerCase().trim();
       const localPart = key.split('@')[0];
       
-      if (isEmail) {
+      if (isEmail || isFictitiousEmail) {
         // Broaden match: email equals key OR email contains localPart OR name contains localPart
         const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
         console.log(`[otp-request] Checking customer "${cName}" (Email: ${cEmail}): match=${match}`);
@@ -112,16 +115,19 @@ Deno.serve(async (req) => {
     const getGenericOk = (hint?: string, name?: string) => ({
       ok: true,
       expires_in: CODE_TTL_MINUTES * 60,
-      message: isEmail 
-        ? "Se o e-mail estiver cadastrado, você receberá um código no WhatsApp vinculado à conta." 
+      message: (isEmail || isFictitiousEmail)
+        ? "Se o identificador estiver cadastrado, você receberá um código no WhatsApp vinculado à conta." 
         : "Se o número estiver cadastrado, você receberá um código no WhatsApp.",
-      target_hint: hint || null, // Ensure target_hint is always present if possible
+      target_hint: hint || null,
       customer_name: name || null,
     });
 
     if (matches.length === 0) {
       console.log(`[otp-request] No matches found for identifier: ${key}`);
-      return json(getGenericOk());
+      const errorMsg = isEmail 
+        ? "E-mail não vinculado a nenhuma conta. Verifique os dados ou entre em contato com o suporte."
+        : "Número não vinculado a nenhuma conta.";
+      return json({ error: errorMsg }, 404);
     }
 
     const targetPhoneRaw = String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || matches[0].whatsapp_c || "");
