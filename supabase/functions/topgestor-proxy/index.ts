@@ -80,9 +80,9 @@ Deno.serve(async (req) => {
       case "get-plans": {
         const r = await fetch(`${API_BASE}/plans`, { headers: tgHeaders() });
         const rawData = await r.json().catch(() => ({}));
-        console.log("[topgestor-proxy] rawData from TG:", JSON.stringify(rawData).slice(0, 500));
+        console.log("[topgestor-proxy] rawData from TG:", JSON.stringify(rawData));
         const plans = Array.isArray(rawData) ? rawData : (rawData?.data || rawData?.plans || rawData?.list || []);
-        console.log(`[topgestor-proxy] returning ${plans.length} plans`);
+        console.log(`[topgestor-proxy] normalized plans count: ${plans.length}`);
         return json({ data: plans });
       }
 

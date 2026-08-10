@@ -23,8 +23,9 @@ export default function SyncpaySubscriptionsTab() {
         getPlans().catch(() => ({ data: [] as Plan[] })),
       ]);
       setPlans(plans || []);
-      const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || tg?.list || []);
-      console.log("[SyncpaySubscriptionsTab] TG Plans list:", tgList);
+      const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || tg?.list || tg || []);
+      console.log("[SyncpaySubscriptionsTab] TG Response:", tg);
+      console.log("[SyncpaySubscriptionsTab] Normalized TG List:", tgList);
       setTgPlans(tgList);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao carregar");
