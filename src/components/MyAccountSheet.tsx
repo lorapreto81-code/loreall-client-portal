@@ -3,10 +3,14 @@ import { toast } from "sonner";
 import {
   X, User, Phone, Mail, Loader2, Receipt,
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
-  KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2,
+  KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2, Info, Calendar, ShieldCheck,
+  Monitor
 } from "lucide-react";
 import { updateCustomer, getCustomer, authHeaders } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
+
+import { formatDate } from "@/lib/format";
+
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -235,170 +239,192 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {tab === "dados" && (
-            <div className="p-5">
-              <p className="text-xs text-muted-foreground mb-4">
-                Mantenha seus dados atualizados para receber lembretes e agilizar cobranças.
-              </p>
-
-              {/* Dados de acesso ao aplicativo — destaque colorido */}
+            <div className="p-5 space-y-6">
+              {/* Seção: Acesso ao App */}
               <div
-                className="rounded-xl p-3.5 mb-4 relative overflow-hidden border-2"
+                className="rounded-2xl p-4 relative overflow-hidden border border-primary/20 bg-primary/5"
                 style={{
-                  borderColor: "hsl(var(--primary) / 0.4)",
-                  background:
-                    "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))",
-                  boxShadow: "0 4px 20px -8px hsl(var(--primary) / 0.3)",
+                  boxShadow: "0 8px 32px -8px hsl(var(--primary) / 0.2)",
                 }}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="rounded-full p-1.5 bg-primary/25">
-                    <KeyRound className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="rounded-xl p-2 bg-primary/20">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-primary uppercase tracking-wider leading-none">
-                      Meus dados de acesso
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">
-                      Use no app do seu player
-                    </div>
+                    <h3 className="text-sm font-bold text-foreground">Credenciais de Acesso</h3>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Use no seu aplicativo</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-1.5">
                       <UserCircle2 className="h-3 w-3" /> Usuário
-                    </div>
-                    <div className="flex items-center gap-2 rounded-lg bg-background border border-primary/20 px-3 py-2">
-                      <UserCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      <div className="flex-1 text-sm font-mono font-semibold text-foreground truncate select-all">
+                    </label>
+                    <div className="flex items-center gap-2 rounded-xl bg-background/50 border border-border/50 px-3.5 py-2.5 group transition-all focus-within:border-primary/50">
+                      <div className="flex-1 text-sm font-mono font-bold text-foreground truncate select-all">
                         {String((customer as any)?.usuario || "—")}
                       </div>
                       <button
                         type="button"
                         onClick={() => copyValue(String((customer as any)?.usuario || ""), "user")}
-                        className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                        aria-label="Copiar usuário"
+                        className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                       >
                         {copied === "user" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-1.5">
                       <Lock className="h-3 w-3" /> Senha
-                    </div>
-                    <div className="flex items-center gap-2 rounded-lg bg-background border border-primary/20 px-3 py-2">
-                      <Lock className="h-4 w-4 text-primary shrink-0" />
-                      <div className="flex-1 text-sm font-mono font-semibold text-foreground truncate select-all">
+                    </label>
+                    <div className="flex items-center gap-2 rounded-xl bg-background/50 border border-border/50 px-3.5 py-2.5 group transition-all focus-within:border-primary/50">
+                      <div className="flex-1 text-sm font-mono font-bold text-foreground truncate select-all">
                         {showPass
                           ? String((customer as any)?.password || "—")
-                          : "•".repeat(Math.min(12, String((customer as any)?.password || "").length) || 6)}
+                          : "••••••••"}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowPass((v) => !v)}
-                        className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                        aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
-                      >
-                        {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => copyValue(String((customer as any)?.password || ""), "pass")}
-                        className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                        aria-label="Copiar senha"
-                      >
-                        {copied === "pass" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-                      </button>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowPass((v) => !v)}
+                          className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => copyValue(String((customer as any)?.password || ""), "pass")}
+                          className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {copied === "pass" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-2.5">
-                  Toque no ícone para copiar. Use estes dados para entrar no app.
-                </p>
+                
+                <div className="mt-4 flex items-start gap-2 p-2.5 rounded-lg bg-black/20 text-[10px] text-muted-foreground italic border border-white/5">
+                  <Info className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />
+                  <span>Dica: Toque nos ícones para copiar. Mantenha esses dados seguros e não os compartilhe.</span>
+                </div>
               </div>
 
+              {/* Seção: Perfil */}
               <div className="space-y-4">
+                <div className="flex items-center gap-2 px-1">
+                  <User className="h-4 w-4 text-primary" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Perfil do Cliente</h3>
+                </div>
 
-                <div>
-                  <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <User className="h-3.5 w-3.5" /> Nome completo
-                  </label>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
-                    placeholder="Seu nome completo"
-                  />
+                <div className="grid gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground ml-1">Nome completo</label>
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-muted/30 border border-border/50 text-sm focus:border-primary/50 outline-none transition-all"
+                      placeholder="Seu nome completo"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-muted-foreground ml-1">WhatsApp</label>
+                      <input
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(formatPhone(e.target.value))}
+                        inputMode="tel"
+                        maxLength={16}
+                        className="w-full px-4 py-3 rounded-xl bg-muted/30 border border-border/50 text-sm focus:border-primary/50 outline-none transition-all"
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-muted-foreground ml-1">E-mail</label>
+                      <input
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        type="email"
+                        className="w-full px-4 py-3 rounded-xl bg-muted/30 border border-border/50 text-sm focus:border-primary/50 outline-none transition-all"
+                        placeholder="voce@email.com"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <Phone className="h-3.5 w-3.5" /> WhatsApp
-                  </label>
-                  <input
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(formatPhone(e.target.value))}
-                    inputMode="tel"
-                    maxLength={16}
-                    className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <Mail className="h-3.5 w-3.5" /> E-mail
-                  </label>
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    type="email"
-                    className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
-                    placeholder="voce@email.com"
-                  />
-                </div>
+
                 {(() => {
                   const raw = String((customer as any)?.cpf || "");
-                  const digits = raw.replace(/\D/g, "");
-                  if (digits.length === 11) {
+                  const digits = onlyDigits(raw);
+                  if (digits.length >= 11) {
                     return (
-                      <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 flex items-center justify-between">
-                        <div>
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">CPF cadastrado</div>
-                          <div className="text-sm font-mono text-foreground">{`***.***.${digits.slice(6, 9)}-${digits.slice(9)}`}</div>
+                      <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-emerald-500/10">
+                            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Documento Verificado</div>
+                            <div className="text-sm font-mono font-bold text-foreground">
+                              {digits.length === 11 
+                                ? `***.***.${digits.slice(6, 9)}-${digits.slice(9)}`
+                                : `**.***.***/${digits.slice(8, 12)}-**`}
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-[10px] text-muted-foreground">Pix Automático</span>
-                      </div>
-                    );
-                  }
-                  if (digits.length === 14) {
-                    return (
-                      <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 flex items-center justify-between">
-                        <div>
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">CNPJ cadastrado</div>
-                          <div className="text-sm font-mono text-foreground">{`**.***.***/${digits.slice(8, 12)}-**`}</div>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">Pix Automático</span>
+                        <div className="text-[9px] font-black text-emerald-500/50 uppercase vertical-text tracking-tighter">PIX OK</div>
                       </div>
                     );
                   }
                   return (
-                    <p className="text-[10px] text-muted-foreground -mt-1">
-                      CPF/CNPJ só será solicitado ao ativar o Pix Automático.
-                    </p>
+                    <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
+                      <Info className="h-4 w-4 text-amber-500/60 mt-0.5" />
+                      <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+                        O CPF será solicitado automaticamente ao realizar o primeiro pagamento via Pix no sistema.
+                      </p>
+                    </div>
                   );
                 })()}
+
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="btn-primary-gradient w-full py-4 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Salvar Alterações"}
+                </button>
               </div>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="btn-primary-gradient w-full mt-6 py-3.5 font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
-                style={{ minHeight: 48 }}
-              >
-                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                Salvar alterações
-              </button>
+
+              {/* Seção: Servidor / App Info */}
+              {((customer as any)?.iptv_provider || (customer as any)?.data_vencimento_app) && (
+                <div className="pt-2 border-t border-border/50 space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <Monitor className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Informações Técnicas</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {(customer as any)?.iptv_provider && (
+                      <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Servidor</div>
+                        <div className="text-sm font-bold text-foreground">{(customer as any).iptv_provider}</div>
+                      </div>
+                    )}
+                    {(customer as any)?.data_vencimento_app && (
+                      <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">App expira em</div>
+                        <div className="text-sm font-bold text-foreground">{formatDate((customer as any).data_vencimento_app)}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
+
+
 
           {tab === "faturas" && (
             <div className="p-4">
