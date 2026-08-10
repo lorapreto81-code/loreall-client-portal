@@ -13,6 +13,8 @@ import Revendedor from "./pages/Revendedor";
 import IndicacaoTeste from "./pages/IndicacaoTeste";
 
 import Instalacao from "./pages/Instalacao";
+import ApiDocs from "./pages/Index";
+
 
 const queryClient = new QueryClient();
 
