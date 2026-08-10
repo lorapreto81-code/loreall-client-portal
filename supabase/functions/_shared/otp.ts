@@ -21,5 +21,7 @@ export async function hashOtp(code: string, phone: string): Promise<string> {
 
 export const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
-/** Last 8 digits — used to match numbers regardless of country code / extra 9. */
-export const phoneKey = (s: string) => onlyDigits(s).slice(-8);
+/** Last 10 digits — used to match numbers regardless of country code (e.g. 5583... vs 83...).
+ * Brazilian numbers are 10 or 11 digits (DDD + number). 10 is enough to be unique within a reasonable scope.
+ */
+export const phoneKey = (s: string) => onlyDigits(s).slice(-10);
