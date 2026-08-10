@@ -16,7 +16,24 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const now = Date.now();
+  const minute = Math.floor(now / 60000);
+  const cacheKey = `${ip}-${minute}`;
+
+  // Simple in-memory rate limit for the proxy (approximate)
+  if (!(globalThis as any).tmdbRateLimit) (globalThis as any).tmdbRateLimit = new Map();
+  const count = ((globalThis as any).tmdbRateLimit.get(cacheKey) || 0) + 1;
+  (globalThis as any).tmdbRateLimit.set(cacheKey, count);
+  
+  if (count > 30) {
+    return new Response(JSON.stringify({ error: "Too many requests" }), { 
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    });
+  }
+
   try {
+
     const key = getKey();
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "trending";

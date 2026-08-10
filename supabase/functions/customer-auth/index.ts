@@ -40,11 +40,17 @@ Deno.serve(async (req) => {
     });
 
     // Credential check: the customer must know their own access password.
-    // Use timing-safe comparison or direct value check after filtering.
+    // Constant-time comparison to prevent timing attacks.
     const authenticated = matches.filter((c) => {
       const stored = String(c.password ?? "");
-      return stored === password && password.length > 0;
+      if (!password || !stored || password.length !== stored.length) return false;
+      let result = 0;
+      for (let i = 0; i < password.length; i++) {
+        result |= password.charCodeAt(i) ^ stored.charCodeAt(i);
+      }
+      return result === 0;
     });
+
 
     if (authenticated.length === 0) {
       return json({ error: "Dados de acesso inválidos." }, 401);

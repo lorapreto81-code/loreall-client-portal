@@ -260,12 +260,44 @@ async function handleSubscriptionEvent(
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // Security Hardening: Validate Webhook Signature
+  const signature = req.headers.get("x-syncpay-signature") || req.headers.get("x-hub-signature");
+  const webhookSecret = Deno.env.get("SYNCPAY_WEBHOOK_SECRET");
+  
   const rawBody = await req.text();
+
+  if (webhookSecret && signature) {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(webhookSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    const sigBytes = new Uint8Array(
+      signature.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+    );
+    const isValid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      sigBytes,
+      encoder.encode(rawBody)
+    );
+    if (!isValid) {
+      console.error("[SECURITY] Invalid webhook signature detected");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), { 
+        status: 401, headers: corsHeaders 
+      });
+    }
+  }
+
   try {
     const payload = JSON.parse(rawBody || "{}");
     if (!payload || typeof payload !== "object") throw new Error("Invalid JSON payload");
     const event = String(req.headers.get("event") || payload.event || "").toLowerCase();
     const data = payload.data || payload;
+
     const txId: string | undefined = data.id || data.identifier || data.reference_id;
     const rawStatus = String(data.status || "").toLowerCase();
     const isPaid = ["completed", "paid", "approved", "success", "succeeded"].includes(rawStatus);
