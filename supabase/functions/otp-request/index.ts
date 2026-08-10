@@ -87,11 +87,14 @@ Deno.serve(async (req) => {
     }
     console.log(`[otp-request] Found ${customers.length} total search results.`);
     const matches = customers.filter((c) => {
+      const cEmail = String(c.email || "").toLowerCase().trim();
+      const cName = String(c.name || "").toLowerCase().trim();
+      
       if (isEmail) {
-        const cEmail = String(c.email || "").toLowerCase().trim();
-        console.log(`[otp-request] Comparing e-mail: input="${key}" vs target="${cEmail}"`);
-        return cEmail === key;
+        // Case insensitive match on email or name
+        return cEmail === key || cName.includes(key.split('@')[0]);
       }
+      
       const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
       return phoneFields
         .filter(Boolean)
