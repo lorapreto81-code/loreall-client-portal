@@ -81,7 +81,8 @@ Deno.serve(async (req) => {
         const r = await fetch(`${API_BASE}/plans`, { headers: tgHeaders() });
         const rawData = await r.json().catch(() => ({}));
         // Normaliza a resposta para garantir que retorne um array em .data
-        const plans = Array.isArray(rawData) ? rawData : (rawData?.data || []);
+        // TopGestor pode retornar a lista direto, ou em .data, ou em .plans
+        const plans = Array.isArray(rawData) ? rawData : (rawData?.data || rawData?.plans || []);
         return json({ data: plans });
       }
 
