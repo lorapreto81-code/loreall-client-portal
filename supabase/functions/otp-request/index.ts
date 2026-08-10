@@ -8,7 +8,9 @@ import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 const CODE_TTL_MINUTES = 5;
 const MAX_REQUESTS_PER_IDENTIFIER = 3;
 const MAX_REQUESTS_PER_IP = 10;
+const MAX_GLOBAL_DAILY_OTP = 1000;
 const WINDOW_MINUTES = 10;
+
 
 
 Deno.serve(async (req) => {
@@ -57,6 +59,19 @@ Deno.serve(async (req) => {
         return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429);
       }
     }
+
+    // Global daily rate limit to prevent mass spam/billing exhaustion
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
+    const { count: globalCount } = await supabase
+      .from("otp_codes")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", dayAgo);
+
+    if ((globalCount ?? 0) >= MAX_GLOBAL_DAILY_OTP) {
+      console.error("[SECURITY] Global OTP daily limit reached!");
+      return json({ error: "Serviço temporariamente indisponível. Tente mais tarde." }, 503);
+    }
+
 
 
     const customers = await tgSearchCustomers(isEmail ? raw.slice(0, 100) : digits);
