@@ -74,17 +74,22 @@ Deno.serve(async (req) => {
 
 
 
-    const customers = await tgSearchCustomers(isEmail ? raw.slice(0, 100) : digits);
+    console.log(`[otp-request] Searching customers for: ${isEmail ? raw : digits}`);
+    const customers = await tgSearchCustomers(isEmail ? raw : digits);
+    console.log(`[otp-request] Found ${customers.length} total search results.`);
     const matches = customers.filter((c) => {
       if (isEmail) {
         const cEmail = String(c.email || "").toLowerCase().trim();
+        console.log(`[otp-request] Comparing e-mail: input="${key}" vs target="${cEmail}"`);
         return cEmail === key;
       }
-      return [c.whatsapp, c.celular, c.phone, c.telefone]
+      const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
+      return phoneFields
         .filter(Boolean)
         .map((v) => phoneKey(String(v)))
         .some((p) => p === key);
     });
+    console.log(`[otp-request] Filtered matches: ${matches.length}`);
 
     const getGenericOk = (hint?: string, name?: string) => ({
       ok: true,
@@ -101,8 +106,9 @@ Deno.serve(async (req) => {
       return json(getGenericOk());
     }
 
-    const targetPhoneRaw = String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || "");
+    const targetPhoneRaw = String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || matches[0].whatsapp_c || "");
     const targetPhoneDigits = onlyDigits(targetPhoneRaw);
+    console.log(`[otp-request] Selected target phone digits: ${targetPhoneDigits}`);
     const targetHint = targetPhoneDigits.length >= 4 
       ? `****-${targetPhoneDigits.slice(-4)}` 
       : targetPhoneDigits;
