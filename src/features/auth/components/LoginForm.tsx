@@ -102,7 +102,7 @@ export const LoginForm = ({
                 autoComplete="one-time-code"
                 autoFocus
               />
-              <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <button
