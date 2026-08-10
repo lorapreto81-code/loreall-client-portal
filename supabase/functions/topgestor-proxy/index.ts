@@ -78,8 +78,11 @@ Deno.serve(async (req) => {
       }
 
       case "get-plans": {
-        apiRes = await fetch(`${API_BASE}/plans`, { headers: tgHeaders() });
-        break;
+        const r = await fetch(`${API_BASE}/plans`, { headers: tgHeaders() });
+        const rawData = await r.json().catch(() => ({}));
+        // Normaliza a resposta para garantir que retorne um array em .data
+        const plans = Array.isArray(rawData) ? rawData : (rawData?.data || []);
+        return json({ data: plans });
       }
 
       case "list-customers": {
