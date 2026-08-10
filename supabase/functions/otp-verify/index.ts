@@ -56,19 +56,31 @@ Deno.serve(async (req) => {
 
     await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
 
-    const customers = await tgSearchCustomers(isEmail ? raw.slice(0, 100) : digits);
+    const searchIdentifier = isEmail ? raw.slice(0, 100) : digits;
+    console.log(`[otp-verify] Searching customers for verification: ${searchIdentifier}`);
+    const customers = await tgSearchCustomers(searchIdentifier);
+    console.log(`[otp-verify] Found ${customers.length} total search results.`);
     const matches = customers.filter((c) => {
       if (isEmail) {
         const cEmail = String(c.email || "").toLowerCase().trim();
-        return cEmail === key;
+        const cName = String(c.name || "").toLowerCase().trim();
+        const localPart = key.split('@')[0];
+        // Broaden match: email equals key OR email contains localPart OR name contains localPart
+        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
+        console.log(`[otp-verify] Checking customer "${cName}" (Email: ${cEmail}): match=${match}`);
+        return match;
       }
-      return [c.whatsapp, c.celular, c.phone, c.telefone]
+      const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
+      return phoneFields
         .filter(Boolean)
         .map((v) => phoneKey(String(v)))
         .some((p) => p === key);
     });
 
-    if (matches.length === 0) return json({ error: "Conta não encontrada." }, 404);
+    if (matches.length === 0) {
+      console.warn(`[otp-verify] No matches found for ${key} after code validation.`);
+      return json({ error: "Conta não encontrada." }, 404);
+    }
 
     const accounts = await Promise.all(
       matches.map(async (c) => ({
