@@ -25,7 +25,8 @@ export { PERIOD_MAP };
 
 export const matchesScreenCount = (planName: string, count: number): boolean => {
   const lower = planName.toLowerCase();
-  if (count === 1) return lower.includes("1 tela") && !lower.includes("1 telas");
+  // We prioritize "1 tela" but remain flexible to "1 telas" if it exists in the DB
+  if (count === 1) return lower.includes("1 tela");
   return lower.includes(`${count} telas`);
 };
 
@@ -73,15 +74,25 @@ export const computeRenewalCards = (
   currentPlanId: number | undefined,
   currentTelas: number,
 ): PeriodCard[] => {
-  // Conjunto padrão para as telas do cliente: 1 plano padrão por período (mais barato).
+  // 1. Determine current plan's properties
+  const currentPlan = allPlans.find((p) => p.id === currentPlanId);
+  const currentName = currentPlan ? getPlanName(currentPlan) : "";
+  const currentHasScreens = hasAnyScreenTag(currentName);
+
+  // 2. Build the standard set of plans for the dashboard
   const standardSet: Record<string, Plan> = {};
   for (const period of PERIOD_MAP) {
     const candidates = allPlans.filter((p) => {
       const name = getPlanName(p);
-      return isStandardPlanName(name)
-        && matchesScreenCount(name, currentTelas)
-        && matchesPeriod(name, period.keyword);
+      if (!isStandardPlanName(name)) return false;
+      if (!matchesPeriod(name, period.keyword)) return false;
+
+      // If user has a plan with screen info, match it. 
+      // Otherwise, pick plans with 1 screen as default.
+      const screensToMatch = currentHasScreens ? currentTelas : 1;
+      return matchesScreenCount(name, screensToMatch);
     });
+
     if (candidates.length > 0) {
       candidates.sort((a, b) => getPlanValue(a) - getPlanValue(b));
       standardSet[period.keyword] = candidates[0];
@@ -91,14 +102,13 @@ export const computeRenewalCards = (
   const standardIds = new Set(Object.values(standardSet).map((p) => p.id));
   const isStandardCustomer = currentPlanId != null && standardIds.has(currentPlanId);
 
-  if (isStandardCustomer) {
+  if (isStandardCustomer || !currentPlan) {
     return PERIOD_MAP
       .map((p) => ({ ...p, plan: standardSet[p.keyword] }))
       .filter((c) => c.plan != null);
   }
 
   // Plano fora da tabela: oferecer somente o plano atual.
-  const currentPlan = allPlans.find((p) => p.id === currentPlanId);
   if (!currentPlan) return [];
   const name = getPlanName(currentPlan);
   const periodKey = detectCurrentPeriod(name);
