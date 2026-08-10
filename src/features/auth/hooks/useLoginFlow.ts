@@ -47,7 +47,7 @@ export const useLoginFlow = () => {
   };
 
   const sendCode = async () => {
-    const isEmail = EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone);
+    const isEmail = EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone) || (phone.length > 3 && !/^\d+$/.test(phone));
     const digits = onlyDigits(phone).slice(0, 13);
     
     if (!isEmail && digits.length < 10) {
@@ -89,7 +89,8 @@ export const useLoginFlow = () => {
     }
     setLoading(true);
     try {
-      const identifier = (EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone)) ? phone : onlyDigits(phone).slice(0, 13);
+      const isEmailInput = EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone) || (phone.length > 3 && !/^\d+$/.test(phone));
+      const identifier = isEmailInput ? phone.toLowerCase().trim() : onlyDigits(phone).slice(0, 13);
       const { accounts } = await verifyOtp(identifier, c);
       if (!accounts || accounts.length === 0) {
         toast.error("Conta não encontrada.");
