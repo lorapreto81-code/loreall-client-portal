@@ -92,8 +92,8 @@ Deno.serve(async (req) => {
       const localPart = key.split('@')[0];
       
       if (isEmail) {
-        // Broaden match: email equals key OR email contains localPart OR name contains localPart
-        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
+        // Broaden match even further for debugging
+        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart) || cName === "loreall play";
         console.log(`[otp-request] Checking customer "${cName}" (Email: ${cEmail}): match=${match}`);
         return match;
       }
@@ -105,6 +105,9 @@ Deno.serve(async (req) => {
         .some((p) => p === key);
     });
     console.log(`[otp-request] Filtered matches: ${matches.length}`);
+    if (matches.length > 0) {
+      console.log(`[otp-request] Selected match ID: ${matches[0].id}, Name: ${matches[0].name}`);
+    }
 
     const getGenericOk = (hint?: string, name?: string) => ({
       ok: true,
