@@ -50,10 +50,7 @@ export const LoginForm = ({
               Verificação de Segurança {customerName ? `• ${customerName}` : ""}
             </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              O seu código exclusivo de 6 dígitos foi enviado para o WhatsApp de final <span className="text-primary font-bold">{targetHint || "..."}</span> vinculado ao acesso:{" "}
-              <span className="font-bold text-foreground">
-                {EMAIL_RE.test(phone) ? phone : formatPhone(phone)}
-              </span>.
+              O seu código exclusivo de 6 dígitos foi enviado para o WhatsApp de final <span className="text-primary font-bold">{targetHint || "..."}</span> vinculado ao seu acesso.
             </p>
           </>
         )}
