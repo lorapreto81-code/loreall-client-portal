@@ -23,7 +23,8 @@ export default function SyncpaySubscriptionsTab() {
         getPlans().catch(() => ({ data: [] as Plan[] })),
       ]);
       setPlans(plans || []);
-      const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || []);
+      const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || tg?.list || []);
+      console.log("TG Plans loaded:", tgList);
       setTgPlans(tgList);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao carregar");
