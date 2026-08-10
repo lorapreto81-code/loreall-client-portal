@@ -76,7 +76,10 @@ Deno.serve(async (req) => {
         .some((p) => p === key);
     });
 
-    if (matches.length === 0) return json({ error: "Conta não encontrada." }, 404);
+    if (matches.length === 0) {
+      console.warn(`[otp-verify] No matches found for ${key} after code validation.`);
+      return json({ error: "Conta não encontrada." }, 404);
+    }
 
     const accounts = await Promise.all(
       matches.map(async (c) => ({
