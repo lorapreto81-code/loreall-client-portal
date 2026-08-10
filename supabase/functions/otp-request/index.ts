@@ -92,12 +92,12 @@ Deno.serve(async (req) => {
       message: isEmail 
         ? "Se o e-mail estiver cadastrado, você receberá um código no WhatsApp vinculado à conta." 
         : "Se o número estiver cadastrado, você receberá um código no WhatsApp.",
-      target_hint: hint,
-      customer_name: name,
+      target_hint: hint || null, // Ensure target_hint is always present if possible
+      customer_name: name || null,
     });
 
     if (matches.length === 0) {
-      // Do not reveal whether the account exists, but if we don't have a hint, we can't show it.
+      console.log(`[otp-request] No matches found for identifier: ${key}`);
       return json(getGenericOk());
     }
 
