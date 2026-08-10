@@ -74,17 +74,40 @@ Deno.serve(async (req) => {
 
 
 
-    const customers = await tgSearchCustomers(isEmail ? raw.slice(0, 100) : digits);
-    const matches = customers.filter((c) => {
-      if (isEmail) {
-        const cEmail = String(c.email || "").toLowerCase().trim();
-        return cEmail === key;
+    console.log(`[otp-request] Searching customers for: ${isEmail ? raw : digits}`);
+    let customers = await tgSearchCustomers(isEmail ? raw : digits);
+    
+    // If e-mail search yielded no results, try searching by the local part of the e-mail as a fallback
+    if (isEmail && customers.length === 0) {
+      const localPart = raw.split('@')[0];
+      if (localPart.length >= 3) {
+        console.log(`[otp-request] Fallback search for local part: ${localPart}`);
+        customers = await tgSearchCustomers(localPart);
       }
-      return [c.whatsapp, c.celular, c.phone, c.telefone]
+    }
+    console.log(`[otp-request] Found ${customers.length} total search results.`);
+    const matches = customers.filter((c) => {
+      const cEmail = String(c.email || "").toLowerCase().trim();
+      const cName = String(c.name || "").toLowerCase().trim();
+      const localPart = key.split('@')[0];
+      
+      if (isEmail) {
+        // Broaden match: email equals key OR email contains localPart OR name contains localPart
+        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
+        console.log(`[otp-request] Checking customer "${cName}" (Email: ${cEmail}): match=${match}`);
+        return match;
+      }
+      
+      const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
+      return phoneFields
         .filter(Boolean)
         .map((v) => phoneKey(String(v)))
         .some((p) => p === key);
     });
+    console.log(`[otp-request] Filtered matches: ${matches.length}`);
+    if (matches.length > 0) {
+      console.log(`[otp-request] Selected match ID: ${matches[0].id}, Name: ${matches[0].name}`);
+    }
 
     const getGenericOk = (hint?: string, name?: string) => ({
       ok: true,
@@ -92,17 +115,18 @@ Deno.serve(async (req) => {
       message: isEmail 
         ? "Se o e-mail estiver cadastrado, você receberá um código no WhatsApp vinculado à conta." 
         : "Se o número estiver cadastrado, você receberá um código no WhatsApp.",
-      target_hint: hint,
-      customer_name: name,
+      target_hint: hint || null, // Ensure target_hint is always present if possible
+      customer_name: name || null,
     });
 
     if (matches.length === 0) {
-      // Do not reveal whether the account exists, but if we don't have a hint, we can't show it.
+      console.log(`[otp-request] No matches found for identifier: ${key}`);
       return json(getGenericOk());
     }
 
-    const targetPhoneRaw = String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || "");
+    const targetPhoneRaw = String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || matches[0].whatsapp_c || "");
     const targetPhoneDigits = onlyDigits(targetPhoneRaw);
+    console.log(`[otp-request] Selected target phone digits: ${targetPhoneDigits}`);
     const targetHint = targetPhoneDigits.length >= 4 
       ? `****-${targetPhoneDigits.slice(-4)}` 
       : targetPhoneDigits;
