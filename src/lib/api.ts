@@ -1,7 +1,10 @@
 import { getCustomerToken } from "@/store/authStore";
+import { AuthService, OtpResponse, LoginAccount } from "@/services/auth/AuthService";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+export type { LoginAccount };
 
 /** Headers with the signed customer session token (required by protected functions). */
 export function authHeaders(): Record<string, string> {
@@ -39,7 +42,6 @@ async function callProxy(action: string, params: Record<string, string> = {}, op
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 
-
   if (res.status === 401) {
     window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     throw new Error("Sessão expirada. Faça login novamente.");
@@ -54,54 +56,15 @@ async function callProxy(action: string, params: Record<string, string> = {}, op
   return res.json();
 }
 
-export interface LoginAccount {
-  token: string;
-  customer: Record<string, unknown>;
-}
-
 /** Verifies the customer's credentials server-side and returns signed sessions. */
-export async function customerLogin(identifier: string, password: string): Promise<{ accounts: LoginAccount[] }> {
-  if (!identifier.trim() || !password) throw new Error("Informe usuário e senha.");
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
-    body: JSON.stringify({ identifier, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
-  return data as { accounts: LoginAccount[] };
-}
-
-async function callPublic(fn: string, body: Record<string, unknown>) {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
-  return data;
-}
+export const customerLogin = (identifier: string, password: string) => AuthService.customerLogin(identifier, password);
 
 /** Sends a 6-digit login code to the customer's WhatsApp. */
-export async function requestOtp(phone: string): Promise<{ ok: boolean; expires_in: number; message: string; target_hint?: string; customer_name?: string }> {
-  // Sanitize input before sending
-  const sanitized = phone.trim().slice(0, 100);
-  return callPublic("otp-request", { phone: sanitized });
-}
+export const requestOtp = (phone: string) => AuthService.requestOtp(phone);
 
 /** Validates the code and returns signed sessions for the matching accounts. */
-export async function verifyOtp(phone: string, code: string): Promise<{ accounts: LoginAccount[] }> {
-  return callPublic("otp-verify", { phone, code });
-}
+export const verifyOtp = (phone: string, code: string) => AuthService.verifyOtp(phone, code);
+
 
 export async function getCustomerInvoices(customerId: number, perPage = 10) {
   return callProxy("get-invoices", { id: String(customerId), per_page: String(perPage) });
