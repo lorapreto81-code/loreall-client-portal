@@ -392,8 +392,34 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Salvar Alterações"}
                 </button>
               </div>
+
+              {/* Seção: Servidor / App Info */}
+              {((customer as any)?.iptv_provider || (customer as any)?.data_vencimento_app) && (
+                <div className="pt-2 border-t border-border/50 space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <Monitor className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Informações Técnicas</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {(customer as any)?.iptv_provider && (
+                      <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Servidor</div>
+                        <div className="text-sm font-bold text-foreground">{(customer as any).iptv_provider}</div>
+                      </div>
+                    )}
+                    {(customer as any)?.data_vencimento_app && (
+                      <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">App expira em</div>
+                        <div className="text-sm font-bold text-foreground">{formatDate((customer as any).data_vencimento_app)}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
+
 
 
           {tab === "faturas" && (
