@@ -10,6 +10,7 @@ interface LoginFormProps {
   resendIn: number;
   refCode: string | null;
   targetHint: string | null;
+  customerName: string | null;
   onPhoneChange: (val: string) => void;
   onCodeChange: (val: string) => void;
   onSendCode: () => void;
@@ -25,6 +26,7 @@ export const LoginForm = ({
   resendIn,
   refCode,
   targetHint,
+  customerName,
   onPhoneChange,
   onCodeChange,
   onSendCode,
@@ -44,7 +46,9 @@ export const LoginForm = ({
           </>
         ) : (
           <>
-            <p className="text-sm font-medium text-foreground mb-1">Verificação de Segurança</p>
+            <p className="text-sm font-medium text-foreground mb-1">
+              Verificação de Segurança {customerName ? `• ${customerName}` : ""}
+            </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               O seu código exclusivo de 6 dígitos foi enviado para o WhatsApp de final <span className="text-primary font-bold">{targetHint || "..."}</span> vinculado ao acesso:{" "}
               <span className="font-bold text-foreground">
