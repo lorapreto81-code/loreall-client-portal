@@ -160,8 +160,8 @@ const Dashboard = () => {
         </div>
       </footer>
 
-      <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} customer={customer} />
-      <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} customerId={customer.id} />
+      <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
+      <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
       <MyAccountSheet
         open={accountOpen}
         onClose={() => setAccountOpen(false)}
@@ -169,7 +169,12 @@ const Dashboard = () => {
         initialTab={accountTab}
         customerUsuario={customer.usuario}
       />
-      <ExpirationPopup customer={customer} days={days} />
+      <ExpirationPopup 
+        days={days} 
+        customerUsuario={customer.usuario} 
+        onRenew={() => setRenewalOpen(true)} 
+        isReady={true} 
+      />
     </div>
   );
 };
