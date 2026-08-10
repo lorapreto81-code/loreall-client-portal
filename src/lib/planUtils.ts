@@ -25,7 +25,8 @@ export { PERIOD_MAP };
 
 export const matchesScreenCount = (planName: string, count: number): boolean => {
   const lower = planName.toLowerCase();
-  if (count === 1) return lower.includes("1 tela") && !lower.includes("1 telas");
+  // We prioritize "1 tela" but remain flexible to "1 telas" if it exists in the DB
+  if (count === 1) return lower.includes("1 tela");
   return lower.includes(`${count} telas`);
 };
 
@@ -79,7 +80,7 @@ export const computeRenewalCards = (
     const candidates = allPlans.filter((p) => {
       const name = getPlanName(p);
       return isStandardPlanName(name)
-        && matchesScreenCount(name, currentTelas)
+        && (matchesScreenCount(name, currentTelas) || !hasAnyScreenTag(name))
         && matchesPeriod(name, period.keyword);
     });
     if (candidates.length > 0) {
