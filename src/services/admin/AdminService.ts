@@ -1,4 +1,4 @@
-import { BaseApi } from "../api/BaseApi";
+import { BaseApi } from "@/services/api/BaseApi";
 
 export class AdminService extends BaseApi {
   private static async callAdmin(action: string, options: { method?: string; body?: Record<string, unknown>; params?: Record<string, string> } = {}) {

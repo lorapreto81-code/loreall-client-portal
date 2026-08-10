@@ -1,4 +1,4 @@
-import { BaseApi } from "./BaseApi";
+import { BaseApi } from "@/services/api/BaseApi";
 import { Customer } from "@/store/authStore";
 
 export interface LoginAccount {
