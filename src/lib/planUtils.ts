@@ -115,8 +115,8 @@ export const computeRenewalCards = (
     }
   }
 
-  const standardIds = new Set(Object.values(standardSet).map((p) => p.id));
-  const isStandardCustomer = currentPlanId != null && standardIds.has(currentPlanId);
+  const standardIds = new Set(Object.values(standardSet).map((p) => Number(p.id)));
+  const isStandardCustomer = currentPlanId != null && standardIds.has(Number(currentPlanId));
 
   if (isStandardCustomer || !currentPlan) {
     return PERIOD_MAP
