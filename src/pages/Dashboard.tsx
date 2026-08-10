@@ -23,6 +23,7 @@ import { useAuthGuard } from "@/features/auth/hooks/useAuthGuard";
 import { firstName } from "@/utils/formatters";
 import { logo, WHATSAPP_NUMBER, getStatusPill, telasLabel } from "@/utils/constants";
 import { PlanCard } from "@/features/dashboard/components/PlanCard";
+import { RenewalHistory } from "@/features/dashboard/components/RenewalHistory";
 
 
 
@@ -361,9 +362,12 @@ const Dashboard = () => {
 
           </div>
           <p className="text-sm referral-subtitle">
-            Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
+          Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
           </p>
         </button>
+
+        {/* HISTÓRICO DE RENOVAÇÕES */}
+        <RenewalHistory customerId={customer.id} />
 
         {/* Minha conta / Como instalar / Suporte movidos para o menu lateral (ícone ☰ no topo) */}
 
