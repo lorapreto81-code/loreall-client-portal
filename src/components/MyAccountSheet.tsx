@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { updateCustomer, getCustomer, authHeaders } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
-import { onlyDigits } from "@/lib/otp";
+import { onlyDigits } from "@/lib/doc";
 import { formatDate } from "@/lib/format";
 
 
