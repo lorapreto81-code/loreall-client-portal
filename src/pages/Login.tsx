@@ -18,6 +18,7 @@ const Login = () => {
     matches,
     setMatches,
     targetHint,
+    customerName,
     pickAccount,
     sendCode,
     handleSubmit
@@ -59,6 +60,7 @@ const Login = () => {
               resendIn={resendIn}
               refCode={refCode}
               targetHint={targetHint}
+              customerName={customerName}
               onPhoneChange={setPhone}
               onCodeChange={setCode}
               onSendCode={sendCode}
