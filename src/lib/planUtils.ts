@@ -53,7 +53,10 @@ export const isStandardPlanName = (planName: string): boolean => {
     .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F]/gu, "")
     .trim()
     .toLowerCase();
-  return /^(mensal|trimestral|semestral|anual)\s+\d+\s+tela(s)?$/.test(cleaned);
+  
+  // More permissive regex: allows space or no space between number and "tela"
+  // Also allows any number of screens (not just 1-3)
+  return /^(mensal|trimestral|semestral|anual)\s+\d+\s*tela(s)?$/.test(cleaned);
 };
 
 export interface PeriodCard {
