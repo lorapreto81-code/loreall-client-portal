@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
       }
 
       case "get-plans": {
+        // Allow both admin and customers to see plans (needed for renewal bottom sheet)
         const r = await fetch(`${API_BASE}/plans`, { headers: tgHeaders() });
         const rawData = await r.json().catch(() => ({}));
         console.log("[topgestor-proxy] rawData from TG:", JSON.stringify(rawData));
