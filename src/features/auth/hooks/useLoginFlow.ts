@@ -59,7 +59,6 @@ export const useLoginFlow = () => {
     setLoading(true);
     try {
       const res = await requestOtp(identifier);
-      console.log("OTP Request response:", res); // Debug log
       if (res.target_hint) {
         setTargetHint(res.target_hint);
         setCustomerName(res.customer_name || null);

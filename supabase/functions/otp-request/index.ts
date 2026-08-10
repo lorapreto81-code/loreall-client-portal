@@ -92,8 +92,8 @@ Deno.serve(async (req) => {
       const localPart = key.split('@')[0];
       
       if (isEmail) {
-        // Broaden match even further for debugging
-        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart) || cName === "loreall play";
+        // Broaden match: email equals key OR email contains localPart OR name contains localPart
+        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
         console.log(`[otp-request] Checking customer "${cName}" (Email: ${cEmail}): match=${match}`);
         return match;
       }
