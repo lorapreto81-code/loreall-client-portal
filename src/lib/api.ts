@@ -14,15 +14,31 @@ export function authHeaders(): Record<string, string> {
   };
 }
 
+function sanitize(val: any): any {
+  if (typeof val === "string") {
+    return val.replace(/<[^>]*>?/gm, "").trim().slice(0, 500);
+  }
+  return val;
+}
+
 async function callProxy(action: string, params: Record<string, string> = {}, options?: { method?: string; body?: Record<string, unknown> }) {
   const qp = new URLSearchParams({ action, ...params }).toString();
   const url = `${SUPABASE_URL}/functions/v1/topgestor-proxy?${qp}`;
   
+  // Frontend Sanitization
+  let body = options?.body;
+  if (body && typeof body === "object") {
+    body = Object.fromEntries(
+      Object.entries(body).map(([k, v]) => [k, sanitize(v)])
+    );
+  }
+
   const res = await fetch(url, {
     method: options?.method || "GET",
     headers: authHeaders(),
-    ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
+    ...(body ? { body: JSON.stringify(body) } : {}),
   });
+
 
   if (res.status === 401) {
     window.dispatchEvent(new CustomEvent("auth:unauthorized"));
