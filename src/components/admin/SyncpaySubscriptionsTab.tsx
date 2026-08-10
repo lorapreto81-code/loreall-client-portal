@@ -20,7 +20,10 @@ export default function SyncpaySubscriptionsTab() {
     try {
       const [{ plans }, tg] = await Promise.all([
         syncpayAdmin.listPlans(),
-        getPlans().catch(() => ({ data: [] as Plan[] })),
+        getPlans().catch((err) => {
+          console.error("[SyncpaySubscriptionsTab] Error loading TG plans:", err);
+          return { data: [] as Plan[] };
+        }),
       ]);
       setPlans(plans || []);
       const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || tg?.list || tg || []);
