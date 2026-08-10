@@ -43,20 +43,6 @@ const Dashboard = () => {
     setMenuOpen(false);
   };
 
-  useEffect(() => {
-    if (!customer) navigate("/login", { replace: true });
-  }, [customer, navigate]);
-
-  useEffect(() => {
-    const handler = () => {
-      toast.error("Sessão expirada. Faça login novamente.");
-      logout();
-      navigate("/login");
-    };
-    window.addEventListener("auth:unauthorized", handler);
-    return () => window.removeEventListener("auth:unauthorized", handler);
-  }, [logout, navigate]);
-
   const hasEmail = !!String((customer as any)?.email || "").trim();
   const emailBannerKey = customer ? `loreall_email_banner_dismissed_${customer.id}` : "";
   const [emailBannerDismissed, setEmailBannerDismissed] = useState<boolean>(() => {
