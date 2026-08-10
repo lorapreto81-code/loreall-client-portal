@@ -20,12 +20,20 @@ export default function SyncpaySubscriptionsTab() {
     try {
       const [{ plans }, tg] = await Promise.all([
         syncpayAdmin.listPlans(),
-        getPlans().catch(() => ({ data: [] as Plan[] })),
+        getPlans().catch((err) => {
+          console.error("[SyncpaySubscriptionsTab] Error loading TG plans:", err);
+          return { data: [] as Plan[] };
+        }),
       ]);
       setPlans(plans || []);
       const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || tg?.list || tg || []);
       console.log("[SyncpaySubscriptionsTab] TG Response:", tg);
       console.log("[SyncpaySubscriptionsTab] Normalized TG List:", tgList);
+      
+      if (tgList.length === 0) {
+        console.warn("[SyncpaySubscriptionsTab] No plans found in TG list.");
+      }
+      
       setTgPlans(tgList);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao carregar");

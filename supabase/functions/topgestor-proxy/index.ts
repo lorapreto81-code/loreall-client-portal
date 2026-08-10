@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     const admin = isAdminRequest(req);
     const session = admin ? null : await getCustomerSession(req);
 
-    if (!admin && !session) return json({ error: "unauthorized" }, 401);
+    if (!admin && !session && action !== "get-plans") return json({ error: "unauthorized" }, 401);
 
     // Actions restricted to the admin panel.
     const adminOnly = new Set(["search-customer", "list-customers"]);
@@ -78,7 +78,8 @@ Deno.serve(async (req) => {
       }
 
       case "get-plans": {
-        const r = await fetch(`${API_BASE}/plans`, { headers: tgHeaders() });
+        // Allow both admin and customers to see plans (needed for renewal bottom sheet)
+        const r = await fetch(`${API_BASE}/plans?per_page=200`, { headers: tgHeaders() });
         const rawData = await r.json().catch(() => ({}));
         console.log("[topgestor-proxy] rawData from TG:", JSON.stringify(rawData));
         const plans = Array.isArray(rawData) ? rawData : (rawData?.data || rawData?.plans || rawData?.list || []);
