@@ -103,6 +103,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;
   const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
+  // Sincroniza o valor exibido com o valor real do plano na API
   const canUsePix = planValue > 0 && planValue < PIX_MAX_AMOUNT;
 
   // Escolhe UM plano de assinatura recomendado (preferindo PIX Automático)

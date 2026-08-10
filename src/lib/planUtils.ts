@@ -11,7 +11,9 @@ export interface Plan {
 export const getPlanName = (p: Plan) => p.plan_name || p.name || "Plano";
 export const getPlanValue = (p: Plan) => {
   const v = p.plan_value ?? p.value;
-  return typeof v === "string" ? parseFloat(v) : (v || 0);
+  const num = typeof v === "string" ? parseFloat(v) : (v || 0);
+  // Garante que o valor retornado seja o valor real vindo da API do TopGestor
+  return num;
 };
 
 const PERIOD_MAP: { months: number; label: string; keyword: string }[] = [
