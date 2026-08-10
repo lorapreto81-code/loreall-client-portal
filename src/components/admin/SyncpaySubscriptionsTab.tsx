@@ -23,8 +23,9 @@ export default function SyncpaySubscriptionsTab() {
         getPlans().catch(() => ({ data: [] as Plan[] })),
       ]);
       setPlans(plans || []);
-      const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || tg?.list || []);
-      console.log("TG Plans loaded:", tgList);
+      const tgList = Array.isArray(tg) ? tg : (tg?.data || tg?.plans || tg?.list || tg || []);
+      console.log("[SyncpaySubscriptionsTab] TG Response:", tg);
+      console.log("[SyncpaySubscriptionsTab] Normalized TG List:", tgList);
       setTgPlans(tgList);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao carregar");
@@ -84,7 +85,7 @@ export default function SyncpaySubscriptionsTab() {
             <Repeat className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-bold text-foreground">Assinaturas (Recorrência)</h2>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Planos recorrentes SyncPay. Cada plano precisa ser mapeado a um plano do TopGestor para que os valores e prazos coincidam exatamente com os do sistema principal.</p>
+          <p className="text-xs text-muted-foreground mt-1">Planos recorrentes SyncPay. Cada plano precisa ser mapeado a um plano do TopGestor para que os valores e prazos coincidam exatamente com os do sistema principal. (Total TopGestor: {tgPlans.length})</p>
         </div>
         <div className="flex gap-2">
           <button onClick={sync} disabled={busy} className="px-3 py-2 rounded-lg border border-input text-sm inline-flex items-center gap-1.5 hover:bg-muted disabled:opacity-60">
@@ -137,7 +138,7 @@ export default function SyncpaySubscriptionsTab() {
                     <option value="">— Não mapeado —</option>
                     {tgPlans.map((tp) => (
                       <option key={tp.id} value={tp.id}>
-                        {getPlanName(tp)} — {formatCurrency(getPlanValue(tp))}
+                        #{tp.id} - {getPlanName(tp)} ({formatCurrency(getPlanValue(tp))})
                       </option>
                     ))}
                   </select>
