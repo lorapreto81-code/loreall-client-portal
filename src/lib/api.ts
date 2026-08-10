@@ -2,11 +2,12 @@ import { getCustomerToken } from "@/store/authStore";
 import { AuthService, OtpResponse, LoginAccount } from "@/services/auth/AuthService";
 import { CustomerService } from "@/services/customer/CustomerService";
 import { PaymentService, CreatePixResponse } from "@/services/customer/PaymentService";
+import { ReferralService, ReferralRow } from "@/services/customer/ReferralService";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-export type { LoginAccount, CreatePixResponse };
+export type { LoginAccount, CreatePixResponse, ReferralRow };
 
 /** Headers with the signed customer session token (required by protected functions). */
 export function authHeaders(): Record<string, string> {
@@ -37,7 +38,12 @@ export const getPlans = () => CustomerService.getPlans();
 export const createPixPayment = (body: any) => PaymentService.createPix(body);
 export const renewCustomer = (id: number, body: any) => PaymentService.renewCustomer(id, body.plan_id);
 
-// Remaining legacy functions (can be moved later)
+// Referral actions
+export const getOrCreateReferralCode = (id: number, name: string) => ReferralService.getOrCreateReferralCode(id, name);
+export const listReferralsByReferrer = (id: number) => ReferralService.listReferralsByReferrer(id);
+export const lookupReferralCode = (code: string) => ReferralService.lookupReferralCode(code);
+
+// Remaining legacy functions
 async function callProxy(action: string, params: Record<string, string> = {}, options?: { method?: string; body?: Record<string, unknown> }) {
   const qp = new URLSearchParams({ action, ...params }).toString();
   const url = `${SUPABASE_URL}/functions/v1/topgestor-proxy?${qp}`;
