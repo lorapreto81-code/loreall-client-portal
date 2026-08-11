@@ -6,10 +6,10 @@ import { otpRequestSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 const CODE_TTL_MINUTES = 5;
-const MAX_REQUESTS_PER_IDENTIFIER = 15;
-const MAX_REQUESTS_PER_IP = 50;
-const MAX_GLOBAL_DAILY_OTP = 5000;
-const WINDOW_MINUTES = 3;
+const MAX_REQUESTS_PER_IDENTIFIER = 30;
+const MAX_REQUESTS_PER_IP = 100;
+const MAX_GLOBAL_DAILY_OTP = 10000;
+const WINDOW_MINUTES = 2;
 
 
 
