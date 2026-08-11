@@ -35,11 +35,11 @@ const Login = () => {
         <div className="flex flex-col items-center gap-2 pt-1 text-center">
           <img src={logo} alt="Loreall Play TV" style={{ width: 70, height: "auto" }} />
           <div className="space-y-0.5">
-            <h1 className="text-lg font-bold text-foreground leading-tight tracking-tight">
-              Acesse Seu <span className="text-primary">Mundo VIP</span>
+            <h1 className="text-xl font-black text-foreground leading-tight tracking-tight uppercase">
+              Acesse Seu <span className="text-primary premium-text-glow">Mundo VIP</span>
             </h1>
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-[0.2em]">
-              Sua Experiência Premium
+            <p className="text-[10px] font-bold text-primary/80 uppercase tracking-[0.3em] mt-0.5">
+              Experiência Ultra Premium
             </p>
           </div>
         </div>

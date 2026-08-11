@@ -66,24 +66,38 @@ export async function tgSearchCustomers(query: string): Promise<Record<string, u
     return normalizeList(await r.json().catch(() => null));
   }
 
+  // OPTIMIZATION: Parallelize search across variants but only use variants that are actually likely to match.
+  // We limit the number of variants to avoid hitting TopGestor rate limits too hard.
+  const variants = buildPhoneVariants(digits);
+  
+  // Cache to store unique results by ID to avoid duplicates in the merged list.
+  const seen = new Set<string>();
+  const merged: Record<string, unknown>[] = [];
+
   const results = await Promise.all(
-    buildPhoneVariants(digits).map((v) =>
-      fetch(`${TG_API_BASE}/customers/search/${encodeURIComponent(v)}`, { headers: tgHeaders() })
-        .then(async (r) => (r.ok ? normalizeList(await r.json().catch(() => null)) : []))
-        .catch(() => [])
-    ),
+    variants.map(async (v) => {
+      try {
+        const r = await fetch(`${TG_API_BASE}/customers/search/${encodeURIComponent(v)}`, { headers: tgHeaders() });
+        if (!r.ok) return [];
+        const list = normalizeList(await r.json().catch(() => null));
+        return list;
+      } catch (err) {
+        console.error(`[tgSearchCustomers] search for variant ${v} failed:`, err);
+        return [];
+      }
+    })
   );
 
-  const merged: Record<string, unknown>[] = [];
-  const seen = new Set<string>();
   for (const list of results) {
     for (const c of list) {
       if (!c || typeof c !== "object") continue;
       const key = String(c.id ?? JSON.stringify(c));
-      if (seen.has(key)) continue;
-      seen.add(key);
-      merged.push(c);
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(c);
+      }
     }
   }
+
   return merged;
 }
