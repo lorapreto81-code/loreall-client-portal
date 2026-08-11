@@ -36,7 +36,7 @@ export class BaseApi {
   }
 
   protected static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const maxRetries = 2;
+    const maxRetries = 3;
     let attempt = 0;
 
     const execute = async (): Promise<T> => {
@@ -65,7 +65,7 @@ export class BaseApi {
           if (attempt < maxRetries) {
             attempt++;
             console.warn(`[BaseApi] Retrying request to ${endpoint} (Attempt ${attempt}/${maxRetries})...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 800 * attempt));
             return execute();
           }
           throw new Error("Erro de conexão. Verifique sua internet ou tente novamente em instantes. (Referência: Conectividade)");
