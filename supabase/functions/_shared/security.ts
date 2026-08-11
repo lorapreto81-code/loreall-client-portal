@@ -1,4 +1,8 @@
-import { corsHeaders as baseCors } from "npm:@supabase/supabase-js@2/cors";
+const baseCors: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-customer-token, x-admin-password",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+};
 
 /**
  * Enhanced security headers for all API responses.
