@@ -101,7 +101,7 @@ export default function Revendedor() {
       setLoading(true);
       const { data, error } = await supabase
         .from("reseller_links")
-        .select("*")
+        .select("id, slug, display_name, credits, amount, price_per_credit, min_credits, max_credits, is_active")
         .eq("slug", slug.toLowerCase())
         .eq("is_active", true)
         .maybeSingle();
@@ -234,7 +234,7 @@ export default function Revendedor() {
   }
 
   const supportUrl = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
-    `Olá, suporte Loreall Play! Preciso de ajuda com a recarga do painel ${link.warez_username} (ID ${link.warez_user_id}).`,
+    `Olá, suporte Loreall Play! Preciso de ajuda com a recarga do link de revenda ${link.display_name} (${link.slug}).`,
   )}`;
 
   return (
@@ -274,7 +274,7 @@ export default function Revendedor() {
             <div className="min-w-0 flex-1">
               <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-50 leading-tight truncate">{link.display_name}</h1>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider truncate">
-                {link.warez_username} · ID {link.warez_user_id}
+                Recarga de créditos
               </p>
             </div>
           </div>
