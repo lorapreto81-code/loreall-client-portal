@@ -58,7 +58,7 @@ export class BaseApi {
       return data as T;
     } catch (err: any) {
       if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
-        throw new Error("Erro de conexão. Verifique sua internet ou tente novamente em instantes.");
+        throw new Error("Erro de conexão. Verifique sua internet ou tente novamente em instantes. (Referência: Conectividade)");
       }
       throw err;
     }
