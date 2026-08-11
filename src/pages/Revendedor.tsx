@@ -18,8 +18,6 @@ interface ResellerLink {
   id: string;
   slug: string;
   display_name: string;
-  warez_username: string;
-  warez_user_id: number;
   credits: number;
   amount: number;
   is_active: boolean;
