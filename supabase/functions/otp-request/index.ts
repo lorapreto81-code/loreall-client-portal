@@ -6,10 +6,14 @@ import { otpRequestSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
 const CODE_TTL_MINUTES = 5;
-const MAX_REQUESTS_PER_IDENTIFIER = 200;
-const MAX_REQUESTS_PER_IP = 300;
-const MAX_GLOBAL_DAILY_OTP = 50000;
-const WINDOW_MINUTES = 1;
+const MAX_REQUESTS_PER_IDENTIFIER = 300;
+const MAX_REQUESTS_PER_IP = 500;
+const MAX_GLOBAL_DAILY_OTP = 100000;
+const WINDOW_MINUTES = 5;
+
+// Increased timeout for fetch operations
+const FETCH_TIMEOUT = 12000;
+
 
 
 
@@ -80,7 +84,18 @@ Deno.serve(async (req) => {
 
 
     console.log(`[otp-request] Searching customers for: ${key}`);
-    let customers = await tgSearchCustomers(key);
+    
+    // Add timeout to tgSearchCustomers call
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+    
+    let customers = [];
+    try {
+      customers = await tgSearchCustomers(key);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
     
     // If e-mail search yielded no results, try searching by the local part of the e-mail as a fallback
     if ((isEmail || isFictitiousEmail) && customers.length === 0) {

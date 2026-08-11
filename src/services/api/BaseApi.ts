@@ -36,12 +36,22 @@ export class BaseApi {
   }
 
   protected static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const maxRetries = 5;
+    const maxRetries = 4;
+    const timeout = 15000;
+
     let attempt = 0;
 
     const execute = async (): Promise<T> => {
       try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, options);
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, {
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(id);
+
 
         if (response.status === 401) {
           window.dispatchEvent(new CustomEvent("auth:unauthorized"));
@@ -61,15 +71,17 @@ export class BaseApi {
 
         return data as T;
       } catch (err: any) {
-        if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+        if ((err.name === 'TypeError' && err.message === 'Failed to fetch') || err.name === 'AbortError') {
           if (attempt < maxRetries) {
             attempt++;
-            console.warn(`[BaseApi] Retrying request to ${endpoint} (Attempt ${attempt}/${maxRetries})...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            const backoff = err.name === 'AbortError' ? 500 : 1000;
+            console.warn(`[BaseApi] Retrying request to ${endpoint} (${err.name}, Attempt ${attempt}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, backoff * attempt));
             return execute();
           }
-          throw new Error("Erro de conexão. Verifique sua internet ou tente novamente em instantes. (Referência: Conectividade)");
+          throw new Error("Não foi possível conectar ao servidor. Tente novamente em instantes.");
         }
+
         throw err;
       }
     };
