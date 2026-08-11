@@ -13,7 +13,7 @@ import Revendedor from "./pages/Revendedor";
 import IndicacaoTeste from "./pages/IndicacaoTeste";
 
 import Instalacao from "./pages/Instalacao";
-import ApiDocs from "./pages/Index";
+
 
 
 const queryClient = new QueryClient();
@@ -37,7 +37,7 @@ const App = () => (
           <Route path="/links" element={<Navigate to="/" replace />} />
           <Route path="/bio" element={<Navigate to="/" replace />} />
           <Route path="/instalacao" element={<Instalacao />} />
-          <Route path="/api-docs" element={<ApiDocs />} />
+          
           <Route path="*" element={<NotFound />} />
 
         </Routes>
