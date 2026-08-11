@@ -278,13 +278,6 @@ export type Database = {
             referencedRelation: "reseller_links"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "reseller_credit_adjustments_reseller_link_id_fkey"
-            columns: ["reseller_link_id"]
-            isOneToOne: false
-            referencedRelation: "reseller_links_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       reseller_credit_purchases: {
@@ -369,13 +362,6 @@ export type Database = {
             columns: ["reseller_link_id"]
             isOneToOne: false
             referencedRelation: "reseller_links"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reseller_credit_purchases_reseller_link_id_fkey"
-            columns: ["reseller_link_id"]
-            isOneToOne: false
-            referencedRelation: "reseller_links_public"
             referencedColumns: ["id"]
           },
         ]
@@ -667,42 +653,7 @@ export type Database = {
       }
     }
     Views: {
-      reseller_links_public: {
-        Row: {
-          amount: number | null
-          credits: number | null
-          display_name: string | null
-          id: string | null
-          is_active: boolean | null
-          max_credits: number | null
-          min_credits: number | null
-          price_per_credit: number | null
-          slug: string | null
-        }
-        Insert: {
-          amount?: number | null
-          credits?: number | null
-          display_name?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          max_credits?: number | null
-          min_credits?: number | null
-          price_per_credit?: number | null
-          slug?: string | null
-        }
-        Update: {
-          amount?: number | null
-          credits?: number | null
-          display_name?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          max_credits?: number | null
-          min_credits?: number | null
-          price_per_credit?: number | null
-          slug?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
