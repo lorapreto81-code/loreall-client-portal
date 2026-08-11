@@ -1,1 +1,36 @@
 project_id = "dcijzvnyheulzirfhtub"
+
+[functions.admin-mark-payment-paid]
+verify_jwt = false
+[functions.create-pix]
+verify_jwt = false
+[functions.customer-auth]
+verify_jwt = false
+[functions.otp-request]
+verify_jwt = false
+[functions.otp-verify]
+verify_jwt = false
+[functions.payment-status]
+verify_jwt = false
+[functions.referrals-api]
+verify_jwt = false
+[functions.reseller-admin]
+verify_jwt = false
+[functions.reseller-check-status]
+verify_jwt = false
+[functions.reseller-create-pix]
+verify_jwt = false
+[functions.reseller-poll-pending]
+verify_jwt = false
+[functions.reseller-process-recharge]
+verify_jwt = false
+[functions.syncpay-subscribe]
+verify_jwt = false
+[functions.syncpay-subscriptions]
+verify_jwt = false
+[functions.syncpay-webhook]
+verify_jwt = false
+[functions.tmdb-proxy]
+verify_jwt = false
+[functions.topgestor-proxy]
+verify_jwt = false
