@@ -36,31 +36,44 @@ export class BaseApi {
   }
 
   protected static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, options);
+    const maxRetries = 2;
+    let attempt = 0;
 
-      if (response.status === 401) {
-        window.dispatchEvent(new CustomEvent("auth:unauthorized"));
-        throw new Error("Sessão expirada. Faça login novamente.");
-      }
+    const execute = async (): Promise<T> => {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, options);
 
-      if (response.status === 429) {
+        if (response.status === 401) {
+          window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+          throw new Error("Sessão expirada. Faça login novamente.");
+        }
+
+        if (response.status === 429) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || "Muitas requisições. Aguarde alguns minutos.");
+        }
+
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Muitas requisições. Aguarde alguns minutos.");
-      }
+        
+        if (!response.ok) {
+          throw new Error(data.error || data.message || `Erro ${response.status}`);
+        }
 
-      const data = await response.json().catch(() => ({}));
-      
-      if (!response.ok) {
-        throw new Error(data.error || data.message || `Erro ${response.status}`);
+        return data as T;
+      } catch (err: any) {
+        if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+          if (attempt < maxRetries) {
+            attempt++;
+            console.warn(`[BaseApi] Retrying request to ${endpoint} (Attempt ${attempt}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            return execute();
+          }
+          throw new Error("Erro de conexão. Verifique sua internet ou tente novamente em instantes. (Referência: Conectividade)");
+        }
+        throw err;
       }
+    };
 
-      return data as T;
-    } catch (err: any) {
-      if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
-        throw new Error("Erro de conexão. Verifique sua internet ou tente novamente em instantes. (Referência: Conectividade)");
-      }
-      throw err;
-    }
+    return execute();
   }
 }
