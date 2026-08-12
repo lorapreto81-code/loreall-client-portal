@@ -136,7 +136,7 @@ const Dashboard = () => {
           </p>
         </button>
 
-        <RenewalHistory customerId={customer.id} />
+        
       </main>
 
       <footer className="px-4 py-8 pb-12 max-w-[480px] mx-auto text-center space-y-6">
