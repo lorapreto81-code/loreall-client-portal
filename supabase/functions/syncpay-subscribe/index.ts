@@ -79,10 +79,10 @@ Deno.serve(async (req) => {
       plan_id, customer_id, name, email, cpf, phone,
     } = body as Record<string, string | number>;
 
-    if (!plan_id) return err("plan_id obrigatório");
-    if (!name || String(name).trim().length < 3) return err("Nome inválido");
-    if (!email || !validEmail(String(email))) return err("E-mail inválido");
-    if (!cpf || !validDoc(String(cpf))) return err("CPF ou CNPJ inválido");
+    if (!plan_id) return json({ error: "plan_id obrigatório" }, 400, {}, req);
+    if (!name || String(name).trim().length < 3) return json({ error: "Nome inválido" }, 400, {}, req);
+    if (!email || !validEmail(String(email))) return json({ error: "E-mail inválido" }, 400, {}, req);
+    if (!cpf || !validDoc(String(cpf))) return json({ error: "CPF ou CNPJ inválido" }, 400, {}, req);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
