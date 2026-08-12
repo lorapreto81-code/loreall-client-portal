@@ -177,7 +177,7 @@ export default function ResellerLinksTab() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-foreground">{l.display_name}</div>
                       <a href={`${PUBLIC_BASE_URL}/revendedor/${l.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1">
-                        pagartv.online/revendedor/{l.slug} <ExternalLink className="h-3 w-3" />
+                        cliente.loreallplay.com/revendedor/{l.slug} <ExternalLink className="h-3 w-3" />
                       </a>
                     </td>
                     <td className="px-4 py-3">
