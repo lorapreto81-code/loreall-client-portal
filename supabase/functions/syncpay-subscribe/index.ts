@@ -9,16 +9,7 @@ import { securityHeadersFor, jsonResponse as json } from "../_shared/security.ts
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
 
-function ok(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-function err(message: string, status = 400, extra?: unknown) {
-  return new Response(JSON.stringify({ error: message, ...(extra ? { detail: extra } : {}) }), {
-    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+// Funções ok/err removidas em favor do jsonResponse compartilhado
 
 // ------- validators -------
 function onlyDigits(s: string) { return String(s || "").replace(/\D/g, ""); }
