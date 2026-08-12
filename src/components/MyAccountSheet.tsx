@@ -4,8 +4,9 @@ import {
   X, User, Phone, Mail, Loader2, Receipt,
   CheckCircle2, Clock, XCircle, HelpCircle, Plus,
   KeyRound, Copy, Eye, EyeOff, Check, Lock, UserCircle2, Info, Calendar, ShieldCheck,
-  Monitor
+  Monitor, History
 } from "lucide-react";
+import { RenewalHistory } from "@/features/dashboard/components/RenewalHistory";
 import { updateCustomer, getCustomer, authHeaders } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 
@@ -19,7 +20,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   customerId: number;
-  initialTab?: "dados" | "faturas";
+  initialTab?: "dados" | "faturas" | "historico";
   customerUsuario?: string;
   whatsappNumber?: string;
 }
@@ -66,7 +67,7 @@ const statusInfo = (s: string) => {
 
 export default function MyAccountSheet({ open, onClose, customerId, initialTab = "dados", customerUsuario = "", whatsappNumber = "" }: Props) {
   const { customer, login } = useAuthStore();
-  const [tab, setTab] = useState<"dados" | "faturas">(initialTab);
+  const [tab, setTab] = useState<"dados" | "faturas" | "historico">(initialTab);
 
   // Dados
   const [name, setName] = useState("");
@@ -240,6 +241,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
           {[
             { id: "dados" as const, label: "Meus dados", Icon: User },
             { id: "faturas" as const, label: "Faturas", Icon: Receipt },
+            { id: "historico" as const, label: "Histórico", Icon: History },
           ].map(({ id, label, Icon }) => {
             const active = tab === id;
             return (
@@ -498,6 +500,12 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                   </div>
                 )}
               </div>
+            </div>
+          )}
+          
+          {tab === "historico" && (
+            <div className="p-4">
+              <RenewalHistory customerId={customerId} />
             </div>
           )}
         </div>

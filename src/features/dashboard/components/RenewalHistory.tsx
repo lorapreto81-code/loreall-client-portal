@@ -17,10 +17,12 @@ export function RenewalHistory({ customerId }: Props) {
     async function loadInvoices() {
       try {
         setLoading(true);
-        const response = await CustomerService.getInvoices(customerId, 10);
-        // Filtramos apenas as faturas pagas ou vencidas para histórico relevante
-        const data = response.data || [];
-        setInvoices(data);
+        const response = await CustomerService.getInvoices(customerId, 20);
+        // Filtramos apenas as faturas pagas
+        const data = (response.data || []).filter(inv => {
+          const s = (inv.status || "").toLowerCase();
+          return ["pago", "paid", "approved", "completed"].includes(s);
+        });
         setError(null);
       } catch (err) {
         console.error("Failed to load invoices:", err);
@@ -81,9 +83,9 @@ export function RenewalHistory({ customerId }: Props) {
   if (error || invoices.length === 0) {
     if (invoices.length === 0 && !loading && !error) {
       return (
-        <div className="card-elevated p-6 text-center">
+        <div className="p-6 text-center">
           <History className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-          <h3 className="text-sm font-medium text-foreground">Sem histórico de renovações</h3>
+          <h3 className="text-sm font-medium text-foreground">Sem histórico de renovações pagas</h3>
           <p className="text-xs text-muted-foreground mt-1">
             Suas futuras renovações aparecerão aqui.
           </p>
@@ -94,22 +96,16 @@ export function RenewalHistory({ customerId }: Props) {
   }
 
   return (
-    <div className="card-elevated overflow-hidden">
-      <div className="p-5 border-b border-white/5 bg-white/[0.02]">
+    <div className="overflow-hidden">
+      <div className="py-2 mb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <History className="h-4 w-4 text-primary" />
-            </div>
             <h3 className="text-sm font-semibold text-foreground tracking-tight">Histórico de Renovações</h3>
           </div>
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest bg-muted/30 px-2 py-0.5 rounded">
-            TopGestor
-          </span>
         </div>
       </div>
 
-      <div className="divide-y divide-white/5">
+      <div className="divide-y divide-border/50">
         {invoices.map((invoice) => {
           const status = getStatusInfo(invoice.status);
           const StatusIcon = status.icon;
