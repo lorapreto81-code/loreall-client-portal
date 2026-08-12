@@ -64,6 +64,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const [subPhone, setSubPhone] = useState("");
   const [subLoading, setSubLoading] = useState(false);
   const [subResult, setSubResult] = useState<SubscribeResult | null>(null);
+  const [checkingSub, setCheckingSub] = useState(false);
 
   const plansQuery = useQuery({
     queryKey: ["plans"],
@@ -136,21 +137,68 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return all[0];
   }, [subPlansQuery.data, currentPlanId, allPlans]);
 
-  const openSubscribeForm = (sp: SyncpayPublicPlan) => {
+  const openSubscribeForm = async (sp: SyncpayPublicPlan) => {
+    if (!customer) return;
     setSubForm(sp);
     setSubResult(null);
+    setCheckingSub(true);
+
+    try {
+      // 1. Verificar se o cliente já tem uma assinatura deste plano ativa no nosso banco
+      const { data: existingSub, error } = await supabase
+        .from("syncpay_subscriptions")
+        .select("*")
+        .eq("customer_id", customer.id)
+        .eq("syncpay_plan_id", sp.syncpay_plan_id)
+        .maybeSingle();
+
+      if (existingSub) {
+        // Se existe, consulta o status real na SyncPay
+        const { data: statusData, error: statusError } = await supabase.functions.invoke("syncpay-subscription-status", {
+          body: { subscription_id: existingSub.syncpay_subscription_id },
+        });
+
+        if (!statusError && statusData) {
+          const res = statusData as { status: string; mandate_status?: string; raw?: any };
+          const sub = res.raw || {};
+          const payment = sub.payment || sub.charge || sub.first_charge || {};
+
+          setSubResult({
+            subscription_id: existingSub.syncpay_subscription_id,
+            subscription_status: res.status,
+            mandate_id: payment.mandate_id || sub.mandate_id,
+            mandate_status: res.mandate_status,
+            qr_code_text: payment.qr_code || payment.pix_code || sub.pix_code,
+            qr_code_base64: payment.qr_code_base64 || sub.qr_code_base64,
+            billing_method: sp.billing_method
+          });
+
+          // Se estiver ativa, já avisa
+          if (res.status === "active" || res.mandate_status === "active" || res.mandate_status === "authorized") {
+            toast.success("Você já possui uma assinatura ativa para este plano!");
+          }
+          setCheckingSub(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("[openSubscribeForm] erro ao checar assinatura existente", e);
+    }
+
     setSubName(customer?.name || "");
     setSubEmail(((customer as any)?.email as string) || "");
     setSubCpf(maskDoc(String((customer as any)?.cpf || "")));
     setSubPhone(
       String(((customer as any)?.whatsapp as string) || ((customer as any)?.celular as string) || "")
     );
+    setCheckingSub(false);
   };
 
   const closeSubscribeForm = () => {
     setSubForm(null);
     setSubResult(null);
     setSubLoading(false);
+    setCheckingSub(false);
   };
 
   const handleSubscribe = async () => {
@@ -435,7 +483,12 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
             {subForm.name} · {formatCurrency(Number(subForm.amount))} / {subForm.periodicity_days}d
           </p>
 
-          {!subResult ? (
+          {checkingSub ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground animate-pulse">Verificando sua assinatura...</p>
+            </div>
+          ) : !subResult ? (
             <>
               <div className="space-y-3">
                 <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 space-y-2">
