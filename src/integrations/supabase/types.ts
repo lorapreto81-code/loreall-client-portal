@@ -382,6 +382,7 @@ export type Database = {
           updated_at: string
           warez_user_id: number
           warez_username: string
+          whatsapp: string | null
         }
         Insert: {
           amount: number
@@ -398,6 +399,7 @@ export type Database = {
           updated_at?: string
           warez_user_id: number
           warez_username: string
+          whatsapp?: string | null
         }
         Update: {
           amount?: number
@@ -414,6 +416,7 @@ export type Database = {
           updated_at?: string
           warez_user_id?: number
           warez_username?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
