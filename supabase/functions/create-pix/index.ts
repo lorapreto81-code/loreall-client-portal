@@ -1,7 +1,7 @@
 // PIX para renovação de cliente — apenas SyncPay.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createPixSchema } from "../_shared/validation.ts";
-import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
@@ -103,13 +103,13 @@ async function fetchCustomerInfo(customerId: number): Promise<{ cpf: string; ema
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
 
   try {
     const rawBody = await req.json().catch(() => ({}));
     const parse = createPixSchema.safeParse(rawBody);
     if (!parse.success) {
-      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400, {}, req);
     }
     
     const body = parse.data;
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     if (!spRes.ok) {
       console.error("[create-pix] SyncPay error", spRes.status, spData);
       return new Response(JSON.stringify({ error: spData?.message || "Erro SyncPay", details: spData }), {
-        status: spRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: spRes.status, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
     const tx = spData?.data || spData;
@@ -183,12 +183,12 @@ Deno.serve(async (req) => {
       expires_at: inserted.qr_code_expires_at,
       amount: inserted.amount,
       provider: "syncpay",
-    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }), { status: 200, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[create-pix] error", message);
     return new Response(JSON.stringify({ error: message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
     });
   }
 });
