@@ -1,7 +1,9 @@
 // PIX para recarga de revendedor — apenas SyncPay.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resellerCreatePixSchema } from "../_shared/validation.ts";
-import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeaders, corsHeadersFor } from "../_shared/security.ts";
+
+const corsHeaders = corsHeadersFor();
 
 
 function parseExpiresAt(raw: string | undefined | null): string {
