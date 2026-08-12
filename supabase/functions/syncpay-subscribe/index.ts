@@ -70,8 +70,8 @@ async function getToken(): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return err("Method not allowed", 405);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, {}, req);
 
   try {
     const body = await req.json().catch(() => ({}));
