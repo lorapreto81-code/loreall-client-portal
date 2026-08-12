@@ -1,5 +1,5 @@
 import { signCustomerToken } from "../_shared/auth.ts";
-import { tgSearchCustomers } from "../_shared/tg.ts";
+import { tgSearchCustomers, sanitizeCustomerForClient } from "../_shared/tg.ts";
 import { loginSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
 
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     const accounts = await Promise.all(
       authenticated.map(async (c) => ({
         token: await signCustomerToken(Number(c.id)),
-        customer: c,
+        customer: sanitizeCustomerForClient(c),
       })),
     );
 

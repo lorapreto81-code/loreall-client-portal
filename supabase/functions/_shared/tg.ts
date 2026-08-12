@@ -46,6 +46,12 @@ export function buildPhoneVariants(d: string): string[] {
   return Array.from(set).filter((v) => v.length >= 8).slice(0, 6);
 }
 
+/** Returns a customer object without the sensitive IPTV password field. */
+export function sanitizeCustomerForClient(c: Record<string, unknown>): Record<string, unknown> {
+  const { password, ...safe } = c;
+  return safe;
+}
+
 function normalizeList(j: unknown): Record<string, unknown>[] {
   if (!j) return [];
   if (Array.isArray(j)) return j as Record<string, unknown>[];

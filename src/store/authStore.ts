@@ -5,7 +5,7 @@ export interface Customer {
   id: number;
   name: string;
   usuario: string;
-  password: string;
+  // password field removed to avoid persistence in localStorage
   email?: string;
   data_de_vencimento: string;
   telas: number | string;
@@ -36,15 +36,27 @@ export const useAuthStore = create<AuthState>()(
       customer: null,
       token: null,
       isAuthenticated: false,
-      login: (customer, token) =>
+      login: (customer, token) => {
+        // Remove password if present before storing in state/localStorage
+        const { password, ...safeCustomer } = customer as any;
         set((state) => ({
-          customer,
+          customer: safeCustomer as Customer,
           token: token ?? state.token,
           isAuthenticated: true,
-        })),
+        }));
+      },
       logout: () => set({ customer: null, token: null, isAuthenticated: false }),
     }),
-    { name: "loreall-auth" }
+    { 
+      name: "loreall-auth",
+      onRehydrateStorage: () => (state) => {
+        if (state?.customer && (state.customer as any).password) {
+          console.log("Cleaning legacy password from local storage session...");
+          const { password, ...safeCustomer } = state.customer as any;
+          state.customer = safeCustomer;
+        }
+      }
+    }
   )
 );
 
