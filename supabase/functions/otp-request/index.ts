@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const rawBody = await req.json().catch(() => ({}));
     const parse = otpRequestSchema.safeParse(rawBody);
     if (!parse.success) {
-      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400, {}, req);
     }
     
     const input = parse.data.phone.trim();
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
     if ((identifierCount ?? 0) >= MAX_REQUESTS_PER_IDENTIFIER) {
       console.warn(`[otp-request] Identifier rate limit hit for: ${key}`);
-      return json({ error: "Muitas tentativas para este identificador. Aguarde alguns minutos." }, 429);
+      return json({ error: "Muitas tentativas para este identificador. Aguarde alguns minutos." }, 429, {}, req);
     }
 
     // Rate limit per IP
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       
       if ((ipCount ?? 0) >= MAX_REQUESTS_PER_IP) {
         console.warn(`[otp-request] IP rate limit hit for: ${ip}`);
-        return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429);
+        return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429, {}, req);
       }
     }
 
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
     if ((globalCount ?? 0) >= MAX_GLOBAL_DAILY_OTP) {
       console.error("[SECURITY] Global OTP daily limit reached!");
-      return json({ error: "Serviço temporariamente indisponível. Tente mais tarde." }, 503);
+      return json({ error: "Serviço temporariamente indisponível. Tente mais tarde." }, 503, {}, req);
     }
 
 
@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
       const errorMsg = isEmail 
         ? "E-mail não vinculado a nenhuma conta. Verifique os dados ou entre em contato com o suporte."
         : "Número não vinculado a nenhuma conta.";
-      return json({ error: errorMsg }, 404);
+      return json({ error: errorMsg }, 404, {}, req);
     }
 
     const targetPhoneRaw = String(matches[0].whatsapp || matches[0].celular || matches[0].phone || matches[0].telefone || matches[0].whatsapp_c || "");
@@ -182,11 +182,11 @@ Deno.serve(async (req) => {
 
     // Always send to the first match's WhatsApp number (TopGestor primary contact)
     const sent = await sendWhatsappText(targetPhoneDigits || digits, text);
-    if (!sent) return json({ error: "Não foi possível enviar o código agora. Tente novamente." }, 502);
+    if (!sent) return json({ error: "Não foi possível enviar o código agora. Tente novamente." }, 502, {}, req);
 
-    return json(getGenericOk(targetHint, firstName));
+    return json(getGenericOk(targetHint, firstName), 200, {}, req);
   } catch (err) {
     console.error("[otp-request] error", err instanceof Error ? err.message : err);
-    return json({ error: "Não foi possível enviar o código." }, 500);
+    return json({ error: "Não foi possível enviar o código." }, 500, {}, req);
   }
 });
