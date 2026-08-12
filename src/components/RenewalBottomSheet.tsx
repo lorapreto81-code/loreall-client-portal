@@ -149,7 +149,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         .from("syncpay_subscriptions")
         .select("*")
         .eq("customer_id", customer.id)
-        .eq("plan_id", sp.id)
+        .eq("syncpay_plan_id", sp.syncpay_plan_id)
         .maybeSingle();
 
       if (existingSub) {
