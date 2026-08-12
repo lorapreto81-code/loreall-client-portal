@@ -127,7 +127,11 @@ Deno.serve(async (req) => {
       name: String(name).trim(),
       email: String(email).trim().toLowerCase(),
       document: onlyDigits(String(cpf)),
-      phone: onlyDigits(String(phone || "")),
+      phone: (() => {
+        let p = onlyDigits(String(phone || ""));
+        if (p.length > 11 && p.startsWith("55")) p = p.slice(2);
+        return p;
+      })(),
     };
 
     // /enroll is the in-app programmatic flow. Do not replace errors with checkout_url.
