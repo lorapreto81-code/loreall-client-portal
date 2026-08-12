@@ -137,10 +137,20 @@ Deno.serve(async (req) => {
 
     const sub = spData.data || spData.subscription || spData;
     const subId = sub.id || sub.token || sub.subscription_id;
-    const charge = sub.charge || sub.first_charge || spData.charge || {};
-    const qrText = charge.qr_code || charge.qrcode || charge.pix_code || sub.qr_code || sub.pix_code;
-    const qrBase64 = charge.qr_code_base64 || charge.qrcode_base64 || sub.qr_code_base64;
-    const authorizationUrl = sub.authorization_url || charge.authorization_url;
+    
+    // O campo 'payment' vem aninhado no /enroll
+    const payment = sub.payment || sub.charge || sub.first_charge || spData.charge || {};
+    
+    // Pix Copia-e-Cola (qr_code)
+    const qrText = payment.pix_code || payment.qr_code || payment.qrcode || sub.pix_code || sub.qr_code;
+    const qrBase64 = payment.qr_code_base64 || payment.qrcode_base64 || sub.qr_code_base64;
+    
+    // Pix Automático (pix_automatico)
+    const mandateId = payment.mandate_id || sub.mandate_id;
+    const mandateStatus = payment.mandate_status || sub.mandate_status;
+    const qrCodeMandate = payment.qr_code || sub.qr_code; // Em pix_automatico, o qr_code é para autorização no banco
+    
+    const authorizationUrl = sub.authorization_url || payment.authorization_url;
 
     // Registra assinante local
     if (subId) {
