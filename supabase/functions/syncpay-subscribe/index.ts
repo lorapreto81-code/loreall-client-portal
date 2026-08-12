@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
 
     if (!spRes.ok) {
       console.error("[syncpay-subscribe] SyncPay recusou", spRes.status, JSON.stringify(spData));
+      console.log("[syncpay-subscribe] Payload enviado:", JSON.stringify(payload));
       // fallback: devolve URL do checkout hospedado se existir
       if (plan.checkout_url) {
         const qs = new URLSearchParams({
