@@ -5,24 +5,11 @@
 // { plan_id (uuid local), customer_id, name, email, cpf, phone }
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { securityHeadersFor, jsonResponse as json } from "../_shared/security.ts";
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
 
-function ok(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-function err(message: string, status = 400, extra?: unknown) {
-  return new Response(JSON.stringify({ error: message, ...(extra ? { detail: extra } : {}) }), {
-    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+// Funções ok/err removidas em favor do jsonResponse compartilhado
 
 // ------- validators -------
 function onlyDigits(s: string) { return String(s || "").replace(/\D/g, ""); }
@@ -83,8 +70,8 @@ async function getToken(): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return err("Method not allowed", 405);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, {}, req);
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -92,10 +79,10 @@ Deno.serve(async (req) => {
       plan_id, customer_id, name, email, cpf, phone,
     } = body as Record<string, string | number>;
 
-    if (!plan_id) return err("plan_id obrigatório");
-    if (!name || String(name).trim().length < 3) return err("Nome inválido");
-    if (!email || !validEmail(String(email))) return err("E-mail inválido");
-    if (!cpf || !validDoc(String(cpf))) return err("CPF ou CNPJ inválido");
+    if (!plan_id) return json({ error: "plan_id obrigatório" }, 400, {}, req);
+    if (!name || String(name).trim().length < 3) return json({ error: "Nome inválido" }, 400, {}, req);
+    if (!email || !validEmail(String(email))) return json({ error: "E-mail inválido" }, 400, {}, req);
+    if (!cpf || !validDoc(String(cpf))) return json({ error: "CPF ou CNPJ inválido" }, 400, {}, req);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -108,9 +95,9 @@ Deno.serve(async (req) => {
       .select("id, syncpay_plan_id, name, amount, billing_method, checkout_url, topgestor_plan_id")
       .eq("id", plan_id)
       .maybeSingle();
-    if (pErr || !plan) return err("Plano não encontrado", 404);
+    if (pErr || !plan) return json({ error: "Plano não encontrado" }, 404, {}, req);
     const planToken = plan.syncpay_plan_id;
-    if (!planToken) return err("Plano sem token SyncPay", 422);
+    if (!planToken) return json({ error: "Plano sem token SyncPay" }, 422, {}, req);
 
     const token = await getToken();
     const payload = {
@@ -133,19 +120,20 @@ Deno.serve(async (req) => {
     const spData = await spRes.json().catch(() => ({}));
 
     if (!spRes.ok) {
+      console.error("[syncpay-subscribe] SyncPay recusou", spRes.status, JSON.stringify(spData));
       // fallback: devolve URL do checkout hospedado se existir
       if (plan.checkout_url) {
         const qs = new URLSearchParams({
           name: payload.name, email: payload.email, cpf: payload.cpf, phone: payload.phone,
           ...(customer_id ? { customer_id: String(customer_id) } : {}),
         }).toString();
-        return ok({
+        return json({
           fallback: true,
           checkout_url: `${plan.checkout_url}${plan.checkout_url.includes("?") ? "&" : "?"}${qs}`,
           error: spData?.message || `SyncPay ${spRes.status}`,
-        });
+        }, 200, {}, req);
       }
-      return err(spData?.message || `SyncPay ${spRes.status}`, spRes.status, spData);
+      return json({ error: spData?.message || `SyncPay ${spRes.status}`, detail: spData }, spRes.status, {}, req);
     }
 
     const sub = spData.data || spData.subscription || spData;
@@ -171,17 +159,17 @@ Deno.serve(async (req) => {
       }, { onConflict: "syncpay_subscription_id" });
     }
 
-    return ok({
+    return json({
       subscription_id: subId,
       qr_code_text: qrText || null,
       qr_code_base64: qrBase64 || null,
       authorization_url: authorizationUrl || null,
       amount: Number(plan.amount || 0),
       raw: sub,
-    });
+    }, 200, {}, req);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     console.error("[syncpay-subscribe]", message);
-    return err(message, 500);
+    return json({ error: message }, 500, {}, req);
   }
 });
