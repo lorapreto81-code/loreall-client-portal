@@ -1,25 +1,25 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isAdminPassword } from "../_shared/auth.ts";
 import { adminMarkPaidSchema } from "../_shared/validation.ts";
-import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
 
   try {
     const rawBody = await req.json().catch(() => ({}));
     const parse = adminMarkPaidSchema.safeParse(rawBody);
     if (!parse.success) {
-      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400, {}, req);
     }
     
     const { admin_password, payment_id } = parse.data;
 
     if (!isAdminPassword(admin_password)) {
-      return json({ error: "unauthorized" }, 401);
+      return json({ error: "unauthorized" }, 401, {}, req);
     }
 
 
@@ -37,14 +37,14 @@ Deno.serve(async (req) => {
     if (findErr || !payment) {
       return new Response(JSON.stringify({ error: "payment not found", details: findErr?.message }), {
         status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
 
     if (payment.fastdepix_status === "paid" && payment.renewed_at) {
       return new Response(JSON.stringify({ ok: true, already_processed: true, payment }), {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
 
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     if (!tgRes.ok) {
       return new Response(
         JSON.stringify({ error: "TG renew failed", status: tgRes.status, details: renewalResponse }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 502, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" } },
       );
     }
 
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true, customer_id: payment.customer_id, renewal_response: renewalResponse }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 200, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" } },
     );
   } catch (err) {
     const anyErr = err as { message?: string; details?: string };
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     console.error("[admin-mark-payment-paid] error", message);
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
     });
   }
 });
