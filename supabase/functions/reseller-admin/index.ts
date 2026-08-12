@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
           warez_username: String(body.warez_username || "").trim(),
           warez_user_id: Number(body.warez_user_id),
           whatsapp: body.whatsapp || null,
+          email: body.email || null,
           credits: baseCredits,
           amount: Number(body.amount ?? baseCredits * price),
           price_per_credit: price,
