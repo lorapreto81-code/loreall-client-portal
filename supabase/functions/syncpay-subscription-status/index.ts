@@ -87,6 +87,7 @@ Deno.serve(async (req) => {
     }).eq("syncpay_subscription_id", subId);
 
     return json({
+      subscription_id: subId,
       status,
       mandate_status: mandateStatus,
       next_charge_at: nextChargeAt,
