@@ -7,37 +7,36 @@ const RouteIndex = () => {
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Diretrizes de Ajuste SyncPay e Pix Automático</h1>
+      <h1 className="text-2xl font-bold">Mapeamento Técnico SyncPay</h1>
       <div className="bg-muted p-6 rounded-lg whitespace-pre-wrap font-mono text-sm">
-        {`Sim. Agora entendi exatamente o que você precisa: não é um prompt explicando o problema para outro ChatGPT analisar. É o prompt de ajuste que eu vou entregar ao Lovable, já baseado na documentação da SyncPay e no código real do seu ZIP.
+        {`Mapeei o resto da estrutura (Planos + Assinantes + Notificações completos, incluindo os schemas que faltavam). Isso fecha o quadro, mas adianto: nada aqui explica sozinho por que o /enroll ainda está falhando depois da correção do path — pra isso eu ainda preciso do error real, que ninguém colou ainda. Volto nisso no fim.
 
-Eu analisei o projeto que você enviou e encontrei problemas concretos na implementação atual:
+**O fluxo todo, de ponta a ponta:**
 
-1. syncpay-subscribe tem um fallback automático para checkout_url quando o /enroll retorna erro. Isso é justamente o que pode mandar o cliente para um segundo fluxo/formulário e quebrar a experiência.
-2. O frontend trata praticamente o resultado como "Pague o PIX para ativar", inclusive no fluxo pix_automatico, embora nesse caso exista a etapa de autorização do mandato.
-3. O backend extrai mandate_id, mandate_status, qr_code e authorization_url, mas a lógica ainda mistura os dois tipos de assinatura.
-4. O webhook atual pode marcar uma assinatura como active em eventos muito genéricos como create/authorized, o que precisa ser corrigido para respeitar os estados reais.
-5. O webhook também faz renovação no TopGestor e cria registro em payments dentro do processamento, mas não há uma proteção de idempotência robusta nesse trecho.
-6. A tabela atual syncpay_subscriptions ainda é simples demais para representar corretamente mandato + cobrança + ciclo + status da assinatura.
-7. O frontend está preparado para abrir authorization_url, mas ao mesmo tempo mostra QR/copia-e-cola e texto de pagamento como se todos fossem o mesmo fluxo.
-8. Existe ainda uma separação problemática entre o fluxo de renovação PIX tradicional (create-pix/payment-status) e o novo fluxo de assinatura SyncPay, que precisa ficar claramente definida.
+\`\`\`
+POST /api/partner/v1/subscription-plans                    → cria o plano
+POST /api/partner/v1/subscription-plans/{token}/enroll     → cadastra o assinante
+GET  /api/partner/v1/subscriptions/{subscription_token}    → acompanha status
+\`\`\`
 
-Então o prompt abaixo já manda o Lovable corrigir a implementação existente, em vez de inventar uma nova.
+Duas coisas que valem a pena registrar, porque não eram óbvias:
 
-PROMPT MASTER — CORREÇÃO DEFINITIVA DO SYNC PAY + PIX AUTOMÁTICO + ASSINATURA RECORRENTE
+**1. O corpo da resposta não é consistente entre endpoints.** Criar plano embrulha o resultado em { "data": {...} }. Já o /enroll devolve plano, sem data nenhum ({ subscription_token, status, billing_method, payment } direto na raiz). É por isso que o const sub = spData.data || spData.subscription || spData no código de vocês existe e está certo — ele já absorve essa inconsistência real da API, não é gambiarra à toa.
 
-CONTEXTO DO PROJETO
-Este projeto é da Loreall Play e já possui uma integração parcialmente implementada com a SyncPay para pagamentos recorrentes.
-A integração atual NÃO deve ser descartada e recriada do zero.
-Precisamos fazer uma auditoria profunda do código existente e corrigir a implementação atual com base na documentação oficial da SyncPay.
-O problema principal é que o fluxo de contratação recorrente, principalmente com Pix Automático, ainda não está funcionando de forma correta e está prejudicando a experiência do cliente.
+**2. O terceiro passo usa um token diferente do segundo.** GET /subscriptions/{token} espera o subscription_token que veio na resposta do /enroll — não o token do plano. São dois UUIDs diferentes. Se em algum lugar do código vocês forem implementar o polling de status e reusarem planToken em vez do subscription_token retornado, isso vai dar 404 mesmo com tudo mais certo. Vale anotar antes de chegar nessa parte.
 
-O objetivo final é:
-CLIENTE → escolhe o plano → informa seus dados uma única vez → escolhe Pix Automático → nossa aplicação cria a assinatura corretamente → cliente recebe SOMENTE a etapa necessária para autorização do Pix Automático → autoriza no banco → SyncPay confirma a assinatura/mandato → webhook atualiza nosso sistema → acesso é ativado → futuras cobranças são gerenciadas pela SyncPay → nossa aplicação apenas sincroniza os resultados.
+**Sobre acompanhar o mandate_status até ACTIVE:** confirmei — não é por polling no /subscriptions/{token}. O schema SubscriptionResource (o que esse GET retorna) não carrega campo de mandato nenhum. Existe um schema MandateBlock separado (id, status, authorized_at, cancelled_at, cancel_reason) que a doc descreve como "incluído nos eventos de mandato" — ou seja, é entregue via webhook, no mesmo mecanismo do Criar webhook que already existe na doc pra "eventos de assinatura". Então pra saber quando o cliente autorizou o Pix Automático no banco, o caminho é escutar esse evento, não ficar dando GET repetido. Isso é trabalho pra depois de resolver o enroll — só não quero que vocês percam tempo tentando adivinhar isso via polling quando chegar lá.
 
-... [Omitido para brevidade no componente, mas mantendo a estrutura solicitada] ...
+**As ações de ciclo de vida** (Cancelar, Pausar, Reativar, Reenviar cobrança, Trocar plano da assinatura) eu só tenho o resumo de uma linha de cada — não abri o spec completo de nenhuma ainda porque não bloqueiam nada agora. Trocar plano em especial tem uma seção "Regras:" na doc que não vi o conteúdo — se algum dia vocês forem implementar upgrade/downgrade de plano, vale eu abrir essa página específica antes.
 
-IMPORTANTE: Execute TODOS os detalhes desta tarefa com máxima precisão. Não ignore nada, não simplifique, implemente EXATAMENTE o que foi pedido.`}
+---
+
+**Voltando ao que trava tudo:** esse mapeamento inteiro não muda o fato de que o /enroll (com o path já corrigido) continua devolvendo algo que não é 2xx — se não fosse, o fallback não teria dispar do de novo. Isso só o error real responde, e já vou pedir pela terceira vez porque as duas anteriores não vieram:
+
+1. DevTools → Network → chamada pra syncpay-subscribe → corpo da resposta → campo error. Ou
+2. Já que a ferramenta que vocês estão usando pra editar/reimplantar a function claramente tem acesso à infra do Supabase (ela fez o deploy sozinha) — pede pra ela mesma puxar o log mais recente da invocação de syncpay-subscribe e colar aqui o spData que veio da SyncPay. Deve ser mais direto que caçar no navegador.
+
+Sem esse texto, qualquer coisa que eu disser agora vira só mais uma hipótese na pilha.`}
       </div>
     </div>
   );
