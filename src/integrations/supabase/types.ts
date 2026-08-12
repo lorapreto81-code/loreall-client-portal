@@ -476,6 +476,7 @@ export type Database = {
       }
       syncpay_subscriptions: {
         Row: {
+          access_status: string | null
           billing_method: string | null
           cancelled_at: string | null
           created_at: string
@@ -486,14 +487,22 @@ export type Database = {
           customer_phone: string | null
           id: string
           last_charge_at: string | null
+          mandate_id: string | null
+          mandate_status: string | null
           metadata: Json | null
           next_charge_at: string | null
+          overdue_since: string | null
+          retry_count: number
+          started_at: string | null
           status: string
+          suspended_at: string | null
           syncpay_plan_id: string
+          syncpay_status: string | null
           syncpay_subscription_id: string
           updated_at: string
         }
         Insert: {
+          access_status?: string | null
           billing_method?: string | null
           cancelled_at?: string | null
           created_at?: string
@@ -504,14 +513,22 @@ export type Database = {
           customer_phone?: string | null
           id?: string
           last_charge_at?: string | null
+          mandate_id?: string | null
+          mandate_status?: string | null
           metadata?: Json | null
           next_charge_at?: string | null
+          overdue_since?: string | null
+          retry_count?: number
+          started_at?: string | null
           status?: string
+          suspended_at?: string | null
           syncpay_plan_id: string
+          syncpay_status?: string | null
           syncpay_subscription_id: string
           updated_at?: string
         }
         Update: {
+          access_status?: string | null
           billing_method?: string | null
           cancelled_at?: string | null
           created_at?: string
@@ -522,12 +539,64 @@ export type Database = {
           customer_phone?: string | null
           id?: string
           last_charge_at?: string | null
+          mandate_id?: string | null
+          mandate_status?: string | null
           metadata?: Json | null
           next_charge_at?: string | null
+          overdue_since?: string | null
+          retry_count?: number
+          started_at?: string | null
           status?: string
+          suspended_at?: string | null
           syncpay_plan_id?: string
+          syncpay_status?: string | null
           syncpay_subscription_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      syncpay_webhook_events: {
+        Row: {
+          attempts: number
+          created_at: string
+          dedupe_key: string
+          event: string
+          id: string
+          occurred_at: string | null
+          payload: Json
+          plan_token: string | null
+          processed_at: string | null
+          processing_error: string | null
+          processing_status: string
+          subscription_token: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          dedupe_key: string
+          event: string
+          id?: string
+          occurred_at?: string | null
+          payload: Json
+          plan_token?: string | null
+          processed_at?: string | null
+          processing_error?: string | null
+          processing_status?: string
+          subscription_token?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          dedupe_key?: string
+          event?: string
+          id?: string
+          occurred_at?: string | null
+          payload?: Json
+          plan_token?: string | null
+          processed_at?: string | null
+          processing_error?: string | null
+          processing_status?: string
+          subscription_token?: string | null
         }
         Relationships: []
       }

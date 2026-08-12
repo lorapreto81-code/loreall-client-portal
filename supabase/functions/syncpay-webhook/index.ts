@@ -171,8 +171,8 @@ async function handleSubscriptionEvent(
   event: string,
   data: Record<string, any>,
 ) {
-  const subId: string | undefined = data.subscription_id || data.subscription?.id || data.subscription?.token || data.id;
-  const planId: string | undefined = data.plan_id || data.plan?.id || data.plan?.token || data.subscription?.plan_id;
+  const subId: string | undefined = data.subscription_token || data.subscription_id || data.subscription?.id || data.subscription?.token || data.id;
+  const planId: string | undefined = data.plan_token || data.plan_id || data.plan?.id || data.plan?.token || data.subscription?.plan_id;
   if (!subId) return { ok: true, ignored: "no subscription id" };
 
   const customer = data.customer || data.subscriber || {};
@@ -181,7 +181,7 @@ async function handleSubscriptionEvent(
     syncpay_plan_id: planId || "",
     customer_name: customer.name,
     customer_email: customer.email,
-    customer_cpf: (customer.cpf || "").replace(/\D/g, ""),
+    customer_cpf: (customer.cpf || customer.document || data.subscriber_document || "").replace(/\D/g, ""),
     customer_phone: customer.phone || customer.whatsapp,
     billing_method: data.billing_method || data.subscription?.billing_method,
     metadata: data,
@@ -200,29 +200,29 @@ async function handleSubscriptionEvent(
   }
   if (tgCustomerId) patch.customer_id = tgCustomerId;
 
-  const status = String(data.status || "").toLowerCase();
+  const status = String(data.status || data.subscription?.status || "").toLowerCase();
+  const normalizedEvent = event.replaceAll("_", ".");
   if (event.includes("cancel") || status === "cancelled" || status === "canceled") {
     patch.status = "cancelled";
     patch.cancelled_at = new Date().toISOString();
-  } else if (event.includes("suspend") || status === "suspended" || status === "delinquent") {
+  } else if (event.includes("suspend") || status === "suspended") {
     patch.status = "suspended";
-  } else if (event.includes("charge.paid") || event.includes("charge.succeeded")) {
+  } else if (status === "overdue" || normalizedEvent === "assinatura.em.atraso") {
+    patch.status = "overdue";
+  } else if (normalizedEvent === "cobranca.paga" || event.includes("charge.paid") || event.includes("charge.succeeded")) {
     patch.status = "active";
     patch.last_charge_at = new Date().toISOString();
     if (data.next_charge_at || data.subscription?.next_charge_at) {
       patch.next_charge_at = data.next_charge_at || data.subscription.next_charge_at;
     }
-  } else if (event.includes("create") || event.includes("activated") || event.includes("authorized")) {
+  } else if (normalizedEvent === "assinatura.ativada" || normalizedEvent === "assinatura.reativada" || event.includes("activated")) {
     patch.status = "active";
-    if (data.mandate_id || data.subscription?.mandate_id) {
-      patch.metadata = { ...((existing?.metadata as any) || {}), mandate_id: data.mandate_id || data.subscription?.mandate_id };
-    }
   }
 
   await supabase.from("syncpay_subscriptions").upsert(patch, { onConflict: "syncpay_subscription_id" });
 
   const chargeId: string | undefined = data.charge_id || data.charge?.id || data.transaction_id;
-  const isChargePaid = (event.includes("charge") && (event.includes("paid") || event.includes("succeeded")))
+  const isChargePaid = normalizedEvent === "cobranca.paga" || (event.includes("charge") && (event.includes("paid") || event.includes("succeeded")))
     || (event.includes("subscription") && status === "paid");
 
   if (isChargePaid && tgCustomerId) {
@@ -324,8 +324,29 @@ Deno.serve(async (req) => {
     );
 
     // Eventos de assinatura (recorrência) — rota separada
-    if (event.includes("subscription") || event.includes("charge") || data.subscription_id || data.subscription) {
+    if (event.includes("subscription") || event.includes("charge") || event.startsWith("assinatura_") || event.startsWith("cobranca_") || data.subscription_token || data.subscription_id || data.subscription) {
+      const subscriptionToken = String(data.subscription_token || data.subscription?.token || data.subscription_id || "");
+      const dedupeKey = `${event}:${subscriptionToken}:${String(data.charge_id || data.charge?.id || data.identifier || "")}:${String(payload.occurred_at || data.occurred_at || "")}`;
+      const { error: eventInsertError } = await supabase.from("syncpay_webhook_events").insert({
+        dedupe_key: dedupeKey,
+        event: event || "unknown",
+        subscription_token: subscriptionToken || null,
+        plan_token: data.plan_token || data.plan?.token || null,
+        occurred_at: payload.occurred_at || data.occurred_at || null,
+        payload,
+        processing_status: "processing",
+        attempts: 1,
+      });
+      if (eventInsertError?.code === "23505") {
+        return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (eventInsertError) console.error("[syncpay-webhook] event log failed", eventInsertError);
       const result = await handleSubscriptionEvent(supabase, event, data);
+      if (!eventInsertError) {
+        await supabase.from("syncpay_webhook_events").update({ processing_status: "processed", processed_at: new Date().toISOString() }).eq("dedupe_key", dedupeKey);
+      }
       return new Response(JSON.stringify(result), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
