@@ -158,7 +158,10 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     setSubLoading(true);
     try {
       const cleanCpf = onlyDigitsDoc(subCpf);
-      const cleanPhone = subPhone.replace(/\D/g, "");
+      let cleanPhone = subPhone.replace(/\D/g, "");
+      if (cleanPhone.length > 11 && cleanPhone.startsWith("55")) {
+        cleanPhone = cleanPhone.slice(2);
+      }
       const trimmedName = subName.trim();
       const trimmedEmail = subEmail.trim().toLowerCase();
 
