@@ -25,15 +25,17 @@ async function key(): Promise<CryptoKey> {
 }
 
 export interface CustomerSession {
-  sub: number; // customer id
+  sub: number | string; // customer id (number for TG, string for reseller UUID)
+  role?: "customer" | "reseller";
   exp: number; // epoch seconds
 }
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-export async function signCustomerToken(customerId: number): Promise<string> {
+export async function signCustomerToken(id: number | string, role: "customer" | "reseller" = "customer"): Promise<string> {
   const payload: CustomerSession = {
-    sub: customerId,
+    sub: id,
+    role,
     exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
   };
   const body = b64url(encoder.encode(JSON.stringify(payload)));

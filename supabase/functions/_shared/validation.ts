@@ -22,11 +22,14 @@ export const loginSchema = z.object({
 
 export const otpRequestSchema = z.object({
   phone: z.string().min(1).max(120),
+  context: z.enum(["customer", "reseller"]).optional().default("customer"),
+  slug: z.string().optional(), // required if context=reseller
 });
 
 export const otpVerifySchema = z.object({
   phone: z.string().min(1).max(120),
   code: z.string().min(6).max(6),
+  context: z.enum(["customer", "reseller"]).optional().default("customer"),
 });
 
 export const createPixSchema = z.object({
