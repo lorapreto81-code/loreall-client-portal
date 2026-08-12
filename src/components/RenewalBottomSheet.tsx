@@ -296,6 +296,45 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     };
   }, [pix?.payment_id, customer, login, queryClient]);
 
+  // Polling para status da assinatura SyncPay (Pix Automático)
+  useEffect(() => {
+    if (!subResult?.subscription_id || subResult.subscription_status === "active") return;
+    
+    let stop = false;
+    const checkStatus = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("syncpay-subscription-status", {
+          body: { subscription_id: subResult.subscription_id },
+        });
+        
+        if (stop || error) return;
+        
+        const res = data as { status: string; mandate_status?: string };
+        if (res.status === "active" || res.mandate_status === "active" || res.mandate_status === "authorized") {
+          setSubResult(prev => prev ? { ...prev, subscription_status: "active", mandate_status: "active" } : null);
+          stop = true;
+          toast.success("Pix Automático ativado com sucesso!");
+          
+          // Refresh customer to see if TopGestor was updated by webhook
+          try {
+            const cust = await getCustomer(customer!.id);
+            login((cust.data || cust) as Customer);
+          } catch (e) {
+            console.error("refresh customer failed", e);
+          }
+        }
+      } catch (e) {
+        console.error("[syncpay-subscription-status poll]", e);
+      }
+    };
+
+    const interval = setInterval(checkStatus, 5000);
+    return () => {
+      stop = true;
+      clearInterval(interval);
+    };
+  }, [subResult?.subscription_id, subResult?.subscription_status, customer, login]);
+
 
   if (!customer) return null;
 
@@ -307,6 +346,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   };
 
   const handleClose = () => {
+    setSubResult(null); // Limpa polling da assinatura
     resetState();
     onClose();
   };
