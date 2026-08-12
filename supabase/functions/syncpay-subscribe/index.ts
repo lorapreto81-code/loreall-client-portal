@@ -95,9 +95,9 @@ Deno.serve(async (req) => {
       .select("id, syncpay_plan_id, name, amount, billing_method, checkout_url, topgestor_plan_id")
       .eq("id", plan_id)
       .maybeSingle();
-    if (pErr || !plan) return err("Plano não encontrado", 404);
+    if (pErr || !plan) return json({ error: "Plano não encontrado" }, 404, {}, req);
     const planToken = plan.syncpay_plan_id;
-    if (!planToken) return err("Plano sem token SyncPay", 422);
+    if (!planToken) return json({ error: "Plano sem token SyncPay" }, 422, {}, req);
 
     const token = await getToken();
     const payload = {
