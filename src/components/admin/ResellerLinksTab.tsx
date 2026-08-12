@@ -127,7 +127,7 @@ export default function ResellerLinksTab() {
     }
   };
 
-  const PUBLIC_BASE_URL = "https://pagartv.online";
+  const PUBLIC_BASE_URL = "https://cliente.loreallplay.com";
 
   const copyLink = (slug: string) => {
     const url = `${PUBLIC_BASE_URL}/revendedor/${slug}`;
@@ -177,7 +177,7 @@ export default function ResellerLinksTab() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-foreground">{l.display_name}</div>
                       <a href={`${PUBLIC_BASE_URL}/revendedor/${l.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1">
-                        pagartv.online/revendedor/{l.slug} <ExternalLink className="h-3 w-3" />
+                        cliente.loreallplay.com/revendedor/{l.slug} <ExternalLink className="h-3 w-3" />
                       </a>
                     </td>
                     <td className="px-4 py-3">
