@@ -1,116 +1,40 @@
+# Plano de Implementação - Refatoração de Assinaturas e Recorrência SyncPay
 
-# Fluxo de Indicação com Validação Manual
+O objetivo é alinhar a estrutura de assinaturas e recorrência com a documentação oficial da SyncPay (Apidog), garantindo que o fluxo de inscrição (`enroll`), gerenciamento de planos e processamento de webhooks esteja robusto, especialmente para o Pix Automático.
 
-## O problema real
+## Mudanças Propostas
 
-Hoje o fluxo atual (`/indicacao/:code` → `referrals-api?action=create-trial`) cria o cliente **direto no TopGestor** como trial ativo. Mas na prática o cliente **não consegue acessar nada** enquanto você não criar usuário/senha manualmente no painel Warez/Uniplay. Resultado: cliente cadastrado sem credenciais, você recebe a mensagem no WhatsApp, cria no painel e responde "no braço".
+### Backend (Edge Functions)
 
-Precisamos formalizar essa fila.
+#### 1. `syncpay-subscriptions`
+- **Ação `sync-plans`**: Garantir que todos os campos da documentação (como `billing_method`, `checkout_url`, `periodicity_days`, `trial_days`) sejam capturados e sincronizados no banco de dados local.
+- **Ação `create-plan`**: Adicionar suporte a campos como `trial_days` e garantir que o `amount` seja tratado corretamente conforme a API (Inteiro em Reais).
+- **Ação `list-subscribers`**: Atualizar para usar o endpoint `/subscription-plans/{token}/subscribers` e garantir o mapeamento correto dos dados retornados.
 
-## Novo fluxo end-to-end
+#### 2. `syncpay-subscribe`
+- **Payload `/enroll`**: Validar se campos adicionais como `document_type` (CPF/CNPJ) ou `address` (se necessário no futuro) estão alinhados.
+- **Resposta**: Refinar a extração de `mandate_id` e `mandate_status` para Pix Automático, garantindo que o `qr_code` retornado seja o de autorização.
+- **Logs**: Manter logs detalhados de erros da API SyncPay para depuração rápida.
 
-```text
-┌─────────────────┐     ┌──────────────────┐     ┌────────────────────┐
-│ Cliente atual   │     │ Indicado         │     │ Admin (você)       │
-│ (indicador)     │     │ (novo)           │     │                    │
-└────────┬────────┘     └────────┬─────────┘     └─────────┬──────────┘
-         │                       │                         │
-         │ 1. Copia link do      │                         │
-         │   ReferralSheet       │                         │
-         ├──────────────────────▶│                         │
-         │                       │ 2. Abre /indicacao/CODE │
-         │                       │    preenche nome+WA     │
-         │                       │                         │
-         │                       │ 3. Cria registro em     │
-         │                       │    trial_signups        │
-         │                       │    status=pending       │
-         │                       ├────────────────────────▶│
-         │                       │                         │
-         │                       │ 4. Vê tela "Cadastro    │ 5. Nova aba
-         │                       │    em análise, avisamos │    "Testes Grátis"
-         │                       │    no WhatsApp"         │    lista pendentes
-         │                       │                         │
-         │                       │                         │ 6. Cria user/senha
-         │                       │                         │    no Warez/Uniplay
-         │                       │                         │
-         │                       │                         │ 7. Clica "Aprovar"
-         │                       │                         │    preenche user+senha
-         │                       │                         │    → cria no TopGestor
-         │                       │                         │      via edge function
-         │                       │                         │    → registra referral
-         │                       │                         │      status=
-         │                       │                         │      pending_referrer_
-         │                       │                         │      renewal
-         │                       │                         │
-         │                       │ 8. Recebe link WhatsApp │
-         │                       │◀────────────────────────┤    com credenciais
-         │                       │                         │
-         │                       │ 9. Vai pra /login       │
-         │                       │    e usa o sistema      │
-         │                       │                         │
-         │ 10. Quando o indicado │                         │
-         │    renovar (pagar     │                         │
-         │    1º PIX), regra     │                         │
-         │    atual credita +30d │                         │
-         │◀──────────────────────┴─────────────────────────┤
-```
+#### 3. `syncpay-webhook`
+- **Eventos de Assinatura**: Implementar tratamento específico para `subscription.created`, `subscription.updated`, `subscription.cancelled`, e eventos de cobrança `charge.paid`.
+- **Pix Automático**: Garantir que o `mandate_id` seja associado corretamente e que mudanças de status do mandato (`active`, `cancelled`) sejam refletidas no banco.
 
-## Estados do pré-cadastro (`trial_signups`)
+### Frontend
 
-- **pending** — preencheu formulário, aguardando você criar credenciais
-- **approved** — você aprovou, cliente criado no TopGestor, credenciais enviadas
-- **rejected** — WhatsApp duplicado / suspeito de fraude (com motivo)
+#### 1. `SyncpaySubscriptionsTab.tsx`
+- Melhorar a exibição dos planos na área admin, incluindo mais detalhes da SyncPay (trial, dias de antecipação).
+- Adicionar filtros ou busca se o volume de planos crescer.
 
-Bônus do indicador continua igual (regra da memória): só libera +30 dias quando o indicado **paga o 1º PIX**, não quando é aprovado. Isso evita fraude de gente cadastrando fake pra ganhar bônus.
+#### 2. `RenewalBottomSheet.tsx`
+- **Fluxo Pix Automático**: Melhorar a explicação para o usuário final sobre como funciona a autorização no banco (que não é um pagamento imediato de fatura, mas uma autorização de débito).
+- **Persistência**: Garantir que, se o cliente já tem uma assinatura ativa, o botão mude para "Gerenciar Assinatura" em vez de criar uma nova.
 
-## Mudanças concretas
+## Detalhes Técnicos
 
-### 1. Banco (nova tabela)
-`trial_signups` com: `referral_code`, `name`, `whatsapp`, `status`, `topgestor_customer_id` (preenchido só na aprovação), `approved_by`, `rejection_reason`, timestamps.
+- **API SyncPay**: Uso rigoroso do base URL `https://api.syncpayments.com.br/api/partner/v1`.
+- **Mapeamento de Planos**: Fortalecer a relação entre `syncpay_plans.topgestor_plan_id` e os planos do TopGestor para que a renovação automática no webhook nunca falhe por falta de ID.
+- **Segurança**: Validação de assinatura HMAC em todos os webhooks recebidos da SyncPay.
 
-Índice único em `whatsapp` WHERE status IN ('pending','approved') pra evitar cadastro duplicado.
-
-### 2. Edge function `referrals-api` (edições)
-- `action=create-trial` **muda comportamento**: em vez de criar no TopGestor, insere em `trial_signups` com status `pending` e retorna `{ status: 'pending', message: '...' }`.
-- `action=list-pending-signups` (novo, admin) — lista fila.
-- `action=approve-signup` (novo, admin) — recebe `signup_id`, `usuario`, `senha`, `plan_id`. Cria cliente no TopGestor via API existente, cria registro em `referrals` com status `pending_referrer_renewal`, marca signup como `approved`. Retorna link WhatsApp pronto pro admin mandar pro cliente.
-- `action=reject-signup` (novo, admin) — marca como `rejected` com motivo.
-
-### 3. Frontend `IndicacaoTeste.tsx`
-Depois de enviar, mostra tela nova: "✓ Cadastro recebido! Estamos preparando seu acesso — você receberá as credenciais no WhatsApp em até X horas." Sem mostrar user/senha (porque ainda não existem).
-
-### 4. Novo painel admin `TrialSignupsTab.tsx`
-Aba nova em `/admin` com lista de pendentes: nome, WhatsApp, quem indicou, quando cadastrou. Cada linha tem:
-- Botão **Aprovar** → abre modal pedindo usuário, senha e plano → chama `approve-signup` → mostra botão "Enviar credenciais no WhatsApp" com mensagem pré-formatada.
-- Botão **Rejeitar** → pede motivo → marca como rejeitado.
-
-Também mostra histórico de aprovados/rejeitados com filtro.
-
-### 5. `ReferralSheet.tsx` (ajuste leve de copy)
-Trocar texto pra deixar claro que o bônus vem quando o indicado **pagar** (não quando cadastrar), evitando expectativa errada.
-
-## Sobre o desconto de 5%
-
-**Recomendo NÃO implementar agora.** Motivos:
-1. O indicado já ganha teste grátis (dias configuráveis no admin) — já é um incentivo forte.
-2. Aplicar 5% no 1º PIX exige mexer em `fastdepix-create-pix`, criar tabela de cupons, e uma flag "primeiro pagamento" no cliente. É outro projeto.
-3. Se depois quiser adicionar, dá pra fazer isolado sem retrabalho no fluxo de aprovação.
-
-Se você quiser mesmo o desconto, marco pra fazer numa segunda leva.
-
-## Ordem de implementação
-
-1. Migration `trial_signups` + grants + RLS + policies
-2. Editar `referrals-api` (mudar create-trial + adicionar approve/reject/list)
-3. Atualizar `IndicacaoTeste.tsx` (tela de "em análise")
-4. Criar `TrialSignupsTab.tsx` e plugar em `Admin.tsx`
-5. Ajuste de copy no `ReferralSheet.tsx`
-
-## Detalhes técnicos
-
-- Autenticação admin: reusar o padrão de `ReferralTrialConfigTab` (mesma proteção já existente pras rotas admin do `referrals-api`).
-- Mensagem WhatsApp de aprovação: template com nome, usuário, senha, plano, dias de teste, link de download do app. Botão copia URL `wa.me` já pronta.
-- Rejeição de WhatsApp duplicado: se já existe signup pending/approved com mesmo WhatsApp, `create-trial` retorna erro com link pro suporte (comportamento atual já existe, mantém).
-- TopGestor: criação usa endpoint `POST /customers` via `topgestor-proxy` — precisa adicionar action `create-customer` no proxy se ainda não tiver (verificar).
-
-Aprova esse plano ou quer ajustar algo (ex: incluir o desconto de 5% agora, mudar copy, adicionar auto-aprovação em casos específicos)?
+---
+Vou prosseguir com a análise detalhada e ajustes pontuais baseados na documentação fornecida.
