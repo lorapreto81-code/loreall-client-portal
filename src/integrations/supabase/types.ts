@@ -383,6 +383,7 @@ export type Database = {
           created_at: string
           credits: number
           display_name: string
+          email: string | null
           id: string
           is_active: boolean
           max_credits: number
@@ -400,6 +401,7 @@ export type Database = {
           created_at?: string
           credits: number
           display_name: string
+          email?: string | null
           id?: string
           is_active?: boolean
           max_credits?: number
@@ -417,6 +419,7 @@ export type Database = {
           created_at?: string
           credits?: number
           display_name?: string
+          email?: string | null
           id?: string
           is_active?: boolean
           max_credits?: number
