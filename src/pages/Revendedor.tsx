@@ -12,7 +12,7 @@ import LaunchesBanner from "@/components/LaunchesBanner";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const SUPPORT_WHATSAPP = "5583998551952";
-const WAREZ_PANEL_URL = "https://painel.wareztv.com/";
+const WAREZ_PANEL_URL = "https://revenda.loreallplay.com/";
 
 interface ResellerLink {
   id: string;
@@ -258,7 +258,7 @@ export default function Revendedor() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <a href={WAREZ_PANEL_URL} target="_blank" rel="noreferrer" className="cursor-pointer">
-                  <ExternalLink className="h-4 w-4 mr-2 text-blue-600" /> Painel WAREZ
+                  <ExternalLink className="h-4 w-4 mr-2 text-blue-600" /> Painel de Revenda
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
