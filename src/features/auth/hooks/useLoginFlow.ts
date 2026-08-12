@@ -6,7 +6,7 @@ import { useAuthStore, Customer } from "@/store/authStore";
 import { onlyDigits } from "@/utils/formatters";
 import { REF_KEY, EMAIL_RE } from "@/utils/constants";
 
-export const useLoginFlow = () => {
+export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: string) => {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"phone" | "code">("phone");
@@ -43,6 +43,10 @@ export const useLoginFlow = () => {
     const c = account.customer as unknown as Customer;
     login(c, account.token);
     toast.success("Bem-vindo, " + c.name + "!");
+    if (mode === "reseller") {
+      // For reseller, stay on same page but now authenticated state will change
+      return;
+    }
     navigate("/welcome");
   };
 
@@ -58,7 +62,7 @@ export const useLoginFlow = () => {
     const identifier = isEmail ? phone.toLowerCase().trim() : digits;
     setLoading(true);
     try {
-      const res = await requestOtp(identifier);
+      const res = await requestOtp(identifier, mode, slug);
       if (res.target_hint) {
         setTargetHint(res.target_hint);
         setCustomerName(res.customer_name || null);
@@ -91,7 +95,7 @@ export const useLoginFlow = () => {
     try {
       const isEmailInput = EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone) || (phone.length > 3 && !/^\d+$/.test(phone));
       const identifier = isEmailInput ? phone.toLowerCase().trim() : onlyDigits(phone).slice(0, 13);
-      const { accounts } = await verifyOtp(identifier, c);
+      const { accounts } = await verifyOtp(identifier, c, mode);
       if (!accounts || accounts.length === 0) {
         toast.error("Conta não encontrada.");
         return;

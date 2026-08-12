@@ -7,7 +7,6 @@ import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts
 
 const MAX_ATTEMPTS = 5;
 
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
 
@@ -20,9 +19,10 @@ Deno.serve(async (req) => {
     
     const raw = parse.data.phone.trim();
     const code = onlyDigits(parse.data.code);
+    const context = parse.data.context || "customer";
+    
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
     const digits = onlyDigits(raw);
-
 
     const key = isEmail ? raw.toLowerCase().trim() : phoneKey(digits);
     const supabase = createClient(
@@ -56,40 +56,72 @@ Deno.serve(async (req) => {
 
     await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
 
-    const searchIdentifier = isEmail ? raw.slice(0, 100) : digits;
-    console.log(`[otp-verify] Searching customers for verification: ${searchIdentifier}`);
-    const customers = await tgSearchCustomers(searchIdentifier);
-    console.log(`[otp-verify] Found ${customers.length} total search results.`);
-    const matches = customers.filter((c) => {
-      if (isEmail) {
-        const cEmail = String(c.email || "").toLowerCase().trim();
-        const cName = String(c.name || "").toLowerCase().trim();
-        const localPart = key.split('@')[0];
-        // Broaden match: email equals key OR email contains localPart OR name contains localPart
-        const match = cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
-        console.log(`[otp-verify] Checking customer "${cName}" (Email: ${cEmail}): match=${match}`);
-        return match;
+    if (context === "reseller") {
+      // Logic for reseller verification
+      const { data: link, error: linkError } = await supabase
+        .from("reseller_links")
+        .select("id, slug, display_name, whatsapp")
+        .or(`reseller_id.eq.${row.reseller_id},id.eq.${row.reseller_id}`) // row.reseller_id is uuid
+        .maybeSingle();
+
+      if (linkError || !link) {
+        // Fallback: search by phone key again if direct match fails
+        const { data: fallbackLink } = await supabase
+          .from("reseller_links")
+          .select("id, slug, display_name, whatsapp")
+          .filter("whatsapp", "ilike", `%${key}`)
+          .maybeSingle();
+        
+        if (!fallbackLink) return json({ error: "Revendedor não encontrado." }, 404, {}, req);
+        
+        const token = await signCustomerToken(fallbackLink.id, "reseller");
+        return json({ 
+          accounts: [{
+            token,
+            customer: { id: fallbackLink.id, name: fallbackLink.display_name, slug: fallbackLink.slug, role: "reseller" }
+          }] 
+        }, 200, {}, req);
       }
-      const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
-      return phoneFields
-        .filter(Boolean)
-        .map((v) => phoneKey(String(v)))
-        .some((p) => p === key);
-    });
 
-    if (matches.length === 0) {
-      console.warn(`[otp-verify] No matches found for ${key} after code validation.`);
-      return json({ error: "Conta não encontrada." }, 404, {}, req);
+      const token = await signCustomerToken(link.id, "reseller");
+      return json({ 
+        accounts: [{
+          token,
+          customer: { id: link.id, name: link.display_name, slug: link.slug, role: "reseller" }
+        }] 
+      }, 200, {}, req);
+
+    } else {
+      // Logic for customer verification
+      const searchIdentifier = isEmail ? raw.slice(0, 100) : digits;
+      const customers = await tgSearchCustomers(searchIdentifier);
+      const matches = customers.filter((c) => {
+        if (isEmail) {
+          const cEmail = String(c.email || "").toLowerCase().trim();
+          const cName = String(c.name || "").toLowerCase().trim();
+          const localPart = key.split('@')[0];
+          return cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
+        }
+        const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
+        return phoneFields
+          .filter(Boolean)
+          .map((v) => phoneKey(String(v)))
+          .some((p) => p === key);
+      });
+
+      if (matches.length === 0) {
+        return json({ error: "Conta não encontrada." }, 404, {}, req);
+      }
+
+      const accounts = await Promise.all(
+        matches.map(async (c) => ({
+          token: await signCustomerToken(Number(c.id), "customer"),
+          customer: sanitizeCustomerForClient(c),
+        })),
+      );
+
+      return json({ accounts }, 200, {}, req);
     }
-
-    const accounts = await Promise.all(
-      matches.map(async (c) => ({
-        token: await signCustomerToken(Number(c.id)),
-        customer: sanitizeCustomerForClient(c),
-      })),
-    );
-
-    return json({ accounts }, 200, {}, req);
   } catch (err) {
     console.error("[otp-verify] error", err instanceof Error ? err.message : err);
     return json({ error: "Não foi possível validar o código." }, 500, {}, req);

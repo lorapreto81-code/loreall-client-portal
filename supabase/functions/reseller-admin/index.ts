@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
           display_name: String(body.display_name || "").trim(),
           warez_username: String(body.warez_username || "").trim(),
           warez_user_id: Number(body.warez_user_id),
+          whatsapp: body.whatsapp || null,
           credits: baseCredits,
           amount: Number(body.amount ?? baseCredits * price),
           price_per_credit: price,
@@ -124,7 +125,7 @@ Deno.serve(async (req) => {
         const id = String(body.id || "");
         if (!id) return ok({ error: "id obrigatório" }, 400);
         const patch: Record<string, unknown> = {};
-        for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "price_per_credit", "min_credits", "max_credits", "is_active", "notes"]) {
+        for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "price_per_credit", "min_credits", "max_credits", "is_active", "notes", "whatsapp"]) {
           if (k in body) patch[k] = body[k];
         }
         if (patch.slug) patch.slug = slugify(String(patch.slug));
@@ -396,7 +397,7 @@ Deno.serve(async (req) => {
       case "list-otp-logs": {
         const { data, error } = await supabase
           .from("otp_codes")
-          .select("id, phone, customer_id, created_at, consumed_at, ip_address, attempts")
+          .select("id, phone, customer_id, reseller_id, created_at, consumed_at, ip_address, attempts")
           .order("created_at", { ascending: false })
           .limit(300);
         if (error) throw error;

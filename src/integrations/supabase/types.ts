@@ -46,6 +46,7 @@ export type Database = {
           id: string
           ip_address: string | null
           phone: string
+          reseller_id: string | null
           updated_at: string
         }
         Insert: {
@@ -58,6 +59,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           phone: string
+          reseller_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -70,9 +72,18 @@ export type Database = {
           id?: string
           ip_address?: string | null
           phone?: string
+          reseller_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "otp_codes_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -382,6 +393,7 @@ export type Database = {
           updated_at: string
           warez_user_id: number
           warez_username: string
+          whatsapp: string | null
         }
         Insert: {
           amount: number
@@ -398,6 +410,7 @@ export type Database = {
           updated_at?: string
           warez_user_id: number
           warez_username: string
+          whatsapp?: string | null
         }
         Update: {
           amount?: number
@@ -414,6 +427,7 @@ export type Database = {
           updated_at?: string
           warez_user_id?: number
           warez_username?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
