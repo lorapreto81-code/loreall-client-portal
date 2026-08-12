@@ -296,6 +296,45 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     };
   }, [pix?.payment_id, customer, login, queryClient]);
 
+  // Polling para status da assinatura SyncPay (Pix Automático)
+  useEffect(() => {
+    if (!subResult?.subscription_id || subResult.subscription_status === "active") return;
+    
+    let stop = false;
+    const checkStatus = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("syncpay-subscription-status", {
+          body: { subscription_id: subResult.subscription_id },
+        });
+        
+        if (stop || error) return;
+        
+        const res = data as { status: string; mandate_status?: string };
+        if (res.status === "active" || res.mandate_status === "active" || res.mandate_status === "authorized") {
+          setSubResult(prev => prev ? { ...prev, subscription_status: "active", mandate_status: "active" } : null);
+          stop = true;
+          toast.success("Pix Automático ativado com sucesso!");
+          
+          // Refresh customer to see if TopGestor was updated by webhook
+          try {
+            const cust = await getCustomer(customer!.id);
+            login((cust.data || cust) as Customer);
+          } catch (e) {
+            console.error("refresh customer failed", e);
+          }
+        }
+      } catch (e) {
+        console.error("[syncpay-subscription-status poll]", e);
+      }
+    };
+
+    const interval = setInterval(checkStatus, 5000);
+    return () => {
+      stop = true;
+      clearInterval(interval);
+    };
+  }, [subResult?.subscription_id, subResult?.subscription_status, customer, login]);
+
 
   if (!customer) return null;
 
@@ -307,6 +346,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   };
 
   const handleClose = () => {
+    setSubResult(null); // Limpa polling da assinatura
     resetState();
     onClose();
   };
@@ -449,43 +489,62 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
             </>
           ) : (
             <>
-              <p className="text-center text-[20px] font-bold text-foreground mb-1">{formatCurrency(Number(subResult.amount || subForm.amount))}</p>
-              <p className="text-center text-xs text-muted-foreground mb-3">
-                {isPixAuto
-                  ? "Escaneie o QR Code no aplicativo do seu banco para autorizar o Pix Automático."
-                  : "Pagamento pendente. Pague o PIX para ativar sua assinatura."}
-              </p>
-
-              {qrImg && (
-                <div className="flex justify-center mb-4">
-                  <div className="bg-white p-3 rounded-xl">
-                    <img src={qrImg} alt="QR Code PIX" style={{ width: 220, height: 220 }} />
+              {subResult.subscription_status === "active" ? (
+                <div className="py-12 flex flex-col items-center gap-4 text-center animate-in zoom-in-95 duration-300">
+                  <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Check className="h-8 w-8 text-primary" />
                   </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-foreground">Pix Automático ativo!</h4>
+                    <p className="text-sm text-muted-foreground mt-2 max-w-[280px]">
+                      Sua assinatura foi autorizada no banco e já está ativa em nosso sistema.
+                    </p>
+                  </div>
+                  <button onClick={closeSubscribeForm} className="btn-primary-gradient px-8 py-3 rounded-xl font-bold text-sm mt-4">
+                    Voltar ao Início
+                  </button>
                 </div>
-              )}
-
-              {qrText && (
+              ) : (
                 <>
-                  <p className="text-xs text-muted-foreground mb-1.5">{isPixAuto ? "Código para autorização:" : "Código copia e cola:"}</p>
-                  <div className="bg-muted rounded-lg p-2.5 mb-3">
-                    <p className="text-[11px] text-foreground break-all font-mono">{qrText}</p>
-                  </div>
-                  <button
-                    onClick={() => handleCopy(qrText)}
-                    className="w-full px-5 py-3 text-sm rounded-lg inline-flex items-center justify-center gap-1.5 transition-all mb-2"
-                    style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? "Copiado!" : isPixAuto ? "Copiar código de autorização" : "Copiar código PIX"}
+                  <p className="text-center text-[20px] font-bold text-foreground mb-1">{formatCurrency(Number(subResult.amount || subForm.amount))}</p>
+                  <p className="text-center text-xs text-muted-foreground mb-3">
+                    {isPixAuto
+                      ? "Escaneie o QR Code no aplicativo do seu banco para autorizar o Pix Automático."
+                      : "Pagamento pendente. Pague o PIX para ativar sua assinatura."}
+                  </p>
+
+                  {qrImg && (
+                    <div className="flex justify-center mb-4">
+                      <div className="bg-white p-3 rounded-xl">
+                        <img src={qrImg} alt="QR Code PIX" style={{ width: 220, height: 220 }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {qrText && (
+                    <>
+                      <p className="text-xs text-muted-foreground mb-1.5">{isPixAuto ? "Código para autorização:" : "Código copia e cola:"}</p>
+                      <div className="bg-muted rounded-lg p-2.5 mb-3">
+                        <p className="text-[11px] text-foreground break-all font-mono">{qrText}</p>
+                      </div>
+                      <button
+                        onClick={() => handleCopy(qrText)}
+                        className="w-full px-5 py-3 text-sm rounded-lg inline-flex items-center justify-center gap-1.5 transition-all mb-2"
+                        style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
+                      >
+                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied ? "Copiado!" : isPixAuto ? "Copiar código de autorização" : "Copiar código PIX"}
+                      </button>
+                    </>
+                  )}
+
+                  {isPixAuto && <p className="text-[11px] text-muted-foreground text-center mt-2">Status: aguardando autorização do Pix Automático.</p>}
+
+                  <button onClick={closeSubscribeForm} className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2 w-full" style={{ minHeight: 44 }}>
+                    Fechar
                   </button>
                 </>
               )}
-
-              {isPixAuto && <p className="text-[11px] text-muted-foreground text-center mt-2">Status: aguardando autorização do Pix Automático.</p>}
-
-              <button onClick={closeSubscribeForm} className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2 w-full" style={{ minHeight: 44 }}>
-                Fechar
-              </button>
             </>
           )}
         </div>
