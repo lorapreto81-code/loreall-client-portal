@@ -3,13 +3,13 @@ import { tgSearchCustomers } from "../_shared/tg.ts";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
 import { generateOtpCode, hashOtp, onlyDigits, phoneKey } from "../_shared/otp.ts";
 import { otpRequestSchema } from "../_shared/validation.ts";
-import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
 const CODE_TTL_MINUTES = 5;
-const MAX_REQUESTS_PER_IDENTIFIER = 300;
-const MAX_REQUESTS_PER_IP = 500;
+const MAX_REQUESTS_PER_IDENTIFIER = 5;
+const MAX_REQUESTS_PER_IP = 15;
 const MAX_GLOBAL_DAILY_OTP = 100000;
-const WINDOW_MINUTES = 5;
+const WINDOW_MINUTES = 15;
 
 // Increased timeout for fetch operations
 const FETCH_TIMEOUT = 12000;
@@ -18,7 +18,7 @@ const FETCH_TIMEOUT = 12000;
 
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
 
   try {
     const rawBody = await req.json().catch(() => ({}));
