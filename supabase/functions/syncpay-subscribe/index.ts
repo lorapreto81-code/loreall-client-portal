@@ -170,9 +170,11 @@ Deno.serve(async (req) => {
 
     return json({
       subscription_id: subId,
-      qr_code_text: qrText || null,
+      qr_code_text: qrText || qrCodeMandate || null,
       qr_code_base64: qrBase64 || null,
       authorization_url: authorizationUrl || null,
+      mandate_id: mandateId || null,
+      mandate_status: mandateStatus || null,
       amount: Number(plan.amount || 0),
       raw: sub,
     }, 200, {}, req);
