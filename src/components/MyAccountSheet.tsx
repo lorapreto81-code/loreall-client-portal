@@ -75,6 +75,26 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
   const [saving, setSaving] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [copied, setCopied] = useState<"user" | "pass" | null>(null);
+  const [accountPassword, setAccountPassword] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setAccountPassword(null);
+      return;
+    }
+    
+    const fetchPassword = async () => {
+      try {
+        const data = await getCustomer(customerId);
+        const pass = data.data?.password ?? data.password ?? null;
+        setAccountPassword(pass);
+      } catch (err) {
+        console.error("Failed to fetch password:", err);
+      }
+    };
+    
+    fetchPassword();
+  }, [open, customerId]);
 
   const copyValue = async (value: string, which: "user" | "pass") => {
     try {
@@ -144,7 +164,10 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
       const patch: Record<string, unknown> = { name: trimmed, whatsapp: phoneDigits, email: trimmedEmail };
       await updateCustomer(customer.id, patch);
       const data = await getCustomer(customer.id);
-      login((data.data || data) as Customer);
+      const resData = (data.data || data) as Customer;
+      const pass = (data.data?.password ?? data.password ?? null);
+      setAccountPassword(pass);
+      login(resData);
       toast.success("Dados atualizados!");
     } catch (e: any) {
       toast.error(e.message || "Erro ao atualizar dados.");
@@ -283,7 +306,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                     <div className="flex items-center gap-2 rounded-xl bg-background/50 border border-border/50 px-3.5 py-2.5 group transition-all focus-within:border-primary/50">
                       <div className="flex-1 text-sm font-mono font-bold text-foreground truncate select-all">
                         {showPass
-                          ? String((customer as any)?.password || "—")
+                          ? accountPassword || "—"
                           : "••••••••"}
                       </div>
                       <div className="flex gap-1">
@@ -296,7 +319,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                         </button>
                         <button
                           type="button"
-                          onClick={() => copyValue(String((customer as any)?.password || ""), "pass")}
+                          onClick={() => copyValue(accountPassword || "", "pass")}
                           className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                         >
                           {copied === "pass" ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
