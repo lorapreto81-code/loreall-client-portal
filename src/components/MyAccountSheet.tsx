@@ -86,7 +86,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     const fetchPassword = async () => {
       try {
         const data = await getCustomer(customerId);
-        const pass = data.data?.password ?? data.password ?? null;
+        const pass = (data.data as any)?.password ?? (data as any).password ?? null;
         setAccountPassword(pass);
       } catch (err) {
         console.error("Failed to fetch password:", err);
@@ -165,7 +165,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
       await updateCustomer(customer.id, patch);
       const data = await getCustomer(customer.id);
       const resData = (data.data || data) as Customer;
-      const pass = (data.data?.password ?? data.password ?? null);
+      const pass = ((data.data as any)?.password ?? (data as any).password ?? null);
       setAccountPassword(pass);
       login(resData);
       toast.success("Dados atualizados!");
