@@ -174,7 +174,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           });
 
           // Se estiver ativa, já avisa
-          if (res.status === "active" || res.mandate_status === "active" || res.mandate_status === "authorized") {
+          if (res.status === "active" || res.mandate_status?.toUpperCase() === "ACTIVE") {
             toast.success("Você já possui uma assinatura ativa para este plano!");
           }
           setCheckingSub(false);
@@ -362,9 +362,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         
         const res = data as { status: string; mandate_status?: string };
         const isAuthorized = res.status === "active" || 
-                           res.mandate_status === "active" || 
-                           res.mandate_status === "authorized" ||
-                           res.status === "authorized";
+                           res.mandate_status?.toUpperCase() === "ACTIVE";
 
         if (isAuthorized) {
           setSubResult(prev => prev ? { ...prev, subscription_status: "active", mandate_status: "active" } : null);
