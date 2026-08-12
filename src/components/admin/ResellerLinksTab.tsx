@@ -10,6 +10,7 @@ interface Link {
   warez_username: string;
   warez_user_id: number;
   whatsapp: string | null;
+  email: string | null;
   credits: number;
   amount: number;
   price_per_credit: number;
