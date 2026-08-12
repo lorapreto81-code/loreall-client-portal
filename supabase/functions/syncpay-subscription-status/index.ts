@@ -28,11 +28,31 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, {}, req);
 
   try {
-    const { subscription_id } = await req.json().catch(() => ({}));
-    if (!subscription_id) return json({ error: "subscription_id obrigatório" }, 400, {}, req);
+    const { subscription_id, customer_id } = await req.json().catch(() => ({}));
+    
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    let subId = subscription_id;
+
+    // Se não veio subscription_id mas veio customer_id, busca a última assinatura deste cliente
+    if (!subId && customer_id) {
+      const { data: latest } = await supabase
+        .from("syncpay_subscriptions")
+        .select("syncpay_subscription_id")
+        .eq("customer_id", customer_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      subId = latest?.syncpay_subscription_id;
+    }
+
+    if (!subId) return json({ error: "subscription_id ou customer_id não encontrado" }, 400, {}, req);
 
     const token = await getToken();
-    const res = await fetch(`${SP_BASE}/subscriptions/${encodeURIComponent(subscription_id)}`, {
+    const res = await fetch(`${SP_BASE}/subscriptions/${encodeURIComponent(subId)}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     });
@@ -45,18 +65,13 @@ Deno.serve(async (req) => {
     const sub = data.data || data.subscription || data;
     const status = sub.status;
     const payment = sub.payment || sub.charge || sub.first_charge || {};
-    const mandateStatus = payment.mandate_status || sub.mandate_status;
+    const mandateStatus = payment.mandate_status || sub.mandate_status || sub.first_charge?.mandate_status;
 
-    // Se estiver ativo no banco local, atualizar também
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-    
+    // Atualiza banco local
     await supabase.from("syncpay_subscriptions").update({
       status: status,
       metadata: sub
-    }).eq("syncpay_subscription_id", subscription_id);
+    }).eq("syncpay_subscription_id", subId);
 
     return json({
       status,

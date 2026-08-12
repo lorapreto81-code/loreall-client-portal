@@ -324,7 +324,7 @@ Deno.serve(async (req) => {
     );
 
     // Eventos de assinatura (recorrência) — rota separada
-    if (event.includes("subscription") || event.includes("charge") || event.startsWith("assinatura_") || event.startsWith("cobranca_") || data.subscription_token || data.subscription_id || data.subscription) {
+    if (event.includes("subscription") || event.includes("charge") || event.startsWith("assinatura_") || event.startsWith("cobranca_") || event.includes("ativada") || data.subscription_token || data.subscription_id || data.subscription) {
       const subscriptionToken = String(data.subscription_token || data.subscription?.token || data.subscription_id || "");
       const dedupeKey = `${event}:${subscriptionToken}:${String(data.charge_id || data.charge?.id || data.identifier || "")}:${String(payload.occurred_at || data.occurred_at || "")}`;
       const { error: eventInsertError } = await supabase.from("syncpay_webhook_events").insert({

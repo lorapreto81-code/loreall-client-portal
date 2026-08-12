@@ -352,18 +352,27 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     const checkStatus = async () => {
       try {
         const { data, error } = await supabase.functions.invoke("syncpay-subscription-status", {
-          body: { subscription_id: subResult.subscription_id },
+          body: { 
+            subscription_id: subResult.subscription_id,
+            customer_id: customer?.id 
+          },
         });
         
         if (stop || error) return;
         
         const res = data as { status: string; mandate_status?: string };
-        if (res.status === "active" || res.mandate_status === "active" || res.mandate_status === "authorized") {
+        const isAuthorized = res.status === "active" || 
+                           res.mandate_status === "active" || 
+                           res.mandate_status === "authorized" ||
+                           res.status === "authorized";
+
+        if (isAuthorized) {
           setSubResult(prev => prev ? { ...prev, subscription_status: "active", mandate_status: "active" } : null);
           stop = true;
           toast.success("Pix Automático ativado com sucesso!");
           
-          // Refresh customer to see if TopGestor was updated by webhook
+          // Refresh customer and invalidate queries to update dashboard
+          queryClient.invalidateQueries({ queryKey: ["active-subscription", customer?.id] });
           try {
             const cust = await getCustomer(customer!.id);
             login((cust.data || cust) as Customer);

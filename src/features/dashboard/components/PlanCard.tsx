@@ -1,7 +1,9 @@
-import { CalendarDays, Monitor, Sparkles } from "lucide-react";
+import { CalendarDays, Monitor, Sparkles, Repeat } from "lucide-react";
 import { Customer } from "@/store/authStore";
 import { formatDate } from "@/lib/format";
 import { getStatusPill, telasLabel } from "@/utils/constants";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PlanCardProps {
   customer: Customer;
@@ -11,6 +13,24 @@ interface PlanCardProps {
 export const PlanCard = ({ customer, days }: PlanCardProps) => {
   const pill = getStatusPill(days);
   const points = (customer as any).pontos || (customer as any).meta?.pontos;
+
+  // Busca se o cliente tem uma assinatura ativa
+  const subQuery = useQuery({
+    queryKey: ["active-subscription", customer.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("syncpay_subscriptions")
+        .select("*")
+        .eq("customer_id", customer.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+    staleTime: 60000,
+  });
+
+  const subscription = subQuery.data;
   
   return (
     <div className="card-elevated p-5 relative overflow-hidden">
@@ -53,6 +73,22 @@ export const PlanCard = ({ customer, days }: PlanCardProps) => {
           </div>
         </div>
       </div>
+
+      {subscription && (
+        <div className="mt-3 pt-3 flex items-center gap-2 border-t border-white/5">
+          <div className="p-1.5 rounded-full bg-primary/10">
+            <Repeat className="h-3 w-3 text-primary animate-pulse" />
+          </div>
+          <p className="text-[11px] font-medium text-primary">
+            Pix Automático Ativo
+            {subscription.next_charge_at && (
+              <span className="text-muted-foreground font-normal ml-1">
+                • Próximo: {formatDate(subscription.next_charge_at)}
+              </span>
+            )}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
