@@ -146,7 +146,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     try {
       // 1. Verificar se o cliente já tem uma assinatura deste plano ativa no nosso banco
       const { data: existingSub, error } = await supabase
-        .from("syncpay_subscriptions" as any)
+        .from("syncpay_subscriptions")
         .select("*")
         .eq("customer_id", customer.id)
         .eq("plan_id", sp.id)
