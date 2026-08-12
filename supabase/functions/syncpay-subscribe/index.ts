@@ -1,8 +1,8 @@
 // Cria um assinante SyncPay diretamente pela API e retorna QR Code + copia-e-cola.
-// Endpoint: POST /api/partner/v1/subscription-plans/{plan_token}/subscribers
+// Endpoint: POST /api/partner/v1/subscription-plans/{plan_token}/enroll
 //
 // Body esperado:
-// { plan_id (uuid local), customer_id, name, email, cpf, phone }
+// { plan_id (uuid local), customer_id, name, email, document, phone }
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { securityHeadersFor, jsonResponse as json } from "../_shared/security.ts";
@@ -103,12 +103,12 @@ Deno.serve(async (req) => {
     const payload = {
       name: String(name).trim(),
       email: String(email).trim().toLowerCase(),
-      cpf: onlyDigits(String(cpf)),
+      document: onlyDigits(String(cpf)),
       phone: onlyDigits(String(phone || "")),
       charge_now: true,
     };
 
-    const spRes = await fetch(`${SP_BASE}/subscription-plans/${planToken}/subscribers`, {
+    const spRes = await fetch(`${SP_BASE}/subscription-plans/${planToken}/enroll`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -124,16 +124,16 @@ Deno.serve(async (req) => {
       // fallback: devolve URL do checkout hospedado se existir
       if (plan.checkout_url) {
         const qs = new URLSearchParams({
-          name: payload.name, email: payload.email, cpf: payload.cpf, phone: payload.phone,
+          name: payload.name, email: payload.email, document: payload.document, phone: payload.phone,
           ...(customer_id ? { customer_id: String(customer_id) } : {}),
         }).toString();
         return json({
           fallback: true,
           checkout_url: `${plan.checkout_url}${plan.checkout_url.includes("?") ? "&" : "?"}${qs}`,
-          error: spData?.message || `SyncPay ${spRes.status}`,
+          error: spData?.message || spData?.error || `SyncPay ${spRes.status}`,
         }, 200, {}, req);
       }
-      return json({ error: spData?.message || `SyncPay ${spRes.status}`, detail: spData }, spRes.status, {}, req);
+      return json({ error: spData?.message || spData?.error || `SyncPay ${spRes.status}`, detail: spData }, spRes.status, {}, req);
     }
 
     const sub = spData.data || spData.subscription || spData;
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
         customer_id: customer_id ? Number(customer_id) : null,
         customer_name: payload.name,
         customer_email: payload.email,
-        customer_cpf: payload.cpf,
+        customer_cpf: payload.document,
         customer_phone: payload.phone,
         billing_method: plan.billing_method,
         status: "pending",
