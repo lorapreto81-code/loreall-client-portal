@@ -99,8 +99,9 @@ Deno.serve(async (req) => {
         if (!r.ok) return err(`SyncPay: ${r.status}`, r.status);
         const list = r.data.data || r.data.plans || [];
         for (const p of list) {
+          const syncpayId = String(p.token || p.id);
           await supabase.from("syncpay_plans").upsert({
-            syncpay_plan_id: String(p.token || p.id),
+            syncpay_plan_id: syncpayId,
             name: p.name,
             description: p.description || null,
             amount: Number(p.amount || 0),
