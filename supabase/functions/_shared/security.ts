@@ -12,7 +12,7 @@ export function corsHeadersFor(req?: Request): Record<string, string> {
   const origin = req?.headers.get("origin") || "";
   const allowOrigin = isAllowedOrigin(origin) ? origin : PRIMARY_ORIGIN;
   return {
-    "Access-Control-Allow-Origin": "*", // allowOrigin, // Temporary force for verification - allowOrigin,
+    "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-customer-token, x-admin-password",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     "Vary": "Origin",
