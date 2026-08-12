@@ -9,6 +9,7 @@ interface Link {
   display_name: string;
   warez_username: string;
   warez_user_id: number;
+  whatsapp: string | null;
   credits: number;
   amount: number;
   price_per_credit: number;
@@ -23,6 +24,7 @@ const empty = {
   display_name: "",
   warez_username: "",
   warez_user_id: "",
+  whatsapp: "",
   price_per_credit: "11",
   min_credits: "10",
   max_credits: "30",
@@ -67,6 +69,7 @@ export default function ResellerLinksTab() {
       price_per_credit: String(l.price_per_credit ?? 11),
       min_credits: String(l.min_credits ?? 10),
       max_credits: String(l.max_credits ?? 30),
+      whatsapp: l.whatsapp || "",
       is_active: l.is_active,
       notes: l.notes || "",
     });
@@ -84,6 +87,7 @@ export default function ResellerLinksTab() {
         display_name: form.display_name,
         warez_username: form.warez_username,
         warez_user_id: Number(form.warez_user_id),
+        whatsapp: form.whatsapp || null,
         price_per_credit: price,
         min_credits: minC,
         max_credits: maxC,
@@ -221,6 +225,7 @@ export default function ResellerLinksTab() {
             <Field label="Slug (URL)" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="auto se vazio" />
             <Field label="Usuário WAREZ" value={form.warez_username} onChange={(v) => setForm({ ...form, warez_username: v })} />
             <Field label="ID WAREZ" value={form.warez_user_id} onChange={(v) => setForm({ ...form, warez_user_id: v })} type="number" />
+            <Field label="WhatsApp (Autenticação)" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} placeholder="Ex: 5583999998888" />
             <div className="grid grid-cols-3 gap-3">
               <Field label="R$/crédito" value={form.price_per_credit} onChange={(v) => setForm({ ...form, price_per_credit: v })} type="number" />
               <Field label="Mín. créditos" value={form.min_credits} onChange={(v) => setForm({ ...form, min_credits: v })} type="number" />
