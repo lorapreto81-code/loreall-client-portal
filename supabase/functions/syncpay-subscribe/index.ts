@@ -48,6 +48,14 @@ function validDoc(v: string): boolean {
   return false;
 }
 function validEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function maskDocument(value: string) {
+  const digits = onlyDigits(value);
+  return digits.length <= 4 ? "***" : `${digits.slice(0, 3)}***${digits.slice(-2)}`;
+}
+function technicalError(status: number, data: Record<string, unknown>) {
+  const source = data?.message || data?.error || data?.errors || `SyncPay ${status}`;
+  return typeof source === "string" ? source : JSON.stringify(source);
+}
 
 // ------- token -------
 let tokenCache: { token: string; exp: number } | null = null;
@@ -64,9 +72,25 @@ async function getToken(): Promise<string> {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`SyncPay auth ${res.status}: ${JSON.stringify(data)}`);
   const token = data.access_token || data.token || data.data?.access_token || data.data?.token;
+  if (!token) throw new Error("SyncPay auth response without access token");
   const expiresIn = Number(data.expires_in || data.data?.expires_in || 3600);
   tokenCache = { token, exp: Date.now() + (expiresIn - 60) * 1000 };
   return token;
+}
+
+async function syncpayFetch(path: string, payload: Record<string, string>) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const token = await getToken();
+    const response = await fetch(`${SP_BASE}${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status !== 401 || attempt === 1) return { response, data };
+    tokenCache = null; // refresh only once after an unauthorized response
+  }
+  throw new Error("Unreachable SyncPay retry state");
 }
 
 Deno.serve(async (req) => {
@@ -99,7 +123,6 @@ Deno.serve(async (req) => {
     const planToken = plan.syncpay_plan_id;
     if (!planToken) return json({ error: "Plano sem token SyncPay" }, 422, {}, req);
 
-    const token = await getToken();
     const payload = {
       name: String(name).trim(),
       email: String(email).trim().toLowerCase(),
@@ -107,37 +130,20 @@ Deno.serve(async (req) => {
       phone: onlyDigits(String(phone || "")),
     };
 
-    const spRes = await fetch(`${SP_BASE}/subscription-plans/${planToken}/enroll`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-    const spData = await spRes.json().catch(() => ({}));
+    // /enroll is the in-app programmatic flow. Do not replace errors with checkout_url.
+    const { response: spRes, data: spData } = await syncpayFetch(
+      `/subscription-plans/${encodeURIComponent(String(planToken))}/enroll`, payload,
+    );
 
     if (!spRes.ok) {
-      console.error("[syncpay-subscribe] SyncPay recusou", spRes.status, JSON.stringify(spData));
-      console.log("[syncpay-subscribe] Payload enviado:", JSON.stringify(payload));
-      // fallback: devolve URL do checkout hospedado se existir
-      if (plan.checkout_url) {
-        const qs = new URLSearchParams({
-          name: payload.name, email: payload.email, document: payload.document, phone: payload.phone,
-          ...(customer_id ? { customer_id: String(customer_id) } : {}),
-        }).toString();
-        return json({
-          fallback: true,
-          checkout_url: `${plan.checkout_url}${plan.checkout_url.includes("?") ? "&" : "?"}${qs}`,
-          error: spData?.message || spData?.error || `SyncPay ${spRes.status}`,
-        }, 200, {}, req);
-      }
-      return json({ error: spData?.message || spData?.error || `SyncPay ${spRes.status}`, detail: spData }, spRes.status, {}, req);
+      console.error("[syncpay-subscribe] SyncPay recusou", {
+        status: spRes.status, planToken: String(planToken), document: maskDocument(payload.document), response: spData,
+      });
+      return json({ error: technicalError(spRes.status, spData), syncpay_status: spRes.status }, spRes.status, {}, req);
     }
 
     const sub = spData.data || spData.subscription || spData;
-    const subId = sub.id || sub.token || sub.subscription_id;
+    const subId = sub.subscription_token || sub.id || sub.token || sub.subscription_id;
     
     // O campo 'payment' vem aninhado no /enroll
     const payment = sub.payment || sub.charge || sub.first_charge || spData.charge || {};
@@ -164,7 +170,7 @@ Deno.serve(async (req) => {
         customer_cpf: payload.document,
         customer_phone: payload.phone,
         billing_method: plan.billing_method,
-        status: mandateId ? "pending_auth" : "pending", // pending_auth para Pix Automático
+        status: sub.status || spData.status || "pending_first_payment",
         metadata: sub,
       }, { onConflict: "syncpay_subscription_id" });
 
@@ -175,6 +181,8 @@ Deno.serve(async (req) => {
 
     return json({
       subscription_id: subId,
+      subscription_status: sub.status || spData.status || "pending_first_payment",
+      billing_method: sub.billing_method || spData.billing_method || plan.billing_method,
       qr_code_text: qrText || qrCodeMandate || null,
       qr_code_base64: qrBase64 || null,
       authorization_url: authorizationUrl || null,

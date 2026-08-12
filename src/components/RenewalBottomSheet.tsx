@@ -25,11 +25,12 @@ interface SyncpayPublicPlan {
 
 interface SubscribeResult {
   subscription_id?: string;
+  subscription_status?: string;
+  billing_method?: "qr_code" | "pix_automatico" | string;
   qr_code_text?: string | null;
   qr_code_base64?: string | null;
-  authorization_url?: string | null;
-  fallback?: boolean;
-  checkout_url?: string;
+  mandate_id?: string | null;
+  mandate_status?: string | null;
   amount?: number;
 }
 
@@ -199,19 +200,18 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           phone: cleanPhone,
         },
       });
-      if (error) throw new Error(error.message || "Falha ao criar assinatura");
-      const res = data as SubscribeResult & { error?: string };
-      if (res.fallback && res.checkout_url) {
-        window.open(res.checkout_url, "_blank", "noopener,noreferrer");
-        toast.message("Abrimos o checkout do plano em uma nova aba.");
-        closeSubscribeForm();
-        return;
+      if (error) {
+        const detail = await error.context?.json().catch(() => null);
+        throw new Error(detail?.error || error.message || "Falha ao criar assinatura");
       }
-      if (!res.qr_code_text && !res.authorization_url) {
+      const res = data as SubscribeResult & { error?: string };
+      if (!res.qr_code_text) {
         throw new Error("Resposta sem QR Code");
       }
       setSubResult(res);
-      toast.success("Assinatura criada! Pague o PIX para ativar.");
+      toast.success(subForm.billing_method === "pix_automatico"
+        ? "Solicitação criada. Autorize no aplicativo do seu banco."
+        : "Assinatura criada. Pague o PIX para ativar.");
     } catch (e: any) {
       toast.error(e.message || "Erro ao criar assinatura");
     } finally {
@@ -447,7 +447,11 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           ) : (
             <>
               <p className="text-center text-[20px] font-bold text-foreground mb-1">{formatCurrency(Number(subResult.amount || subForm.amount))}</p>
-              <p className="text-center text-xs text-muted-foreground mb-3">Pague o PIX para ativar sua assinatura</p>
+              <p className="text-center text-xs text-muted-foreground mb-3">
+                {isPixAuto
+                  ? "Escaneie o QR Code no aplicativo do seu banco para autorizar o Pix Automático."
+                  : "Pagamento pendente. Pague o PIX para ativar sua assinatura."}
+              </p>
 
               {qrImg && (
                 <div className="flex justify-center mb-4">
@@ -459,7 +463,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
               {qrText && (
                 <>
-                  <p className="text-xs text-muted-foreground mb-1.5">Código copia e cola:</p>
+                  <p className="text-xs text-muted-foreground mb-1.5">{isPixAuto ? "Código para autorização:" : "Código copia e cola:"}</p>
                   <div className="bg-muted rounded-lg p-2.5 mb-3">
                     <p className="text-[11px] text-foreground break-all font-mono">{qrText}</p>
                   </div>
@@ -469,22 +473,12 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
                   >
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? "Copiado!" : "Copiar código PIX"}
+                    {copied ? "Copiado!" : isPixAuto ? "Copiar código de autorização" : "Copiar código PIX"}
                   </button>
                 </>
               )}
 
-              {subResult.authorization_url && (
-                <a
-                  href={subResult.authorization_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-primary-gradient w-full py-3 text-sm font-semibold inline-flex items-center justify-center gap-1.5 mb-2"
-                  style={{ minHeight: 48 }}
-                >
-                  <ExternalLink className="h-4 w-4" /> Autorizar no banco
-                </a>
-              )}
+              {isPixAuto && <p className="text-[11px] text-muted-foreground text-center mt-2">Status: aguardando autorização do Pix Automático.</p>}
 
               <button onClick={closeSubscribeForm} className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2 w-full" style={{ minHeight: 44 }}>
                 Fechar
