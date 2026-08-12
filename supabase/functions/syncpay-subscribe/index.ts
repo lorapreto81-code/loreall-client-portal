@@ -159,17 +159,17 @@ Deno.serve(async (req) => {
       }, { onConflict: "syncpay_subscription_id" });
     }
 
-    return ok({
+    return json({
       subscription_id: subId,
       qr_code_text: qrText || null,
       qr_code_base64: qrBase64 || null,
       authorization_url: authorizationUrl || null,
       amount: Number(plan.amount || 0),
       raw: sub,
-    });
+    }, 200, {}, req);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     console.error("[syncpay-subscribe]", message);
-    return err(message, 500);
+    return json({ error: message }, 500, {}, req);
   }
 });
