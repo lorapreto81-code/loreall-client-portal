@@ -212,8 +212,11 @@ async function handleSubscriptionEvent(
     if (data.next_charge_at || data.subscription?.next_charge_at) {
       patch.next_charge_at = data.next_charge_at || data.subscription.next_charge_at;
     }
-  } else if (event.includes("create") || event.includes("activated")) {
+  } else if (event.includes("create") || event.includes("activated") || event.includes("authorized")) {
     patch.status = "active";
+    if (data.mandate_id || data.subscription?.mandate_id) {
+      patch.metadata = { ...((existing?.metadata as any) || {}), mandate_id: data.mandate_id || data.subscription?.mandate_id };
+    }
   }
 
   await supabase.from("syncpay_subscriptions").upsert(patch, { onConflict: "syncpay_subscription_id" });

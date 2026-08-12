@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
 
     // Registra assinante local
     if (subId) {
-      await supabase.from("syncpay_subscriptions").upsert({
+      const { error: upsertErr } = await supabase.from("syncpay_subscriptions").upsert({
         syncpay_subscription_id: String(subId),
         syncpay_plan_id: planToken,
         customer_id: customer_id ? Number(customer_id) : null,
@@ -164,9 +164,13 @@ Deno.serve(async (req) => {
         customer_cpf: payload.document,
         customer_phone: payload.phone,
         billing_method: plan.billing_method,
-        status: "pending",
+        status: mandateId ? "pending_auth" : "pending", // pending_auth para Pix Automático
         metadata: sub,
       }, { onConflict: "syncpay_subscription_id" });
+
+      if (upsertErr) {
+        console.error("[syncpay-subscribe] Erro ao salvar sub no banco:", upsertErr);
+      }
     }
 
     return json({
