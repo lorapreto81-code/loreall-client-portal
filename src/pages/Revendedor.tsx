@@ -258,7 +258,7 @@ export default function Revendedor() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <a href={WAREZ_PANEL_URL} target="_blank" rel="noreferrer" className="cursor-pointer">
-                  <ExternalLink className="h-4 w-4 mr-2 text-blue-600" /> Painel WAREZ
+                  <ExternalLink className="h-4 w-4 mr-2 text-blue-600" /> Painel de Revenda
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
