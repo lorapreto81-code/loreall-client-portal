@@ -127,7 +127,7 @@ export default function ResellerLinksTab() {
     }
   };
 
-  const PUBLIC_BASE_URL = "https://pagartv.online";
+  const PUBLIC_BASE_URL = "https://cliente.loreallplay.com";
 
   const copyLink = (slug: string) => {
     const url = `${PUBLIC_BASE_URL}/revendedor/${slug}`;
