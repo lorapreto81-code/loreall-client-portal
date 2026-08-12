@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
         const id = String(body.id || "");
         if (!id) return ok({ error: "id obrigatório" }, 400);
         const patch: Record<string, unknown> = {};
-        for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "price_per_credit", "min_credits", "max_credits", "is_active", "notes", "whatsapp"]) {
+        for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "price_per_credit", "min_credits", "max_credits", "is_active", "notes", "whatsapp", "email"]) {
           if (k in body) patch[k] = body[k];
         }
         if (patch.slug) patch.slug = slugify(String(patch.slug));
