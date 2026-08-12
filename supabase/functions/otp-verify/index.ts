@@ -3,19 +3,19 @@ import { signCustomerToken } from "../_shared/auth.ts";
 import { tgSearchCustomers, sanitizeCustomerForClient } from "../_shared/tg.ts";
 import { hashOtp, onlyDigits, phoneKey } from "../_shared/otp.ts";
 import { otpVerifySchema } from "../_shared/validation.ts";
-import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
 const MAX_ATTEMPTS = 5;
 
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
 
   try {
     const rawBody = await req.json().catch(() => ({}));
     const parse = otpVerifySchema.safeParse(rawBody);
     if (!parse.success) {
-      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400);
+      return json({ error: "Dados inválidos.", details: parse.error.format() }, 400, {}, req);
     }
     
     const raw = parse.data.phone.trim();
@@ -39,19 +39,19 @@ Deno.serve(async (req) => {
       .limit(1);
 
     const row = rows?.[0];
-    if (!row) return json({ error: "Código expirado. Solicite um novo." }, 401);
+    if (!row) return json({ error: "Código expirado. Solicite um novo." }, 401, {}, req);
     if (new Date(row.expires_at).getTime() < Date.now()) {
-      return json({ error: "Código expirado. Solicite um novo." }, 401);
+      return json({ error: "Código expirado. Solicite um novo." }, 401, {}, req);
     }
     if (row.attempts >= MAX_ATTEMPTS) {
       await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
-      return json({ error: "Muitas tentativas. Solicite um novo código." }, 429);
+      return json({ error: "Muitas tentativas. Solicite um novo código." }, 429, {}, req);
     }
 
     const hash = await hashOtp(code, key);
     if (hash !== row.code_hash) {
       await supabase.from("otp_codes").update({ attempts: row.attempts + 1 }).eq("id", row.id);
-      return json({ error: "Código incorreto." }, 401);
+      return json({ error: "Código incorreto." }, 401, {}, req);
     }
 
     await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
 
     if (matches.length === 0) {
       console.warn(`[otp-verify] No matches found for ${key} after code validation.`);
-      return json({ error: "Conta não encontrada." }, 404);
+      return json({ error: "Conta não encontrada." }, 404, {}, req);
     }
 
     const accounts = await Promise.all(
@@ -89,9 +89,9 @@ Deno.serve(async (req) => {
       })),
     );
 
-    return json({ accounts });
+    return json({ accounts }, 200, {}, req);
   } catch (err) {
     console.error("[otp-verify] error", err instanceof Error ? err.message : err);
-    return json({ error: "Não foi possível validar o código." }, 500);
+    return json({ error: "Não foi possível validar o código." }, 500, {}, req);
   }
 });

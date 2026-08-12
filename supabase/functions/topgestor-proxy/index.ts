@@ -1,12 +1,12 @@
 import { getCustomerSession, isAdminRequest } from "../_shared/auth.ts";
 import { TG_API_BASE as API_BASE, tgHeaders, tgSearchCustomers } from "../_shared/tg.ts";
-import { jsonResponse as json, securityHeaders } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
-async function proxyResponse(res: Response): Promise<Response> {
+async function proxyResponse(res: Response, req: Request): Promise<Response> {
   const body = await res.text();
   return new Response(body, {
     status: res.status,
-    headers: { ...securityHeaders, "Content-Type": "application/json" },
+    headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
   });
 }
 
@@ -16,7 +16,7 @@ const CUSTOMER_EDITABLE_FIELDS = ["name", "email", "whatsapp", "celular", "telef
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: securityHeaders });
+    return new Response("ok", { headers: securityHeadersFor(req) });
   }
 
 
@@ -27,11 +27,11 @@ Deno.serve(async (req) => {
     const admin = isAdminRequest(req);
     const session = admin ? null : await getCustomerSession(req);
 
-    if (!admin && !session && action !== "get-plans") return json({ error: "unauthorized" }, 401);
+    if (!admin && !session && action !== "get-plans") return json({ error: "unauthorized" }, 401, {}, req);
 
     // Actions restricted to the admin panel.
     const adminOnly = new Set(["search-customer", "list-customers"]);
-    if (adminOnly.has(action || "") && !admin) return json({ error: "forbidden" }, 403);
+    if (adminOnly.has(action || "") && !admin) return json({ error: "forbidden" }, 403, {}, req);
 
     // Actions bound to a specific customer id — must be the caller's own id.
     const ownedActions = new Set([
@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
     ]);
     const id = url.searchParams.get("id");
     if (ownedActions.has(action || "")) {
-      if (!id) return json({ error: "id required" }, 400);
-      if (!admin && Number(id) !== session!.sub) return json({ error: "forbidden" }, 403);
+      if (!id) return json({ error: "id required" }, 400, {}, req);
+      if (!admin && Number(id) !== session!.sub) return json({ error: "forbidden" }, 403, {}, req);
     }
 
     let apiRes: Response;
@@ -52,9 +52,9 @@ Deno.serve(async (req) => {
     switch (action) {
       case "search-customer": {
         const query = url.searchParams.get("query");
-        if (!query) return json({ error: "query required" }, 400);
+        if (!query) return json({ error: "query required" }, 400, {}, req);
         const merged = await tgSearchCustomers(query);
-        return json({ data: merged });
+        return json({ data: merged }, 200, {}, req);
       }
 
       case "get-customer": {
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
         console.log("[topgestor-proxy] rawData from TG:", JSON.stringify(rawData));
         const plans = Array.isArray(rawData) ? rawData : (rawData?.data || rawData?.plans || rawData?.list || []);
         console.log(`[topgestor-proxy] normalized plans count: ${plans.length}`);
-        return json({ data: plans });
+        return json({ data: plans }, 200, {}, req);
       }
 
       case "list-customers": {
@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 
       case "update-customer": {
         const raw = await req.json().catch(() => ({}));
-        if (!raw || typeof raw !== "object" || Array.isArray(raw)) return json({ error: "invalid body" }, 400);
+        if (!raw || typeof raw !== "object" || Array.isArray(raw)) return json({ error: "invalid body" }, 400, {}, req);
 
         // Customers may only patch a safe allow-list of their own fields.
         let body: Record<string, unknown> = raw as Record<string, unknown>;
@@ -121,9 +121,9 @@ Deno.serve(async (req) => {
             }
           }
           if (typeof body.email === "string" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) {
-            return json({ error: "invalid email" }, 400);
+            return json({ error: "invalid email" }, 400, {}, req);
           }
-          if (Object.keys(body).length === 0) return json({ error: "no updatable fields" }, 400);
+          if (Object.keys(body).length === 0) return json({ error: "no updatable fields" }, 400, {}, req);
         }
 
         apiRes = await fetch(`${API_BASE}/customers/${id}`, {
@@ -175,22 +175,22 @@ Deno.serve(async (req) => {
           body: JSON.stringify({}),
         });
         const linkData = await linkRes.json().catch(() => ({}));
-        if (!linkRes.ok) return json(linkData, linkRes.status);
+        if (!linkRes.ok) return json(linkData, linkRes.status, {}, req);
         const checkoutUrl =
           linkData?.data?.checkout_url ||
           linkData?.checkout_url ||
           linkData?.data?.invoice?.checkout_url ||
           null;
-        return json({ success: true, data: { ...(linkData?.data || {}), checkout_url: checkoutUrl } });
+        return json({ success: true, data: { ...(linkData?.data || {}), checkout_url: checkoutUrl } }, 200, {}, req);
       }
 
       default:
-        return json({ error: "Invalid action" }, 400);
+        return json({ error: "Invalid action" }, 400, {}, req);
     }
 
-    return proxyResponse(apiRes);
+    return proxyResponse(apiRes, req);
   } catch (err) {
     console.error("[topgestor-proxy] error", err instanceof Error ? err.message : err);
-    return json({ error: "Erro ao processar a requisição." }, 500);
+    return json({ error: "Erro ao processar a requisição." }, 500, {}, req);
   }
 });
