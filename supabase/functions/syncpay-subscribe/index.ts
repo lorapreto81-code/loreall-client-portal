@@ -105,7 +105,6 @@ Deno.serve(async (req) => {
       email: String(email).trim().toLowerCase(),
       document: onlyDigits(String(cpf)),
       phone: onlyDigits(String(phone || "")),
-      charge_now: true,
     };
 
     const spRes = await fetch(`${SP_BASE}/subscription-plans/${planToken}/enroll`, {
