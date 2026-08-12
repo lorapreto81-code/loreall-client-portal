@@ -127,13 +127,13 @@ Deno.serve(async (req) => {
           name: payload.name, email: payload.email, cpf: payload.cpf, phone: payload.phone,
           ...(customer_id ? { customer_id: String(customer_id) } : {}),
         }).toString();
-        return ok({
+        return json({
           fallback: true,
           checkout_url: `${plan.checkout_url}${plan.checkout_url.includes("?") ? "&" : "?"}${qs}`,
           error: spData?.message || `SyncPay ${spRes.status}`,
-        });
+        }, 200, {}, req);
       }
-      return err(spData?.message || `SyncPay ${spRes.status}`, spRes.status, spData);
+      return json({ error: spData?.message || `SyncPay ${spRes.status}`, detail: spData }, spRes.status, {}, req);
     }
 
     const sub = spData.data || spData.subscription || spData;
