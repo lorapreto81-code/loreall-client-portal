@@ -2,12 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink, Menu, Sparkles, Film, Play, Sun, Moon } from "lucide-react";
+import { Loader2, Copy, CheckCircle2, AlertCircle, Zap, RefreshCw, MessageCircle, Minus, Plus, ExternalLink, Menu, Sparkles, Film, Play, Sun, Moon, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import loreallLogo from "@/assets/loreall-play-logo.png";
 import topgestorLogo from "@/assets/topgestor-logo.png";
 import geradorProLogo from "@/assets/gerador-pro-logo.png";
 import LaunchesBanner from "@/components/LaunchesBanner";
+import { LoginForm } from "@/features/auth/components/LoginForm";
+import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
+import { useAuthStore } from "@/store/authStore";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -69,13 +72,19 @@ function useCountdown(expiresAt: string | null | undefined) {
 }
 
 export default function Revendedor() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { slug } = useParams<{ slug: string }>();
+  const customer = useAuthStore((s) => s.customer);
+  const isAuthenticated = !!customer && customer.role === "reseller" && customer.slug === slug;
+
+  const {
+    phone, setPhone, code, setCode, step, setStep, resendIn, loading: loginLoading,
+    targetHint, customerName, sendCode, handleSubmit
+  } = useLoginFlow("reseller", slug);
+
   const [link, setLink] = useState<ResellerLink | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // email é gerado automaticamente no backend caso não informado
   const [credits, setCredits] = useState<number>(10);
   const [generating, setGenerating] = useState(false);
 
@@ -248,6 +257,46 @@ export default function Revendedor() {
       </div>
 
       <div className="w-full max-w-md px-5 pt-3 pb-6 flex flex-col gap-4 relative">
+        {!isAuthenticated ? (
+          <div className="flex flex-col gap-6 pt-10">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <img src={loreallLogo} alt="Loreall Play" className="h-16 w-16 object-contain drop-shadow-xl" />
+              <div className="space-y-1">
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  Área do <span className="text-blue-600">Revendedor</span>
+                </h1>
+                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  {link.display_name}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/50 dark:border-slate-800 shadow-2xl shadow-blue-900/10">
+              <LoginForm 
+                step={step}
+                phone={phone}
+                code={code}
+                loading={loginLoading}
+                resendIn={resendIn}
+                refCode={null}
+                targetHint={targetHint}
+                customerName={customerName}
+                onPhoneChange={setPhone}
+                onCodeChange={setCode}
+                onSendCode={sendCode}
+                onBackToPhone={() => { setStep("phone"); setCode(""); }}
+                onSubmit={handleSubmit}
+              />
+            </div>
+
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[10px] text-slate-400 font-medium inline-flex items-center gap-1.5 uppercase tracking-widest">
+                <Lock className="w-3 h-3" /> Acesso Restrito e Criptografado
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Top bar */}
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -542,8 +591,8 @@ export default function Revendedor() {
         )}
 
         <p className="text-center text-[10px] text-slate-400 dark:text-slate-600">© Loreall Play</p>
-
-
+          </>
+        )}
       </div>
     </div>
     </div>
