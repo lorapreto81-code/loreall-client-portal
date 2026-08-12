@@ -67,10 +67,21 @@ Deno.serve(async (req) => {
     const payment = sub.payment || sub.charge || sub.first_charge || {};
     const mandateStatus = payment.mandate_status || sub.mandate_status || sub.first_charge?.mandate_status;
 
-    // Atualiza banco local
+    const accessStatus =
+      status === "cancelled" ? "cancelled" :
+      status === "suspended" ? "suspended" :
+      status === "overdue" ? "grace_period" :
+      status === "active" ? "active" :
+      mandateStatus?.toUpperCase() === "ACTIVE" ? "pending_first_charge" :
+      "pending";
+
     await supabase.from("syncpay_subscriptions").update({
       status: status,
-      metadata: sub
+      syncpay_status: status,
+      access_status: accessStatus,
+      mandate_id: payment.mandate_id || sub.mandate_id || null,
+      mandate_status: mandateStatus || null,
+      metadata: sub,
     }).eq("syncpay_subscription_id", subId);
 
     return json({

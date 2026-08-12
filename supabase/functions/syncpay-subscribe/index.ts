@@ -175,6 +175,8 @@ Deno.serve(async (req) => {
         customer_phone: payload.phone,
         billing_method: plan.billing_method,
         status: sub.status || spData.status || "pending_first_payment",
+        mandate_id: mandateId || null,
+        mandate_status: mandateStatus || null,
         metadata: sub,
       }, { onConflict: "syncpay_subscription_id" });
 

@@ -1,4 +1,4 @@
-import { CalendarDays, Monitor, Sparkles, Repeat } from "lucide-react";
+import { CalendarDays, Monitor, Sparkles, Repeat, Clock } from "lucide-react";
 import { Customer } from "@/store/authStore";
 import { formatDate } from "@/lib/format";
 import { getStatusPill, telasLabel } from "@/utils/constants";
@@ -14,7 +14,6 @@ export const PlanCard = ({ customer, days }: PlanCardProps) => {
   const pill = getStatusPill(days);
   const points = (customer as any).pontos || (customer as any).meta?.pontos;
 
-  // Busca se o cliente tem uma assinatura ativa
   const subQuery = useQuery({
     queryKey: ["active-subscription", customer.id],
     queryFn: async () => {
@@ -22,7 +21,9 @@ export const PlanCard = ({ customer, days }: PlanCardProps) => {
         .from("syncpay_subscriptions")
         .select("*")
         .eq("customer_id", customer.id)
-        .eq("status", "active")
+        .in("status", ["pending_first_payment", "active", "overdue"])
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) return null;
       return data;
@@ -31,7 +32,10 @@ export const PlanCard = ({ customer, days }: PlanCardProps) => {
   });
 
   const subscription = subQuery.data;
-  
+  const mandateActive = subscription?.mandate_status?.toUpperCase() === "ACTIVE";
+  const isFullyActive = subscription?.status === "active";
+  const isOverdue = subscription?.status === "overdue";
+
   return (
     <div className="card-elevated p-5 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
@@ -74,7 +78,16 @@ export const PlanCard = ({ customer, days }: PlanCardProps) => {
         </div>
       </div>
 
-      {subscription && (
+      {subscription && isOverdue && (
+        <div className="mt-3 pt-3 flex items-center gap-2 border-t border-white/5">
+          <div className="p-1.5 rounded-full bg-destructive/10">
+            <Repeat className="h-3 w-3 text-destructive" />
+          </div>
+          <p className="text-[11px] font-medium text-destructive">Pix Automático — pagamento em atraso</p>
+        </div>
+      )}
+
+      {subscription && isFullyActive && (
         <div className="mt-3 pt-3 flex items-center gap-2 border-t border-white/5">
           <div className="p-1.5 rounded-full bg-primary/10">
             <Repeat className="h-3 w-3 text-primary animate-pulse" />
@@ -89,7 +102,17 @@ export const PlanCard = ({ customer, days }: PlanCardProps) => {
           </p>
         </div>
       )}
+
+      {subscription && !isFullyActive && !isOverdue && mandateActive && (
+        <div className="mt-3 pt-3 flex items-center gap-2 border-t border-white/5">
+          <div className="p-1.5 rounded-full bg-amber-500/10">
+            <Clock className="h-3 w-3 text-amber-500" />
+          </div>
+          <p className="text-[11px] font-medium text-amber-600">
+            Pix Automático autorizado • 1ª cobrança em breve
+          </p>
+        </div>
+      )}
     </div>
   );
 };
-
