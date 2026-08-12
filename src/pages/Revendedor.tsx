@@ -69,6 +69,7 @@ function useCountdown(expiresAt: string | null | undefined) {
 }
 
 export default function Revendedor() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { slug } = useParams<{ slug: string }>();
   const [link, setLink] = useState<ResellerLink | null>(null);
   const [loading, setLoading] = useState(true);
