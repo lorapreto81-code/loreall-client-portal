@@ -218,7 +218,18 @@ Deno.serve(async (req) => {
           .from("syncpay_subscriptions")
           .select("*")
           .order("created_at", { ascending: false });
-        return ok({ subscribers: rows || [] });
+        const planIds = [...new Set((rows || []).map((r) => r.syncpay_plan_id).filter(Boolean))];
+        const { data: plans } = planIds.length
+          ? await supabase.from("syncpay_plans").select("syncpay_plan_id, name, amount").in("syncpay_plan_id", planIds)
+          : { data: [] };
+        const planMap = new Map((plans || []).map((p) => [p.syncpay_plan_id, p]));
+        const enriched = (rows || []).map((r) => ({
+          ...r,
+          plan_name: planMap.get(r.syncpay_plan_id)?.name || "—",
+          amount: planMap.get(r.syncpay_plan_id)?.amount ?? 0,
+          customer_whatsapp: r.customer_phone,
+        }));
+        return ok({ subscribers: enriched });
       }
 
       default:
