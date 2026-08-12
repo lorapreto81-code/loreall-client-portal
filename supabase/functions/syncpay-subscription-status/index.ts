@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
     const status = sub.status;
     const payment = sub.payment || sub.charge || sub.first_charge || {};
     const mandateStatus = payment.mandate_status || sub.mandate_status || sub.first_charge?.mandate_status;
+    const nextChargeAt = sub.next_charge_at || sub.next_billing_date || sub.next_due_date || sub.next_cycle_date || null;
 
     const accessStatus =
       status === "cancelled" ? "cancelled" :
@@ -81,12 +82,14 @@ Deno.serve(async (req) => {
       access_status: accessStatus,
       mandate_id: payment.mandate_id || sub.mandate_id || null,
       mandate_status: mandateStatus || null,
+      next_charge_at: nextChargeAt,
       metadata: sub,
     }).eq("syncpay_subscription_id", subId);
 
     return json({
       status,
       mandate_status: mandateStatus,
+      next_charge_at: nextChargeAt,
       raw: sub
     }, 200, {}, req);
   } catch (e) {

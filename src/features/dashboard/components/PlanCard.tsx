@@ -2,8 +2,7 @@ import { CalendarDays, Monitor, Sparkles, Repeat, Clock } from "lucide-react";
 import { Customer } from "@/store/authStore";
 import { formatDate } from "@/lib/format";
 import { getStatusPill, telasLabel } from "@/utils/constants";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 
 interface PlanCardProps {
   customer: Customer;
@@ -14,23 +13,7 @@ export const PlanCard = ({ customer, days }: PlanCardProps) => {
   const pill = getStatusPill(days);
   const points = (customer as any).pontos || (customer as any).meta?.pontos;
 
-  const subQuery = useQuery({
-    queryKey: ["active-subscription", customer.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("syncpay_subscriptions")
-        .select("*")
-        .eq("customer_id", customer.id)
-        .in("status", ["pending_first_payment", "active", "overdue"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) return null;
-      return data;
-    },
-    staleTime: 60000,
-  });
-
+  const subQuery = useActiveSubscription(customer.id);
   const subscription = subQuery.data;
   const mandateActive = subscription?.mandate_status?.toUpperCase() === "ACTIVE";
   const isFullyActive = subscription?.status === "active";
