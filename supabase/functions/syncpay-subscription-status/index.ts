@@ -29,24 +29,25 @@ Deno.serve(async (req) => {
 
   try {
     const { subscription_id, customer_id } = await req.json().catch(() => ({}));
-    
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     let subId = subscription_id;
+    let planIdHint: string | null = null;
 
-    // Se não veio subscription_id mas veio customer_id, busca a última assinatura deste cliente
     if (!subId && customer_id) {
       const { data: latest } = await supabase
         .from("syncpay_subscriptions")
-        .select("syncpay_subscription_id")
+        .select("syncpay_subscription_id, syncpay_plan_id")
         .eq("customer_id", customer_id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       subId = latest?.syncpay_subscription_id;
+      planIdHint = latest?.syncpay_plan_id || null;
     }
 
     if (!subId) return json({ error: "subscription_id ou customer_id não encontrado" }, 400, {}, req);
@@ -56,7 +57,7 @@ Deno.serve(async (req) => {
       method: "GET",
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     });
-    
+
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       return json({ error: "Falha ao consultar SyncPay", details: data }, res.status, {}, req);
@@ -86,11 +87,23 @@ Deno.serve(async (req) => {
       metadata: sub,
     }).eq("syncpay_subscription_id", subId);
 
+    let amount: number | null = null;
+    const planId = sub.plan_token || sub.plan_id || planIdHint;
+    if (planId) {
+      const { data: planRow } = await supabase
+        .from("syncpay_plans")
+        .select("amount")
+        .eq("syncpay_plan_id", planId)
+        .maybeSingle();
+      amount = planRow?.amount ?? null;
+    }
+
     return json({
       subscription_id: subId,
       status,
       mandate_status: mandateStatus,
       next_charge_at: nextChargeAt,
+      amount,
       raw: sub
     }, 200, {}, req);
   } catch (e) {

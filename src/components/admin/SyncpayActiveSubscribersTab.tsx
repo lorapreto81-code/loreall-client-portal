@@ -18,6 +18,7 @@ interface Subscription {
 
 export default function SyncpayActiveSubscribersTab() {
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [subscribers, setSubscribers] = useState<Subscription[]>([]);
 
   const load = async () => {
@@ -29,6 +30,22 @@ export default function SyncpayActiveSubscribersTab() {
       toast.error(e instanceof Error ? e.message : "Erro ao carrergar assinantes");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await syncpayAdmin.syncSubscribers();
+      toast.success(`${res.synced} assinatura(s) sincronizada(s) com a SyncPay.`);
+      if (res.errors?.length) {
+        toast.warning(`${res.errors.length} plano(s) com erro ao sincronizar.`);
+      }
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao sincronizar");
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -66,13 +83,22 @@ export default function SyncpayActiveSubscribersTab() {
             Clientes com recorrência ativa via SyncPay.
           </p>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Atualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} /> Sincronizar com SyncPay
+          </button>
+          <button
+            onClick={load}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Atualizar
+          </button>
+        </div>
       </div>
 
       {loading ? (

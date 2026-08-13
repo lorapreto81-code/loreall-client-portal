@@ -34,7 +34,7 @@ const Dashboard = () => {
     logout
   } = useDashboardData();
 
-  const { data: activeSubscription } = useActiveSubscription(customer?.id);
+  
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
