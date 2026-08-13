@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, RefreshCw, Trash2, CheckCircle2 } from "lucide-react";
 
 interface Payment {
   id: string;
@@ -138,22 +138,42 @@ export default function CustomersPaymentsTab() {
                     <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.paid_at)}</td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">{fmtDate(p.renewed_at)}</td>
                     <td className="px-3 py-2 text-right">
-                      <button
-                        title="Apagar do histórico"
-                        onClick={async () => {
-                          if (!confirm(`APAGAR definitivamente esse pagamento de ${p.customer_name}? Isso não devolve dinheiro nem afeta a assinatura.`)) return;
-                          try {
-                            await resellerAdmin.deletePayment(p.id);
-                            toast.success("Registro apagado");
-                            await load();
-                          } catch (e) {
-                            toast.error(e instanceof Error ? e.message : "Erro");
-                          }
-                        }}
-                        className="p-1.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {p.fastdepix_status !== "paid" && p.fastdepix_status !== "PAID" && (
+                          <button
+                            title="Confirmar Pagamento e Renovar"
+                            onClick={async () => {
+                              if (!confirm(`Confirmar recebimento de ${fmtBRL(p.amount)} de ${p.customer_name} e RENOVAR no TopGestor?`)) return;
+                              try {
+                                await resellerAdmin.confirmPayment(p.id);
+                                toast.success("Pagamento confirmado e renovação enviada!");
+                                await load();
+                              } catch (e) {
+                                toast.error(e instanceof Error ? e.message : "Erro ao confirmar");
+                              }
+                            }}
+                            className="p-1.5 rounded bg-green-500/10 text-green-500 hover:bg-green-500/20"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        <button
+                          title="Apagar do histórico"
+                          onClick={async () => {
+                            if (!confirm(`APAGAR definitivamente esse pagamento de ${p.customer_name}? Isso não devolve dinheiro nem afeta a assinatura.`)) return;
+                            try {
+                              await resellerAdmin.deletePayment(p.id);
+                              toast.success("Registro apagado");
+                              await load();
+                            } catch (e) {
+                              toast.error(e instanceof Error ? e.message : "Erro");
+                            }
+                          }}
+                          className="p-1.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
