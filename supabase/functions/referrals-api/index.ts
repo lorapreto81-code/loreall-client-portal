@@ -3,14 +3,11 @@ import { getCustomerSession, isAdminPassword } from "../_shared/auth.ts";
 
 import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
 
-const TG_BASE = "https://topgestor.me/api/v1";
-
-function jsonRes(data: unknown, status = 200) {
+function jsonRes(data: unknown, status = 200, req?: Request) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 }
 
