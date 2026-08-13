@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { resellerCreatePixSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeaders, corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
+ 
 
 
 function parseExpiresAt(raw: string | undefined | null): string {
@@ -76,6 +76,7 @@ async function getSyncToken(supabase: ReturnType<typeof createClient>): Promise<
 
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {

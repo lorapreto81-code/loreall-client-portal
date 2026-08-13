@@ -1,6 +1,6 @@
 import { corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
+ 
 
 const API_BASE = "https://api.themoviedb.org/3";
 
@@ -11,6 +11,7 @@ function getKey(): string {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

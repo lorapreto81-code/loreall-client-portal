@@ -3,9 +3,9 @@
 // reseller-process-recharge. Rodar via pg_cron.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
+import { corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
+ 
 
 const PAID = ["paid", "approved", "completed", "success", "succeeded"];
 const EXPIRED = ["expired", "cancelled", "canceled", "failed", "refunded"];
@@ -43,6 +43,7 @@ async function getSyncpayToken(base: string): Promise<string | null> {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const supabase = createClient(

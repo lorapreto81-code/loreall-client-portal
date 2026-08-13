@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
+import { corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
+ 
 
 
 
@@ -22,6 +22,7 @@ async function callProcessRecharge(purchaseId: string) {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
