@@ -131,6 +131,33 @@ Deno.serve(async (req) => {
     const credits = Math.max(minC, Math.min(maxC, requested));
     const amount = Number((credits * price).toFixed(2));
 
+    // Reaproveita um Pix já pendente e ainda válido para o mesmo revendedor + mesma quantidade de créditos
+    const { data: existingPending } = await supabase
+      .from("reseller_credit_purchases")
+      .select("id, qr_code_url, qr_code_text, qr_code_expires_at, amount, package_credits, warez_username")
+      .eq("reseller_link_id", link.id)
+      .eq("package_credits", credits)
+      .eq("status", "pending")
+      .gt("qr_code_expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingPending) {
+      return new Response(JSON.stringify({
+        success: true,
+        purchase_id: existingPending.id,
+        qr_code_url: existingPending.qr_code_url,
+        qr_code_text: existingPending.qr_code_text,
+        expires_at: existingPending.qr_code_expires_at,
+        amount: existingPending.amount,
+        package_credits: existingPending.package_credits,
+        warez_username: existingPending.warez_username,
+        provider: "syncpay",
+        reused: true,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // CPF é opcional: se não informado, gera um CPF válido automaticamente
     const cpf = onlyDigits(body.cpf) || generateValidCpf();
     const phone = normalizePhone(whatsapp) || "11999999999";

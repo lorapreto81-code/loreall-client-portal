@@ -153,6 +153,31 @@ Deno.serve(async (req) => {
       return json({ error: "Valor não corresponde ao plano." }, 422, {}, req);
     }
 
+    // Reaproveita um Pix já pendente e ainda válido pro mesmo cliente + mesmo plano,
+    // em vez de gerar um novo a cada clique.
+    const { data: existingPending } = await supabase
+      .from("payments")
+      .select("id, qr_code_url, qr_code_text, qr_code_expires_at, amount")
+      .eq("customer_id", body.customer_id)
+      .eq("plan_id", body.plan_id)
+      .eq("fastdepix_status", "pending")
+      .gt("qr_code_expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingPending) {
+      return json({
+        payment_id: existingPending.id,
+        qr_code_url: existingPending.qr_code_url,
+        qr_code_text: existingPending.qr_code_text,
+        expires_at: existingPending.qr_code_expires_at,
+        amount: existingPending.amount,
+        provider: "syncpay",
+        reused: true,
+      }, 200, {}, req);
+    }
+
     const cpf = onlyDigits(body.customer_cpf) || tgInfo?.cpf || generateValidCpf();
     const email = (body.customer_email || tgInfo?.email || `cliente_${body.customer_id}@topgestor.me`).trim();
     const phone = normalizePhone(body.customer_whatsapp || tgInfo?.phone);
