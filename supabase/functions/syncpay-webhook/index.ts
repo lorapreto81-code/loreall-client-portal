@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   // Security Hardening: Validate Webhook Signature
-  const signature = req.headers.get("x-syncpay-signature") || req.headers.get("x-hub-signature");
+  const signature = req.headers.get("x-syncpay-signature") || req.headers.get("x-hub-signature") || req.headers.get("x-signature");
   const webhookSecret = Deno.env.get("SYNCPAY_WEBHOOK_SECRET");
   
   const rawBody = await req.text();
@@ -300,15 +300,21 @@ Deno.serve(async (req) => {
       false,
       ["verify"]
     );
-    const sigBytes = new Uint8Array(
-      signature.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
-    );
-    const isValid = await crypto.subtle.verify(
-      "HMAC",
-      key,
-      sigBytes,
-      encoder.encode(rawBody)
-    );
+    let sigBytes: Uint8Array;
+    try {
+      if (signature.length === 64 && /^[0-9a-fA-F]+$/.test(signature)) {
+        sigBytes = new Uint8Array(signature.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
+      } else {
+        const binary = atob(signature);
+        sigBytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) sigBytes[i] = binary.charCodeAt(i);
+      }
+    } catch (e) {
+      console.error("[SECURITY] Erro ao decodificar assinatura", e);
+      return new Response(JSON.stringify({ error: "Invalid signature format" }), { status: 401, headers: corsHeaders });
+    }
+
+    const isValid = await crypto.subtle.verify("HMAC", key, sigBytes, encoder.encode(rawBody));
     if (!isValid) {
       console.error("[SECURITY] Invalid webhook signature detected");
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
