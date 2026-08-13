@@ -279,7 +279,19 @@ Deno.serve(async (req) => {
   
   const rawBody = await req.text();
 
-  if (webhookSecret && signature) {
+  if (!webhookSecret) {
+    console.error("[SECURITY] SYNCPAY_WEBHOOK_SECRET não configurado — recusando webhook");
+    return new Response(JSON.stringify({ error: "Webhook not configured" }), {
+      status: 500, headers: corsHeaders
+    });
+  }
+  if (!signature) {
+    console.error("[SECURITY] Webhook sem header de assinatura — recusando");
+    return new Response(JSON.stringify({ error: "Missing signature" }), {
+      status: 401, headers: corsHeaders
+    });
+  }
+  {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       "raw",
@@ -299,8 +311,8 @@ Deno.serve(async (req) => {
     );
     if (!isValid) {
       console.error("[SECURITY] Invalid webhook signature detected");
-      return new Response(JSON.stringify({ error: "Invalid signature" }), { 
-        status: 401, headers: corsHeaders 
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401, headers: corsHeaders
       });
     }
   }

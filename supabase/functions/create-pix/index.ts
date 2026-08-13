@@ -1,7 +1,7 @@
 // PIX para renovação de cliente — apenas SyncPay.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createPixSchema } from "../_shared/validation.ts";
-import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeadersFor, checkRateLimit } from "../_shared/security.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
@@ -102,6 +102,22 @@ async function fetchCustomerInfo(customerId: number): Promise<{ cpf: string; ema
   } catch { return null; }
 }
 
+async function fetchPlanPrice(planId: number): Promise<number | null> {
+  const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
+  if (!tgToken) return null;
+  try {
+    const r = await fetch(`${TG_BASE}/plans?per_page=200&status=ativo`, {
+      headers: { Authorization: `Bearer ${tgToken}`, Accept: "application/json" },
+    });
+    const d = await r.json().catch(() => ({}));
+    const plans = Array.isArray(d) ? d : (d?.data || d?.plans || d?.list || []);
+    const plan = plans.find((p: any) => Number(p.id) === Number(planId));
+    if (!plan) return null;
+    const v = plan.plan_value ?? plan.value;
+    return typeof v === "string" ? parseFloat(v) : Number(v || 0);
+  } catch { return null; }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
 
@@ -114,10 +130,29 @@ Deno.serve(async (req) => {
     
     const body = parse.data;
 
-
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+    const allowed = await checkRateLimit(supabase, ip, "create-pix", 8, 15);
+    if (!allowed) return json({ error: "Muitas tentativas. Aguarde alguns minutos." }, 429, {}, req);
 
     const tgInfo = await fetchCustomerInfo(body.customer_id);
+    if (!tgInfo) {
+      console.error("[SECURITY] create-pix: customer_id inexistente no TopGestor", body.customer_id);
+      return json({ error: "Cliente não encontrado." }, 404, {}, req);
+    }
+
+    const realAmount = await fetchPlanPrice(body.plan_id);
+    if (realAmount == null || realAmount <= 0) {
+      console.error("[SECURITY] create-pix: plano não encontrado", body.plan_id);
+      return json({ error: "Plano não encontrado." }, 404, {}, req);
+    }
+    if (Math.abs(realAmount - Number(body.amount)) > 0.01) {
+      console.error("[SECURITY] create-pix: valor divergente do plano real", {
+        customer_id: body.customer_id, plan_id: body.plan_id, sent: body.amount, real: realAmount,
+      });
+      return json({ error: "Valor não corresponde ao plano." }, 422, {}, req);
+    }
+
     const cpf = onlyDigits(body.customer_cpf) || tgInfo?.cpf || generateValidCpf();
     const email = (body.customer_email || tgInfo?.email || `cliente_${body.customer_id}@topgestor.me`).trim();
     const phone = normalizePhone(body.customer_whatsapp || tgInfo?.phone);
@@ -133,7 +168,7 @@ Deno.serve(async (req) => {
         Accept: "application/json",
       },
       body: JSON.stringify({
-        amount: Number(body.amount.toFixed(2)),
+        amount: Number(realAmount.toFixed(2)),
         description: `Renovação ${body.plan_name}`,
         webhook_url: webhookUrl,
         client: { name: body.customer_name, cpf, email, phone },
