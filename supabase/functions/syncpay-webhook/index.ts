@@ -334,6 +334,7 @@ Deno.serve(async (req) => {
     const isPaid = ["completed", "paid", "approved", "success", "succeeded"].includes(rawStatus);
     const isExpired = ["failed", "expired", "cancelled", "canceled", "refunded"].includes(rawStatus);
 
+    console.log("[syncpay-webhook] payload", JSON.stringify(payload));
     console.log("[syncpay-webhook] event", event, "tx", txId, "status", rawStatus);
 
     const supabase = createClient(
