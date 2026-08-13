@@ -109,14 +109,14 @@ export default function Revendedor() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("reseller_links")
-        .select("id, slug, display_name, credits, amount, price_per_credit, min_credits, max_credits, is_active")
-        .eq("slug", slug.toLowerCase())
-        .eq("is_active", true)
-        .maybeSingle();
+      const supaUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(`${supaUrl}/functions/v1/reseller-link-info?slug=${encodeURIComponent(slug.toLowerCase())}`, {
+        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+      });
+      const data = res.ok ? await res.json() : null;
       if (cancelled) return;
-      if (error || !data) setNotFound(true);
+      if (!data) setNotFound(true);
       else {
         const l = data as ResellerLink;
         setLink(l);
