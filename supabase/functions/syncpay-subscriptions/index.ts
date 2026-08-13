@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
 
   try {
     const pwd = req.headers.get("x-admin-password");
-    if (!isAdminPassword(pwd)) return err("Unauthorized", 401);
+    if (!isAdminPassword(pwd)) return err("Unauthorized", 401, req);
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "";
@@ -86,12 +86,12 @@ Deno.serve(async (req) => {
           .from("syncpay_plans")
           .select("*")
           .order("created_at", { ascending: false });
-        return ok({ plans: rows || [] });
+        return ok({ plans: rows || [] }, 200, req);
       }
 
       case "sync-plans": {
         const r = await spFetch("/subscription-plans?per_page=100", "GET");
-        if (!r.ok) return err(`SyncPay: ${r.status}`, r.status);
+        if (!r.ok) return err(`SyncPay: ${r.status}`, r.status, req);
         const list = r.data.data || r.data.plans || [];
         for (const p of list) {
           const syncpayId = String(p.token || p.id);
@@ -110,14 +110,14 @@ Deno.serve(async (req) => {
             metadata: p,
           }, { onConflict: "syncpay_plan_id" });
         }
-        return ok({ synced: list.length });
+        return ok({ synced: list.length }, 200, req);
       }
 
       case "create-plan": {
         // SyncPay exige amount em REAIS inteiro (ex.: 50 = R$ 50,00)
         const amountInt = Math.round(Number(body.amount));
         if (!Number.isFinite(amountInt) || amountInt < 1) {
-          return err("amount deve ser um inteiro em reais (>= 1)", 422);
+          return err("amount deve ser um inteiro em reais (>= 1, 400, req)", 422);
         }
         const payload = {
           name: body.name,
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
           billing_method: body.billing_method || "qr_code",
         };
         const r = await spFetch("/subscription-plans", "POST", payload);
-        if (!r.ok) return err(`SyncPay: ${JSON.stringify(r.data)}`, r.status);
+        if (!r.ok) return err(`SyncPay: ${JSON.stringify(r.data, 400, req)}`, r.status);
         const p = r.data.data || r.data;
         const { data: saved } = await supabase.from("syncpay_plans").insert({
           syncpay_plan_id: String(p.token || p.id),
@@ -147,13 +147,13 @@ Deno.serve(async (req) => {
           topgestor_plan_id: body.topgestor_plan_id ? Number(body.topgestor_plan_id) : null,
           metadata: p,
         }).select().maybeSingle();
-        return ok({ plan: saved });
+        return ok({ plan: saved }, 200, req);
       }
 
       case "update-plan": {
         // Atualiza mapeamento local (plano TG) e opcionalmente edita no SyncPay
         const { id, topgestor_plan_id, name, description, amount } = body;
-        if (!id) return err("id required");
+        if (!id) return err("id required", 400, req);
         if (name || description || amount) {
           const row = await supabase.from("syncpay_plans").select("*").eq("id", id).maybeSingle();
           const spId = row.data?.syncpay_plan_id;
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
               ...(description !== undefined && { description }),
               ...(amount && { amount: Number(amount) }),
             });
-            if (!r.ok) return err(`SyncPay: ${JSON.stringify(r.data)}`, r.status);
+            if (!r.ok) return err(`SyncPay: ${JSON.stringify(r.data, 400, req)}`, r.status);
           }
         }
         const patch: Record<string, unknown> = {};
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
         if (description !== undefined) patch.description = description;
         if (amount) patch.amount = Number(amount);
         await supabase.from("syncpay_plans").update(patch).eq("id", id);
-        return ok({ success: true });
+        return ok({ success: true }, 200, req);
       }
 
       case "archive-plan": {
@@ -182,30 +182,30 @@ Deno.serve(async (req) => {
           await spFetch(`/subscription-plans/${row.data.syncpay_plan_id}`, "DELETE");
         }
         await supabase.from("syncpay_plans").update({ status: "archived" }).eq("id", id);
-        return ok({ success: true });
+        return ok({ success: true }, 200, req);
       }
 
       case "list-subscribers": {
         const spId = url.searchParams.get("plan_id");
-        if (!spId) return err("plan_id required");
+        if (!spId) return err("plan_id required", 400, req);
         const r = await spFetch(`/subscription-plans/${spId}/subscribers?per_page=100`, "GET");
-        if (!r.ok) return err(`SyncPay: ${r.status}`, r.status);
+        if (!r.ok) return err(`SyncPay: ${r.status}`, r.status, req);
         const { data: local } = await supabase
           .from("syncpay_subscriptions")
           .select("*")
           .eq("syncpay_plan_id", spId);
-        return ok({ subscribers: r.data.data || r.data.subscribers || [], local: local || [] });
+        return ok({ subscribers: r.data.data || r.data.subscribers || [], local: local || [] }, req);
       }
 
       case "cancel-subscription": {
         const { subscription_id } = body;
-        if (!subscription_id) return err("subscription_id required");
+        if (!subscription_id) return err("subscription_id required", 400, req);
         const r = await spFetch(`/subscriptions/${subscription_id}`, "DELETE");
-        if (!r.ok) return err(`SyncPay: ${r.status}`, r.status);
+        if (!r.ok) return err(`SyncPay: ${r.status}`, r.status, req);
         await supabase.from("syncpay_subscriptions")
           .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
           .eq("syncpay_subscription_id", subscription_id);
-        return ok({ success: true });
+        return ok({ success: true }, 200, req);
       }
 
       case "list-all-subscribers": {
@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
           amount: planMap.get(r.syncpay_plan_id)?.amount ?? 0,
           customer_whatsapp: r.customer_phone,
         }));
-        return ok({ subscribers: enriched });
+        return ok({ subscribers: enriched }, 200, req);
       }
 
       case "sync-subscribers": {
@@ -273,15 +273,15 @@ Deno.serve(async (req) => {
             syncedCount++;
           }
         }
-        return ok({ synced: syncedCount, plans_checked: (plans || []).length, errors });
+        return ok({ synced: syncedCount, plans_checked: (plans || [], req).length, errors });
       }
 
       default:
-        return err(`Unknown action: ${action}`, 404);
+        return err(`Unknown action: ${action}`, 404, req);
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     console.error("[syncpay-subscriptions]", message);
-    return err(message, 500);
+    return err(message, 500, req);
   }
 });
