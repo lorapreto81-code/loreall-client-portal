@@ -3,10 +3,9 @@
 // reseller-process-recharge. Rodar via pg_cron.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
+
+const corsHeaders = corsHeadersFor();
 
 const PAID = ["paid", "approved", "completed", "success", "succeeded"];
 const EXPIRED = ["expired", "cancelled", "canceled", "failed", "refunded"];
