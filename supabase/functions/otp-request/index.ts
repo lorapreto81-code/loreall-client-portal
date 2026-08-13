@@ -49,6 +49,21 @@ Deno.serve(async (req) => {
       return json({ error: "Muitas tentativas para este identificador. Aguarde alguns minutos." }, 429, {}, req);
     }
 
+    // Intervalo mínimo entre pedidos consecutivos — impede rajadas mesmo dentro do 
+    // limite total da janela de 15 minutos.
+    const cooldownSince = new Date(Date.now() - 45_000).toISOString();
+    const { data: recentRequest } = await supabase
+      .from("otp_codes")
+      .select("id")
+      .eq("phone", key)
+      .gte("created_at", cooldownSince)
+      .limit(1)
+      .maybeSingle();
+
+    if (recentRequest) {
+      return json({ error: "Aguarde alguns segundos antes de solicitar um novo código." }, 429, {}, req);
+    }
+
     // Rate limit per IP
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
     if (ip) {
