@@ -12,7 +12,7 @@ async function proxyResponse(res: Response, req: Request): Promise<Response> {
 
 
 // Fields a customer is allowed to change on their own account.
-const CUSTOMER_EDITABLE_FIELDS = ["name", "email", "whatsapp", "celular", "telefone", "cpf", "plan_id"];
+const CUSTOMER_EDITABLE_FIELDS = ["name", "email", "whatsapp", "celular", "telefone", "cpf"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

@@ -1,10 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCustomerSession } from "../_shared/auth.ts";
+import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-customer-token",
-};
+const corsHeaders = corsHeadersFor();
 
 
 
@@ -67,13 +65,18 @@ async function pollAndSyncIfPaid(
     // como pago e renovar no TopGestor (mesma lógica do FastDepix).
     const txId = payment.provider_transaction_id;
     try {
+      const webhookBody = JSON.stringify({ event: "cashin.update", data: { id: txId, status: "paid" } });
+      const webhookSecret = Deno.env.get("SYNCPAY_WEBHOOK_SECRET") || "";
+      const webhookSignature = webhookSecret ? await signWebhookPayload(webhookSecret, webhookBody) : "";
+      
       await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/syncpay-webhook`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          "x-syncpay-signature": webhookSignature,
         },
-        body: JSON.stringify({ event: "cashin.update", data: { id: txId, status: "paid" } }),
+        body: webhookBody,
       });
     } catch (e) {
       console.error("[payment-status] webhook invoke failed", e);
