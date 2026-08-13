@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Zap, Gift, Clock, Repeat, Settings, AlertTriangle } from "lucide-react";
+import { Gift } from "lucide-react";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -14,11 +13,9 @@ import MyAccountSheet from "@/components/MyAccountSheet";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 
 import { PlanCard } from "@/features/dashboard/components/PlanCard";
-import { RenewalHistory } from "@/features/dashboard/components/RenewalHistory";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { DashboardBanners } from "@/features/dashboard/components/DashboardBanners";
-import { DashboardStatusAlerts } from "@/features/dashboard/components/DashboardStatusAlerts";
 import { DashboardNavigation } from "@/features/dashboard/components/DashboardNavigation";
 
 const Dashboard = () => {
@@ -33,8 +30,6 @@ const Dashboard = () => {
     menuOpen, setMenuOpen,
     logout
   } = useDashboardData();
-
-  const { data: activeSubscription } = useActiveSubscription(customer?.id);
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -107,71 +102,7 @@ const Dashboard = () => {
           onDismissEmailBanner={dismissEmailBanner}
         />
 
-        <PlanCard customer={customer} days={days} />
-
-        <DashboardStatusAlerts days={days} />
-
-        {(!activeSubscription || activeSubscription.status === "cancelled") && (
-          <button
-            onClick={() => setRenewalOpen(true)}
-            className="group btn-primary-gradient font-semibold text-sm flex items-center justify-center gap-2 w-full relative overflow-hidden"
-            style={{ minHeight: 60, borderRadius: 16 }}
-          >
-            <Zap className="h-5 w-5 group-hover:scale-110 transition-transform" />
-            Renovar acesso
-          </button>
-        )}
-
-        {activeSubscription?.status === "pending_first_payment" && (
-          <div className="card-elevated p-4 flex items-start gap-3">
-            <div className="p-2 rounded-full bg-amber-500/10 shrink-0">
-              <Clock className="h-4 w-4 text-amber-500" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground">Pix Automático autorizado</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Seu banco confirmou a autorização. A primeira cobrança deve cair em até 24h — você não precisa fazer nada.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {activeSubscription?.status === "active" && (
-          <button
-            onClick={() => setRenewalOpen(true)}
-            className="card-elevated p-4 flex items-center justify-between gap-3 text-left w-full transition-all hover:scale-[1.01] active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2 rounded-full bg-primary/10 shrink-0">
-                <Repeat className="h-4 w-4 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">Pix Automático ativo</p>
-                {activeSubscription.next_charge_at && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Próxima cobrança em {new Date(activeSubscription.next_charge_at).toLocaleDateString("pt-BR")}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
-          </button>
-        )}
-
-        {activeSubscription?.status === "overdue" && (
-          <button
-            onClick={() => setRenewalOpen(true)}
-            className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center gap-3 text-left w-full hover:bg-destructive/15 transition-colors"
-          >
-            <div className="p-2 rounded-full bg-destructive/10 shrink-0">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-destructive">Pagamento em atraso</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Toque para regularizar sua assinatura automática.</p>
-            </div>
-          </button>
-        )}
+        <PlanCard customer={customer} days={days} onRenewClick={() => setRenewalOpen(true)} />
 
         <button
           onClick={() => setReferralOpen(true)}
@@ -191,8 +122,6 @@ const Dashboard = () => {
             Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
           </p>
         </button>
-
-        
       </main>
 
       <footer className="px-4 py-8 pb-12 max-w-[480px] mx-auto text-center space-y-6">

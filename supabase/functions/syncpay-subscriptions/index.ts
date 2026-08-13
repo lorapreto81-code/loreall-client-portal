@@ -232,6 +232,55 @@ Deno.serve(async (req) => {
         return ok({ subscribers: enriched });
       }
 
+      case "sync-subscribers": {
+        const { data: plans } = await supabase
+          .from("syncpay_plans")
+          .select("syncpay_plan_id")
+          .not("syncpay_plan_id", "is", null);
+        let syncedCount = 0;
+        const errors: string[] = [];
+        for (const plan of plans || []) {
+          const r = await spFetch(`/subscription-plans/${plan.syncpay_plan_id}/subscribers?per_page=100`, "GET");
+          if (!r.ok) {
+            errors.push(`Plano ${plan.syncpay_plan_id}: HTTP ${r.status}`);
+            continue;
+          }
+          const subscribers = r.data.data || r.data.subscribers || [];
+          for (const sub of subscribers) {
+            const subId = sub.subscription_token || sub.token || sub.id;
+            if (!subId) continue;
+            const status = String(sub.status || "").toLowerCase();
+            const payment = sub.payment || {};
+            const mandateStatus = payment.mandate_status || sub.mandate_status || null;
+            const nextChargeAt = sub.next_charge_at || sub.next_billing_date || sub.next_due_date || null;
+            const accessStatus =
+              status === "cancelled" ? "cancelled" :
+              status === "suspended" ? "suspended" :
+              status === "overdue" ? "grace_period" :
+              status === "active" ? "active" :
+              mandateStatus?.toUpperCase() === "ACTIVE" ? "pending_first_charge" :
+              "pending";
+            await supabase.from("syncpay_subscriptions").upsert({
+              syncpay_subscription_id: String(subId),
+              syncpay_plan_id: plan.syncpay_plan_id,
+              customer_name: sub.name || sub.customer?.name,
+              customer_email: sub.email || sub.customer?.email,
+              customer_cpf: (sub.document || sub.cpf || sub.customer?.document || "").replace(/\D/g, ""),
+              customer_phone: sub.phone || sub.customer?.phone,
+              status,
+              syncpay_status: status,
+              access_status: accessStatus,
+              mandate_id: payment.mandate_id || sub.mandate_id || null,
+              mandate_status: mandateStatus,
+              next_charge_at: nextChargeAt,
+              metadata: sub,
+            }, { onConflict: "syncpay_subscription_id" });
+            syncedCount++;
+          }
+        }
+        return ok({ synced: syncedCount, plans_checked: (plans || []).length, errors });
+      }
+
       default:
         return err(`Unknown action: ${action}`, 404);
     }
