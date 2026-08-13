@@ -11,20 +11,17 @@ import { isAdminPassword } from "../_shared/auth.ts";
 
 import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
 
-const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
-
-function ok(data: unknown, status = 200) {
+function ok(data: unknown, status = 200, req?: Request) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 }
-function err(message: string, status = 400) {
+function err(message: string, status = 400, req?: Request) {
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 }
 
