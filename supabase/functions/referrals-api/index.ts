@@ -3,14 +3,13 @@ import { getCustomerSession, isAdminPassword } from "../_shared/auth.ts";
 
 import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
-function jsonRes(data: unknown, status = 200) {
+function jsonRes(data: unknown, status = 200, req?: Request) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 }
 
@@ -44,7 +43,7 @@ async function getConfigMap(supabase: ReturnType<typeof createClient>): Promise<
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeadersFor(req) });
 
   try {
     const supabase = createClient(
@@ -60,11 +59,11 @@ Deno.serve(async (req) => {
       const body = await req.json().catch(() => ({}));
       const customerId = Number(body.customer_id);
       const customerName: string = body.customer_name || "";
-      if (!customerId) return jsonRes({ error: "customer_id required" }, 400);
+      if (!customerId) return jsonRes({ error: "customer_id required" }, 400, req);
 
       const session = await getCustomerSession(req);
-      if (!session) return jsonRes({ error: "Unauthorized" }, 401);
-      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401, req);
+      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403, req);
 
       const { data: existing } = await supabase
         .from("referral_codes")
@@ -72,7 +71,7 @@ Deno.serve(async (req) => {
         .eq("customer_id", customerId)
         .maybeSingle();
 
-      if (existing) return jsonRes({ code: existing.code, customer_id: customerId });
+      if (existing) return jsonRes({ code: existing.code, customer_id: customerId }, req);
 
       for (let i = 0; i < 5; i++) {
         const code = genCode();
@@ -81,36 +80,36 @@ Deno.serve(async (req) => {
           .insert({ customer_id: customerId, customer_name: customerName, code })
           .select()
           .single();
-        if (!error && inserted) return jsonRes({ code: inserted.code, customer_id: customerId });
+        if (!error && inserted) return jsonRes({ code: inserted.code, customer_id: customerId }, req);
         if (error && !`${error.message}`.toLowerCase().includes("duplicate")) {
           console.error("[referrals-api] insert error", error);
-          return jsonRes({ error: error.message }, 500);
+          return jsonRes({ error: error.message }, 500, req);
         }
       }
-      return jsonRes({ error: "could not generate unique code" }, 500);
+      return jsonRes({ error: "could not generate unique code" }, 500, req);
     }
 
     // ----- lookup-code -----
     if (action === "lookup-code") {
       const code = (url.searchParams.get("code") || "").trim().toUpperCase();
-      if (!code) return jsonRes({ error: "code required" }, 400);
+      if (!code) return jsonRes({ error: "code required" }, 400, req);
       const { data } = await supabase
         .from("referral_codes")
         .select("customer_id, customer_name, code")
         .eq("code", code)
         .maybeSingle();
-      if (!data) return jsonRes({ valid: false }, 200);
-      return jsonRes({ valid: true, ...data });
+      if (!data) return jsonRes({ valid: false }, 200, req);
+      return jsonRes({ valid: true, ...data }, req);
     }
 
     // ----- list-by-referrer -----
     if (action === "list-by-referrer") {
       const customerId = Number(url.searchParams.get("customer_id"));
-      if (!customerId) return jsonRes({ error: "customer_id required" }, 400);
+      if (!customerId) return jsonRes({ error: "customer_id required" }, 400, req);
 
       const session = await getCustomerSession(req);
-      if (!session) return jsonRes({ error: "Unauthorized" }, 401);
-      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401, req);
+      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403, req);
 
       const { data: referrals } = await supabase
         .from("referrals")
@@ -144,7 +143,7 @@ Deno.serve(async (req) => {
     // ----- get-trial-config (admin) -----
     if (action === "get-trial-config") {
       const pwd = req.headers.get("x-admin-password");
-      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401, req);
       const cfg = await getConfigMap(supabase);
       return jsonRes({
         config: {
@@ -161,29 +160,29 @@ Deno.serve(async (req) => {
     // ----- update-trial-config (admin) -----
     if (action === "update-trial-config") {
       const pwd = req.headers.get("x-admin-password");
-      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401, req);
       const body = await req.json().catch(() => ({}));
       const entries: Record<string, string> = body.entries || {};
       const allowed = ["trial_enabled", "trial_product_id", "trial_plan_id", "trial_telas", "trial_days", "trial_support_whatsapp"];
       const rows = Object.entries(entries)
         .filter(([k]) => allowed.includes(k))
         .map(([config_key, config_value]) => ({ config_key, config_value: String(config_value ?? "") }));
-      if (rows.length === 0) return jsonRes({ ok: true });
+      if (rows.length === 0) return jsonRes({ ok: true }, 200, req);
       const { error } = await supabase.from("system_config").upsert(rows);
-      if (error) return jsonRes({ error: error.message }, 500);
-      return jsonRes({ ok: true });
+      if (error) return jsonRes({ error: error.message }, 500, req);
+      return jsonRes({ ok: true }, 200, req);
     }
 
     // ----- list-pending-trials (admin) -----
     if (action === "list-pending-trials") {
       const pwd = req.headers.get("x-admin-password");
-      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401, req);
       const { data } = await supabase
         .from("referrals")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(200);
-      return jsonRes({ referrals: data || [] });
+      return jsonRes({ referrals: data || [] }, 200, req);
     }
 
     // ----- create-trial (public) -----
@@ -196,9 +195,9 @@ Deno.serve(async (req) => {
       const whatsappRaw = String(body.whatsapp || "").trim();
       const whatsapp = onlyDigits(whatsappRaw);
 
-      if (!code) return jsonRes({ error: "Código de indicação obrigatório" }, 400);
-      if (name.length < 2 || name.length > 80) return jsonRes({ error: "Nome inválido" }, 400);
-      if (whatsapp.length < 10 || whatsapp.length > 13) return jsonRes({ error: "WhatsApp inválido (use DDD + número)" }, 400);
+      if (!code) return jsonRes({ error: "Código de indicação obrigatório" }, 400, req);
+      if (name.length < 2 || name.length > 80) return jsonRes({ error: "Nome inválido" }, 400, req);
+      if (whatsapp.length < 10 || whatsapp.length > 13) return jsonRes({ error: "WhatsApp inválido (use DDD + número, 200, req)" }, 400);
 
       // 1) Validate referral code
       const { data: refRow } = await supabase
@@ -206,12 +205,12 @@ Deno.serve(async (req) => {
         .select("customer_id, customer_name, code")
         .eq("code", code)
         .maybeSingle();
-      if (!refRow) return jsonRes({ error: "Código de indicação não encontrado" }, 404);
+      if (!refRow) return jsonRes({ error: "Código de indicação não encontrado" }, 404, req);
 
       // 2) Load trial config
       const cfg = await getConfigMap(supabase);
       if (cfg.trial_enabled === "false") {
-        return jsonRes({ error: "Sistema de teste grátis temporariamente desativado" }, 403);
+        return jsonRes({ error: "Sistema de teste grátis temporariamente desativado" }, 403, req);
       }
       const days = Number(cfg.trial_days || 1);
       const telas = Number(cfg.trial_telas || 1);
@@ -266,7 +265,7 @@ Deno.serve(async (req) => {
           }, 409);
         }
         console.error("[create-trial] signup insert error", insErr);
-        return jsonRes({ error: insErr.message }, 500);
+        return jsonRes({ error: insErr.message }, 500, req);
       }
 
       return jsonRes({
@@ -283,13 +282,13 @@ Deno.serve(async (req) => {
     // ----- list-signups (admin) -----
     if (action === "list-signups") {
       const pwd = req.headers.get("x-admin-password");
-      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401, req);
       const status = url.searchParams.get("status"); // pending | approved | rejected | null=all
       let q = supabase.from("trial_signups").select("*").order("created_at", { ascending: false }).limit(300);
       if (status) q = q.eq("status", status);
       const { data, error } = await q;
-      if (error) return jsonRes({ error: error.message }, 500);
-      return jsonRes({ signups: data || [] });
+      if (error) return jsonRes({ error: error.message }, 500, req);
+      return jsonRes({ signups: data || [] }, 200, req);
     }
 
     // ----- approve-signup (admin) -----
@@ -299,7 +298,7 @@ Deno.serve(async (req) => {
     //   3) create a referrals row (pending_payment) so referrer bonus is triggered on 1st PIX
     if (action === "approve-signup") {
       const pwd = req.headers.get("x-admin-password");
-      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401, req);
 
       const body = await req.json().catch(() => ({}));
       const signupId = String(body.signup_id || "").trim();
@@ -308,18 +307,18 @@ Deno.serve(async (req) => {
       const planIdOverride = body.plan_id ? Number(body.plan_id) : null;
       const daysOverride = body.trial_days ? Number(body.trial_days) : null;
 
-      if (!signupId) return jsonRes({ error: "signup_id obrigatório" }, 400);
-      if (usuario.length < 2 || usuario.length > 32) return jsonRes({ error: "Usuário inválido" }, 400);
-      if (password.length < 3 || password.length > 32) return jsonRes({ error: "Senha inválida" }, 400);
+      if (!signupId) return jsonRes({ error: "signup_id obrigatório" }, 400, req);
+      if (usuario.length < 2 || usuario.length > 32) return jsonRes({ error: "Usuário inválido" }, 400, req);
+      if (password.length < 3 || password.length > 32) return jsonRes({ error: "Senha inválida" }, 400, req);
 
       const { data: signup, error: getErr } = await supabase
         .from("trial_signups")
         .select("*")
         .eq("id", signupId)
         .maybeSingle();
-      if (getErr || !signup) return jsonRes({ error: "Cadastro não encontrado" }, 404);
+      if (getErr || !signup) return jsonRes({ error: "Cadastro não encontrado" }, 404, req);
       if (signup.status !== "pending") {
-        return jsonRes({ error: `Cadastro já está ${signup.status}` }, 409);
+        return jsonRes({ error: `Cadastro já está ${signup.status}` }, 409, req);
       }
 
       const cfg = await getConfigMap(supabase);
@@ -329,11 +328,11 @@ Deno.serve(async (req) => {
       const days = daysOverride || Number(signup.trial_days || cfg.trial_days || 1);
       const supportWhatsapp = cfg.trial_support_whatsapp || "";
       if (!productId || !planId) {
-        return jsonRes({ error: "Configure product_id e plan_id na aba Indicação antes de aprovar" }, 500);
+        return jsonRes({ error: "Configure product_id e plan_id na aba Indicação antes de aprovar" }, 500, req);
       }
 
       const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
-      if (!tgToken) return jsonRes({ error: "TopGestor não configurado" }, 500);
+      if (!tgToken) return jsonRes({ error: "TopGestor não configurado" }, 500, req);
 
       const observacao = `Teste grátis via indicação. Indicado por: ${signup.referrer_customer_name || "ID " + signup.referrer_customer_id} (cód ${signup.referral_code}). Aprovado manualmente.`;
 
@@ -375,7 +374,7 @@ Deno.serve(async (req) => {
 
       // Block self-referral
       if (referredId === Number(signup.referrer_customer_id)) {
-        return jsonRes({ error: "Auto-indicação detectada — TopGestor retornou o próprio ID do indicador" }, 400);
+        return jsonRes({ error: "Auto-indicação detectada — TopGestor retornou o próprio ID do indicador" }, 400, req);
       }
 
       // Mark signup approved
@@ -419,20 +418,20 @@ Deno.serve(async (req) => {
     // ----- reject-signup (admin) -----
     if (action === "reject-signup") {
       const pwd = req.headers.get("x-admin-password");
-      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401);
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401, req);
       const body = await req.json().catch(() => ({}));
       const signupId = String(body.signup_id || "").trim();
       const reason = String(body.reason || "").trim().slice(0, 300);
-      if (!signupId) return jsonRes({ error: "signup_id obrigatório" }, 400);
+      if (!signupId) return jsonRes({ error: "signup_id obrigatório" }, 400, req);
 
       const { data: signup } = await supabase
         .from("trial_signups")
         .select("status")
         .eq("id", signupId)
         .maybeSingle();
-      if (!signup) return jsonRes({ error: "Cadastro não encontrado" }, 404);
+      if (!signup) return jsonRes({ error: "Cadastro não encontrado" }, 404, req);
       if (signup.status !== "pending") {
-        return jsonRes({ error: `Cadastro já está ${signup.status}` }, 409);
+        return jsonRes({ error: `Cadastro já está ${signup.status}` }, 409, req);
       }
 
       const { error } = await supabase
@@ -444,27 +443,27 @@ Deno.serve(async (req) => {
           approved_by: "admin",
         })
         .eq("id", signupId);
-      if (error) return jsonRes({ error: error.message }, 500);
-      return jsonRes({ ok: true });
+      if (error) return jsonRes({ error: error.message }, 500, req);
+      return jsonRes({ ok: true }, 200, req);
     }
 
     // ----- get-signup-status (public — used by "em análise" screen for polling) -----
     if (action === "get-signup-status") {
       const signupId = String(url.searchParams.get("signup_id") || "").trim();
-      if (!signupId) return jsonRes({ error: "signup_id required" }, 400);
+      if (!signupId) return jsonRes({ error: "signup_id required" }, 400, req);
       const { data } = await supabase
         .from("trial_signups")
         .select("id, status, name, trial_days, created_at")
         .eq("id", signupId)
         .maybeSingle();
-      if (!data) return jsonRes({ error: "not found" }, 404);
-      return jsonRes(data);
+      if (!data) return jsonRes({ error: "not found" }, 404, req);
+      return jsonRes(data, 200, req);
     }
 
-    return jsonRes({ error: "Invalid action" }, 400);
+    return jsonRes({ error: "Invalid action" }, 400, req);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[referrals-api] error", message);
-    return jsonRes({ error: message }, 500);
+    return jsonRes({ error: message }, 500, req);
   }
 });

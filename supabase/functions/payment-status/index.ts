@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCustomerSession } from "../_shared/auth.ts";
 import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = corsHeadersFor();
+ 
 
 
 
@@ -94,6 +94,7 @@ async function pollAndSyncIfPaid(
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
