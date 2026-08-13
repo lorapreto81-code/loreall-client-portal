@@ -1,7 +1,6 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeadersFor } from "../_shared/security.ts";
+
+const corsHeaders = corsHeadersFor();
 
 const API_BASE = "https://api.themoviedb.org/3";
 

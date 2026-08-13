@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeadersFor } from "../_shared/security.ts";
+import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
 const corsHeaders = corsHeadersFor();
 

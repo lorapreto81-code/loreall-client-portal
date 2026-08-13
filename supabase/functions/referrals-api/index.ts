@@ -1,10 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCustomerSession, isAdminPassword } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-password, x-customer-token",
-};
+import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
+
+const corsHeaders = corsHeadersFor();
 
 const TG_BASE = "https://topgestor.me/api/v1";
 

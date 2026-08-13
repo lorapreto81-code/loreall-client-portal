@@ -9,11 +9,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isAdminPassword } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-admin-password",
-};
+import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
+
+const corsHeaders = corsHeadersFor();
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
 
