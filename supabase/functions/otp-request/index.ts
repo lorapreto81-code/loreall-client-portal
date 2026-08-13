@@ -8,6 +8,7 @@ import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts
 const CODE_TTL_MINUTES = 5;
 const MAX_REQUESTS_PER_IDENTIFIER = 5;
 const MAX_REQUESTS_PER_IP = 15;
+const MAX_GLOBAL_PER_MINUTE = 20;
 const MAX_GLOBAL_DAILY_OTP = 100000;
 const WINDOW_MINUTES = 15;
 
@@ -76,6 +77,19 @@ Deno.serve(async (req) => {
       if ((ipCount ?? 0) >= MAX_REQUESTS_PER_IP) {
         return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429, {}, req);
       }
+    }
+
+    // Freio geral: limite de envios do sistema inteiro por minuto, independente de 
+    // quem está pedindo — protege contra rajadas que ameaçam o número de WhatsApp.
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+    const { count: globalMinuteCount } = await supabase
+      .from("otp_codes")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", oneMinuteAgo);
+
+    if ((globalMinuteCount ?? 0) >= MAX_GLOBAL_PER_MINUTE) {
+      console.error("[SECURITY] otp-request: limite global por minuto atingido", globalMinuteCount);
+      return json({ error: "Sistema com alta demanda no momento. Tente novamente em instantes." }, 429, {}, req);
     }
 
     let matches: any[] = [];
