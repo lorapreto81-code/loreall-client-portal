@@ -44,7 +44,7 @@ async function getConfigMap(supabase: ReturnType<typeof createClient>): Promise<
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeadersFor(req) });
 
   try {
     const supabase = createClient(
