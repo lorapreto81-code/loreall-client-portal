@@ -42,6 +42,7 @@ export const resellerAdmin = {
   dashboard: () => call("dashboard"),
   listPayments: (params?: Record<string, string>) => call("list-payments", { params }),
   deletePayment: (id: string) => call("delete-payment", { method: "POST", body: { id } }),
+  confirmPayment: (id: string) => makeCaller("admin-confirm-payment")("", { method: "POST", body: { payment_id: id } }),
   customersDashboard: () => call("customers-dashboard"),
   listOtpLogs: () => call("list-otp-logs"),
 };
