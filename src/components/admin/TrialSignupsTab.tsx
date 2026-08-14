@@ -236,18 +236,38 @@ const StatusBadge = ({ status }: { status: Signup["status"] }) => {
 const ApproveModal = ({ signup, onClose, onSuccess }: { signup: Signup; onClose: () => void; onSuccess: (usuario: string, password: string, supportWhatsapp: string) => void }) => {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
+  const [servidor, setServidor] = useState<"uniplay_p2p" | "uniplay_iptv" | "warez" | "">("");
+  const [telas, setTelas] = useState<number | "">("");
+  const [horas, setHoras] = useState<number | "">("");
   const [submitting, setSubmitting] = useState(false);
+
+  const TELAS_POR_SERVIDOR: Record<string, number[]> = {
+    uniplay_p2p: [1], uniplay_iptv: [1, 2], warez: [1, 2, 3],
+  };
+  const HORAS_POR_SERVIDOR: Record<string, number[]> = {
+    uniplay_p2p: [1, 2, 3, 6], uniplay_iptv: [1, 2, 3, 6], warez: [1, 2, 3, 4],
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
     if (usuario.trim().length < 2) return toast.error("Informe o usuário");
     if (password.trim().length < 3) return toast.error("Informe a senha");
+    if (!servidor) return toast.error("Selecione o servidor");
+    if (!telas) return toast.error("Selecione a quantidade de telas");
+    if (!horas) return toast.error("Selecione a duração do teste");
     setSubmitting(true);
     try {
       const data = await callApi("approve-signup", {}, {
         method: "POST",
-        body: { signup_id: signup.id, usuario: usuario.trim(), password: password.trim() },
+        body: { 
+          signup_id: signup.id, 
+          usuario: usuario.trim(), 
+          password: password.trim(),
+          servidor,
+          telas,
+          trial_hours: horas
+        },
       });
       toast.success(`Cliente #${data.customer_id} criado no TopGestor!`);
       onSuccess(usuario.trim(), password.trim(), data.support_whatsapp || "");
@@ -264,6 +284,58 @@ const ApproveModal = ({ signup, onClose, onSuccess }: { signup: Signup; onClose:
         Cole abaixo o usuário e senha que você <strong>já criou</strong> no painel Warez/Uniplay para {signup.name} ({formatPhone(signup.whatsapp)}).
       </p>
       <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="text-xs text-muted-foreground">Servidor</label>
+          <select
+            value={servidor}
+            onChange={(e) => {
+              setServidor(e.target.value as any);
+              setTelas("");
+              setHoras("");
+            }}
+            className="w-full mt-1 px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            required
+          >
+            <option value="">Selecione...</option>
+            <option value="uniplay_p2p">Uniplay P2P</option>
+            <option value="uniplay_iptv">Uniplay IPTV</option>
+            <option value="warez">Warez</option>
+          </select>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-muted-foreground">Telas</label>
+            <select
+              value={telas}
+              onChange={(e) => setTelas(Number(e.target.value))}
+              disabled={!servidor}
+              className="w-full mt-1 px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              required
+            >
+              <option value="">...</option>
+              {servidor && TELAS_POR_SERVIDOR[servidor].map(t => (
+                <option key={t} value={t}>{t} {t === 1 ? 'tela' : 'telas'}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">Duração</label>
+            <select
+              value={horas}
+              onChange={(e) => setHoras(Number(e.target.value))}
+              disabled={!servidor}
+              className="w-full mt-1 px-3 py-2.5 rounded-lg border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              required
+            >
+              <option value="">...</option>
+              {servidor && HORAS_POR_SERVIDOR[servidor].map(h => (
+                <option key={h} value={h}>{h}h</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div>
           <label className="text-xs text-muted-foreground flex items-center gap-1.5"><User className="h-3 w-3" /> Usuário</label>
           <input
