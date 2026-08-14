@@ -472,19 +472,6 @@ export default function Revendedor() {
           </div>
         )}
 
-                  <Loader2 className="h-4 w-4 animate-spin" /> Gerando PIX...
-                </span>
-              ) : (
-                <>
-                  Recarregar painel
-                  <span className="opacity-50 text-sm font-normal">•</span>
-                  {formatBRL(totalAmount)}
-                </>
-              )}
-            </button>
-          </div>
-        )}
-
         {/* Mini tools row */}
         {!pix && (
           <div className="grid grid-cols-2 gap-4">
