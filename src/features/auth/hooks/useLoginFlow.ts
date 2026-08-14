@@ -44,7 +44,10 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     login(c, account.token);
     toast.success("Bem-vindo, " + c.name + "!");
     if (mode === "reseller") {
-      // For reseller, stay on same page but now authenticated state will change
+      const resellerSlug = (c as unknown as { slug?: string }).slug;
+      if (resellerSlug && resellerSlug !== slug) {
+        navigate(`/revendedor/${resellerSlug}`, { replace: true });
+      }
       return;
     }
     navigate("/welcome");

@@ -105,7 +105,10 @@ export default function Revendedor() {
   const countdown = useCountdown(pix?.expires_at);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setLoading(true);
