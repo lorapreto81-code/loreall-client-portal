@@ -72,14 +72,17 @@ function useCountdown(expiresAt: string | null | undefined) {
 }
 
 export default function Revendedor() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: rawSlug } = useParams<{ slug: string }>();
+  // Ignore unresolved route placeholders (e.g. literal ":slug" in the preview URL)
+  const slug = rawSlug && !rawSlug.startsWith(":") ? rawSlug : undefined;
   const customer = useAuthStore((s) => s.customer);
-  const isAuthenticated = !!customer && customer.role === "reseller" && customer.slug === slug;
+  const isAuthenticated = !!customer && customer.role === "reseller" && (!slug || customer.slug === slug);
 
   const {
     phone, setPhone, code, setCode, step, setStep, resendIn, loading: loginLoading,
     targetHint, customerName, sendCode, handleSubmit
   } = useLoginFlow("reseller", slug);
+
 
   const [link, setLink] = useState<ResellerLink | null>(null);
   const [loading, setLoading] = useState(true);
