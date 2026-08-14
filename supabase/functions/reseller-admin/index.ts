@@ -1,25 +1,23 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isAdminPassword } from "../_shared/auth.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-password",
-};
+import { isAdminPassword, getCustomerSession } from "../_shared/auth.ts";
+import { corsHeadersFor } from "../_shared/security.ts";
 
 
-function unauthorized() {
+
+function unauthorized(req: Request) {
   return new Response(JSON.stringify({ error: "Unauthorized" }), {
     status: 401,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 }
 
-function ok(data: unknown, status = 200) {
+function ok(req: Request, data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 }
+
 
 function slugify(s: string): string {
   return String(s || "")
@@ -49,14 +47,43 @@ async function getUniqueSlug(supabase: ReturnType<typeof createClient>, baseSlug
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeadersFor(req) });
 
   try {
-    const pwd = req.headers.get("x-admin-password");
-    if (!isAdminPassword(pwd)) return unauthorized();
-
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "";
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    if (action === "my-purchases") {
+      const session = await getCustomerSession(req);
+      if (!session || session.role !== "reseller") {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
+        });
+      }
+      const { data, error } = await supabase
+        .from("reseller_credit_purchases")
+        .select("*")
+        .eq("reseller_link_id", session.sub)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500, headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ purchases: data || [] }), {
+        status: 200, headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
+      });
+    }
+
+    const pwd = req.headers.get("x-admin-password");
+    if (!isAdminPassword(pwd)) return unauthorized(req);
+
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -73,12 +100,12 @@ Deno.serve(async (req) => {
           .select("*")
           .order("created_at", { ascending: false });
         if (error) throw error;
-        return ok({ links: data || [] });
+        return ok(req, { links: data || [] });
       }
 
       case "create-link": {
         const baseSlug = slugify(body.slug || body.display_name || "");
-        if (!baseSlug) return ok({ error: "slug inválido" }, 400);
+        if (!baseSlug) return ok(req, { error: "slug inválido" }, 400);
         const customSlug = Boolean(String(body.slug || "").trim());
         const slug = customSlug ? baseSlug : await getUniqueSlug(supabase, baseSlug);
         if (customSlug) {
@@ -88,7 +115,7 @@ Deno.serve(async (req) => {
             .eq("slug", slug)
             .maybeSingle();
           if (existingError) throw existingError;
-          if (existing) return ok({ error: `Já existe um revendedor com o link "${slug}". Use outro slug.` }, 400);
+          if (existing) return ok(req, { error: `Já existe um revendedor com o link "${slug}". Use outro slug.` }, 400);
         }
         const price = Number(body.price_per_credit ?? 11);
         const minC = Number(body.min_credits ?? 10);
@@ -110,21 +137,21 @@ Deno.serve(async (req) => {
           notes: body.notes || null,
         };
         if (!payload.display_name || !payload.warez_username || !payload.warez_user_id || !payload.price_per_credit) {
-          return ok({ error: "Campos obrigatórios faltando" }, 400);
+          return ok(req, { error: "Campos obrigatórios faltando" }, 400);
         }
         const { data, error } = await supabase.from("reseller_links").insert(payload).select().single();
         if (error) {
           if (error.code === "23505" && error.message.includes("reseller_links_slug_key")) {
-            return ok({ error: `Já existe um revendedor com o link "${payload.slug}". Use outro slug.` }, 400);
+            return ok(req, { error: `Já existe um revendedor com o link "${payload.slug}". Use outro slug.` }, 400);
           }
           throw error;
         }
-        return ok({ link: data });
+        return ok(req, { link: data });
       }
 
       case "update-link": {
         const id = String(body.id || "");
-        if (!id) return ok({ error: "id obrigatório" }, 400);
+        if (!id) return ok(req, { error: "id obrigatório" }, 400);
         const patch: Record<string, unknown> = {};
         for (const k of ["slug", "display_name", "warez_username", "warez_user_id", "credits", "amount", "price_per_credit", "min_credits", "max_credits", "is_active", "notes", "whatsapp", "email"]) {
           if (k in body) patch[k] = body[k];
@@ -135,15 +162,15 @@ Deno.serve(async (req) => {
         }
         const { data, error } = await supabase.from("reseller_links").update(patch).eq("id", id).select().single();
         if (error) throw error;
-        return ok({ link: data });
+        return ok(req, { link: data });
       }
 
       case "delete-link": {
         const id = String(body.id || "");
-        if (!id) return ok({ error: "id obrigatório" }, 400);
+        if (!id) return ok(req, { error: "id obrigatório" }, 400);
         const { error } = await supabase.from("reseller_links").delete().eq("id", id);
         if (error) throw error;
-        return ok({ success: true });
+        return ok(req, { success: true });
       }
 
       // -------- Purchases --------
@@ -156,12 +183,12 @@ Deno.serve(async (req) => {
         if (since) q = q.gte("created_at", since);
         const { data, error } = await q;
         if (error) throw error;
-        return ok({ purchases: data || [] });
+        return ok(req, { purchases: data || [] });
       }
 
       case "reprocess-purchase": {
         const id = String(body.id || "");
-        if (!id) return ok({ error: "id obrigatório" }, 400);
+        if (!id) return ok(req, { error: "id obrigatório" }, 400);
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/reseller-process-recharge`, {
           method: "POST",
           headers: {
@@ -171,12 +198,12 @@ Deno.serve(async (req) => {
           body: JSON.stringify({ purchase_id: id }),
         });
         const data = await r.json().catch(() => ({}));
-        return ok({ result: data }, r.ok ? 200 : 400);
+        return ok(req, { result: data }, r.ok ? 200 : 400);
       }
 
       case "mark-paid": {
         const id = String(body.id || "");
-        if (!id) return ok({ error: "id obrigatório" }, 400);
+        if (!id) return ok(req, { error: "id obrigatório" }, 400);
         const { data: upd, error } = await supabase
           .from("reseller_credit_purchases")
           .update({ status: "paid", paid_at: new Date().toISOString() })
@@ -185,7 +212,7 @@ Deno.serve(async (req) => {
           .select()
           .maybeSingle();
         if (error) throw error;
-        if (!upd) return ok({ error: "Compra não está pendente" }, 400);
+        if (!upd) return ok(req, { error: "Compra não está pendente" }, 400);
         // dispara recarga
         const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/reseller-process-recharge`, {
           method: "POST",
@@ -196,29 +223,29 @@ Deno.serve(async (req) => {
           body: JSON.stringify({ purchase_id: id }),
         });
         const data = await r.json().catch(() => ({}));
-        return ok({ success: true, recharge: data });
+        return ok(req, { success: true, recharge: data });
       }
 
       case "close-purchase": {
         const id = String(body.id || "");
-        if (!id) return ok({ error: "id obrigatório" }, 400);
+        if (!id) return ok(req, { error: "id obrigatório" }, 400);
         const { error } = await supabase
           .from("reseller_credit_purchases")
           .update({ status: "cancelled" })
           .eq("id", id);
         if (error) throw error;
-        return ok({ success: true });
+        return ok(req, { success: true });
       }
 
       case "delete-purchase": {
         const id = String(body.id || "");
-        if (!id) return ok({ error: "id obrigatório" }, 400);
+        if (!id) return ok(req, { error: "id obrigatório" }, 400);
         const { error } = await supabase
           .from("reseller_credit_purchases")
           .delete()
           .eq("id", id);
         if (error) throw error;
-        return ok({ success: true });
+        return ok(req, { success: true });
       }
 
 
@@ -230,12 +257,12 @@ Deno.serve(async (req) => {
         (data || []).forEach((r: { config_key: string; config_value: string }) => {
           obj[r.config_key] = r.config_value;
         });
-        return ok({ config: obj });
+        return ok(req, { config: obj });
       }
 
       case "update-config": {
         const entries = body.entries as Record<string, string> | undefined;
-        if (!entries || typeof entries !== "object") return ok({ error: "entries obrigatório" }, 400);
+        if (!entries || typeof entries !== "object") return ok(req, { error: "entries obrigatório" }, 400);
         const rows = Object.entries(entries).map(([config_key, config_value]) => ({
           config_key,
           config_value: String(config_value),
@@ -243,7 +270,7 @@ Deno.serve(async (req) => {
         }));
         const { error } = await supabase.from("system_config").upsert(rows);
         if (error) throw error;
-        return ok({ success: true });
+        return ok(req, { success: true });
       }
 
       // -------- Dashboard --------
@@ -295,7 +322,7 @@ Deno.serve(async (req) => {
           series.push({ date: dateStr, revenue: rev, cost: cst, profit: rev - cst });
         }
 
-        return ok({
+        return ok(req, {
           kpis: {
             revenue_month: revenueMonth,
             cost_month: costMonth,
@@ -318,15 +345,15 @@ Deno.serve(async (req) => {
         if (status) q = q.eq("fastdepix_status", status);
         const { data, error } = await q;
         if (error) throw error;
-        return ok({ payments: data || [] });
+        return ok(req, { payments: data || [] });
       }
 
       case "delete-payment": {
         const id = String(body.id || "");
-        if (!id) return ok({ error: "id obrigatório" }, 400);
+        if (!id) return ok(req, { error: "id obrigatório" }, 400);
         const { error } = await supabase.from("payments").delete().eq("id", id);
         if (error) throw error;
-        return ok({ success: true });
+        return ok(req, { success: true });
       }
 
       case "customers-dashboard": {
@@ -380,7 +407,7 @@ Deno.serve(async (req) => {
           series.push({ date: dateStr, revenue: rev, cost: cst, profit: rev - cst });
         }
 
-        return ok({
+        return ok(req, {
           kpis: {
             revenue_month: revenueMonth,
             cost_month: costMonth,
@@ -402,11 +429,11 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(300);
         if (error) throw error;
-        return ok({ logs: data || [] });
+        return ok(req, { logs: data || [] });
       }
       
       default:
-        return ok({ error: "ação inválida" }, 400);
+        return ok(req, { error: "ação inválida" }, 400);
     }
   } catch (err) {
     const anyErr = err as { message?: string; details?: string; hint?: string; code?: string };
@@ -414,6 +441,6 @@ Deno.serve(async (req) => {
       (anyErr && (anyErr.message || anyErr.details || anyErr.hint)) ||
       (typeof err === "string" ? err : JSON.stringify(err));
     console.error("[reseller-admin] error", message, anyErr?.code || "", anyErr?.details || "", anyErr?.hint || "");
-    return ok({ error: message || "Erro desconhecido" }, 500);
+    return ok(req, { error: message || "Erro desconhecido" }, 500);
   }
 });
