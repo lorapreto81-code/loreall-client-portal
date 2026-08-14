@@ -98,32 +98,40 @@ Deno.serve(async (req) => {
     let customerId: string | number = 0;
 
     if (context === "reseller") {
-      if (!slug) return json({ error: "Slug é obrigatório para revendedores." }, 400, {}, req);
-      
-      console.log(`[otp-request] Reseller mode. Slug: ${slug}, Key: ${key}`);
-      
-      // Search in reseller_links
-      // phoneKey extracts last 10 digits. We need to match this against the stored whatsapp.
-      const { data: link, error: linkError } = await supabase
-        .from("reseller_links")
-        .select("id, display_name, whatsapp")
-        .eq("slug", slug.toLowerCase())
-        .maybeSingle();
+      let link: { id: string; display_name: string; whatsapp: string | null } | null = null;
 
-      if (linkError) throw linkError;
-      if (!link) return json({ error: "Revendedor não encontrado." }, 404, {}, req);
-      
-      if (!link.whatsapp) {
-        return json({ error: "Este revendedor não possui WhatsApp cadastrado para autenticação. Contate o suporte." }, 403, {}, req);
-      }
-
-      const linkPhoneKey = phoneKey(onlyDigits(link.whatsapp));
-      if (linkPhoneKey !== key) {
-        return json({ error: "Número de WhatsApp incorreto para este revendedor." }, 401, {}, req);
+      if (slug) {
+        console.log(`[otp-request] Reseller mode. Slug: ${slug}, Key: ${key}`);
+        const { data, error: linkError } = await supabase
+          .from("reseller_links")
+          .select("id, display_name, whatsapp")
+          .eq("slug", slug.toLowerCase())
+          .maybeSingle();
+        if (linkError) throw linkError;
+        link = data;
+        if (!link) return json({ error: "Revendedor não encontrado." }, 404, {}, req);
+        if (!link.whatsapp) {
+          return json({ error: "Este revendedor não possui WhatsApp cadastrado para autenticação. Contate o suporte." }, 403, {}, req);
+        }
+        if (phoneKey(onlyDigits(link.whatsapp)) !== key) {
+          return json({ error: "Número de WhatsApp incorreto para este revendedor." }, 401, {}, req);
+        }
+      } else {
+        // Sem slug: identifica o revendedor só pelo WhatsApp (entrada genérica)
+        console.log(`[otp-request] Reseller mode sem slug. Buscando por WhatsApp. Key: ${key}`);
+        const { data: allLinks, error: listError } = await supabase
+          .from("reseller_links")
+          .select("id, display_name, whatsapp")
+          .not("whatsapp", "is", null);
+        if (listError) throw listError;
+        link = (allLinks || []).find((l) => phoneKey(onlyDigits(l.whatsapp || ""))) === key ? (allLinks || []).find((l) => phoneKey(onlyDigits(l.whatsapp || "")) === key) : null;
+        // The prompt has a slightly different logic for finding: (allLinks || []).find((l) => phoneKey(onlyDigits(l.whatsapp || "")) === key) || null;
+        link = (allLinks || []).find((l) => phoneKey(onlyDigits(l.whatsapp || "")) === key) || null;
+        if (!link) return json({ error: "Nenhum revendedor encontrado para esse WhatsApp." }, 404, {}, req);
       }
 
       matches = [link];
-      targetPhoneDigits = onlyDigits(link.whatsapp);
+      targetPhoneDigits = onlyDigits(link.whatsapp || "");
       firstName = link.display_name;
       customerId = link.id;
     } else {
