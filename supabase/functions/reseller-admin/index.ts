@@ -84,12 +84,6 @@ Deno.serve(async (req) => {
     const pwd = req.headers.get("x-admin-password");
     if (!isAdminPassword(pwd)) return unauthorized(req);
 
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
 
     switch (action) {
