@@ -211,6 +211,22 @@ export default function Revendedor() {
     setStatus(null);
   };
 
+  const [purchases, setPurchases] = useState<any[]>([]);
+  useEffect(() => {
+    if (!isAuthenticated || !customer) return;
+    fetch(`${SUPABASE_URL}/functions/v1/reseller-admin?action=my-purchases`, {
+      headers: { 
+        apikey: ANON_KEY, 
+        Authorization: `Bearer ${ANON_KEY}`, 
+        "x-customer-token": (customer as any).token || "" 
+      },
+    })
+      .then((r) => r.json())
+      .then((d) => setPurchases(d.purchases || []))
+      .catch(() => {});
+  }, [isAuthenticated, customer, SUPABASE_URL, ANON_KEY]);
+
+
   const retryRecharge = async () => {
     if (!pix) return;
     toast.info("Reprocessando recarga...");
@@ -411,6 +427,51 @@ export default function Revendedor() {
             >
               {generating ? (
                 <span className="inline-flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Gerando...
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-2">
+                  <Zap className="w-4 h-4" /> Comprar Créditos
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {isAuthenticated && !pix && purchases.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-md shadow-blue-900/5 dark:shadow-black/40">
+            <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-[0.18em] uppercase mb-4 flex items-center gap-2">
+              <Sparkles className="w-3 h-3 text-blue-500" /> Minhas Recargas
+            </h3>
+            
+            <div className="space-y-3">
+              {purchases.map((p) => (
+                <div key={p.id} className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tight mb-0.5">
+                      {new Date(p.created_at).toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
+                      {p.package_credits} Créditos · {formatBRL(Number(p.amount))}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-md tracking-wider border ${
+                      p.recharge_status === "recharged" 
+                        ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" 
+                        : p.status === "pending"
+                        ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800"
+                        : "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
+                    }`}>
+                      {p.recharge_status === "recharged" ? "Concluída" : p.status === "pending" ? "Pendente" : "Cancelada"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
                   <Loader2 className="h-4 w-4 animate-spin" /> Gerando PIX...
                 </span>
               ) : (
