@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCustomerSession, isAdminPassword } from "../_shared/auth.ts";
+import { sendWhatsappText } from "../_shared/uazapi.ts";
 
 import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
@@ -34,6 +35,23 @@ function addDaysISO(days: number): string {
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
+
+function addHoursISO(hours: number): string {
+  const d = new Date();
+  d.setHours(d.getHours() + hours);
+  return d.toISOString();
+}
+
+const SERVER_TELAS_MAP: Record<string, number[]> = {
+  uniplay_p2p: [1],
+  uniplay_iptv: [1, 2],
+  warez: [1, 2, 3],
+};
+const SERVER_HORAS_MAP: Record<string, number[]> = {
+  uniplay_p2p: [1, 2, 3, 6],
+  uniplay_iptv: [1, 2, 3, 6],
+  warez: [1, 2, 3, 4],
+};
 
 async function getConfigMap(supabase: ReturnType<typeof createClient>): Promise<Record<string, string>> {
   const { data } = await supabase.from("system_config").select("config_key, config_value");
@@ -305,11 +323,20 @@ Deno.serve(async (req) => {
       const usuario = String(body.usuario || "").trim();
       const password = String(body.password || "").trim();
       const planIdOverride = body.plan_id ? Number(body.plan_id) : null;
-      const daysOverride = body.trial_days ? Number(body.trial_days) : null;
+      const servidor = String(body.servidor || "").trim();
+      const telasEscolhidas = Number(body.telas || 0);
+      const horas = Number(body.trial_hours || 0);
 
       if (!signupId) return jsonRes({ error: "signup_id obrigatório" }, 400, req);
       if (usuario.length < 2 || usuario.length > 32) return jsonRes({ error: "Usuário inválido" }, 400, req);
       if (password.length < 3 || password.length > 32) return jsonRes({ error: "Senha inválida" }, 400, req);
+      if (!SERVER_TELAS_MAP[servidor]) return jsonRes({ error: "Servidor inválido" }, 400, req);
+      if (!SERVER_TELAS_MAP[servidor].includes(telasEscolhidas)) {
+        return jsonRes({ error: `Esse servidor não oferece ${telasEscolhidas} tela(s)` }, 400, req);
+      }
+      if (!SERVER_HORAS_MAP[servidor].includes(horas)) {
+        return jsonRes({ error: `Esse servidor não oferece teste de ${horas}h` }, 400, req);
+      }
 
       const { data: signup, error: getErr } = await supabase
         .from("trial_signups")
@@ -324,8 +351,7 @@ Deno.serve(async (req) => {
       const cfg = await getConfigMap(supabase);
       const productId = Number(cfg.trial_product_id);
       const planId = planIdOverride || Number(cfg.trial_plan_id);
-      const telas = Number(cfg.trial_telas || 1);
-      const days = daysOverride || Number(signup.trial_days || cfg.trial_days || 1);
+      const telas = telasEscolhidas;
       const supportWhatsapp = cfg.trial_support_whatsapp || "";
       if (!productId || !planId) {
         return jsonRes({ error: "Configure product_id e plan_id na aba Indicação antes de aprovar" }, 500, req);
@@ -334,7 +360,8 @@ Deno.serve(async (req) => {
       const tgToken = Deno.env.get("TOPGESTOR_API_TOKEN");
       if (!tgToken) return jsonRes({ error: "TopGestor não configurado" }, 500, req);
 
-      const observacao = `Teste grátis via indicação. Indicado por: ${signup.referrer_customer_name || "ID " + signup.referrer_customer_id} (cód ${signup.referral_code}). Aprovado manualmente.`;
+      const servidorLabel = { uniplay_p2p: "Uniplay P2P", uniplay_iptv: "Uniplay IPTV", warez: "Warez" }[servidor as keyof typeof SERVER_TELAS_MAP];
+      const observacao = `Teste grátis via indicação. Servidor: ${servidorLabel}. Indicado por: ${signup.referrer_customer_name || "ID " + signup.referrer_customer_id} (cód ${signup.referral_code}). Aprovado manualmente.`;
 
       const createPayload: Record<string, unknown> = {
         name: signup.name,
@@ -344,7 +371,7 @@ Deno.serve(async (req) => {
         telas,
         usuario,
         password,
-        data_de_vencimento: addDaysISO(days),
+        data_de_vencimento: addHoursISO(horas),
         observacao,
         send_whatsapp: false,
       };
@@ -386,11 +413,30 @@ Deno.serve(async (req) => {
           usuario,
           password,
           plan_id: planId,
-          trial_days: days,
+          trial_hours: horas,
           approved_at: new Date().toISOString(),
           approved_by: "admin",
         })
         .eq("id", signupId);
+
+      // WhatsApp welcome message
+      try {
+        const msg = [
+          `🎉 *Parabéns, ${signup.name.split(" ")[0]}!*`,
+          "",
+          `Seu teste grátis do *Loreall Play* de ${horas}h já está liberado!`,
+          "",
+          `👤 Usuário: *${usuario}*`,
+          `🔑 Senha: *${password}*`,
+          "",
+          `📲 Instalação passo a passo: https://cliente.loreallplay.com/instalacao`,
+          "",
+          supportWhatsapp ? `Qualquer dúvida, fala com a gente: ${supportWhatsapp}` : "Qualquer dúvida, é só chamar por aqui!",
+        ].join("\n");
+        await sendWhatsappText(signup.whatsapp, msg);
+      } catch (e) {
+        console.error("[approve-signup] whatsapp notify failed", e);
+      }
 
       // Register referral (pending_payment) — bonus fires when referred pays 1st PIX
       const { error: refErr } = await supabase.from("referrals").insert({
@@ -410,7 +456,7 @@ Deno.serve(async (req) => {
         customer_id: referredId,
         usuario,
         password,
-        trial_days: days,
+        trial_hours: horas,
         support_whatsapp: supportWhatsapp,
       });
     }

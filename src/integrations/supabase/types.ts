@@ -652,6 +652,7 @@ export type Database = {
           status: string
           topgestor_customer_id: number | null
           trial_days: number | null
+          trial_hours: number | null
           updated_at: string
           usuario: string | null
           whatsapp: string
@@ -672,6 +673,7 @@ export type Database = {
           status?: string
           topgestor_customer_id?: number | null
           trial_days?: number | null
+          trial_hours?: number | null
           updated_at?: string
           usuario?: string | null
           whatsapp: string
@@ -692,6 +694,7 @@ export type Database = {
           status?: string
           topgestor_customer_id?: number | null
           trial_days?: number | null
+          trial_hours?: number | null
           updated_at?: string
           usuario?: string | null
           whatsapp?: string
