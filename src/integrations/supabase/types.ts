@@ -434,6 +434,77 @@ export type Database = {
         }
         Relationships: []
       }
+      reseller_signups: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          credits: number
+          desired_password: string
+          desired_username: string
+          email: string
+          fastdepix_transaction_id: string | null
+          id: string
+          ip_address: string | null
+          name: string
+          qr_code_expires_at: string | null
+          qr_code_text: string | null
+          qr_code_url: string | null
+          reseller_link_id: string | null
+          status: string
+          warez_user_id: string | null
+          whatsapp: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          credits: number
+          desired_password: string
+          desired_username: string
+          email: string
+          fastdepix_transaction_id?: string | null
+          id?: string
+          ip_address?: string | null
+          name: string
+          qr_code_expires_at?: string | null
+          qr_code_text?: string | null
+          qr_code_url?: string | null
+          reseller_link_id?: string | null
+          status?: string
+          warez_user_id?: string | null
+          whatsapp: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          credits?: number
+          desired_password?: string
+          desired_username?: string
+          email?: string
+          fastdepix_transaction_id?: string | null
+          id?: string
+          ip_address?: string | null
+          name?: string
+          qr_code_expires_at?: string | null
+          qr_code_text?: string | null
+          qr_code_url?: string | null
+          reseller_link_id?: string | null
+          status?: string
+          warez_user_id?: string | null
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_signups_reseller_link_id_fkey"
+            columns: ["reseller_link_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       syncpay_plans: {
         Row: {
           amount: number
