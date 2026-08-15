@@ -169,7 +169,7 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
                           "Content-Type": "application/json",
                           "x-customer-token": getCustomerToken() || "",
                         },
-                        body: JSON.stringify({ subscription_id: subscription?.syncpay_subscription_id }),
+                        body: JSON.stringify({ subscription_id: subscription?.subscription_id }),
                       }
                     );
                     if (res.ok) {
