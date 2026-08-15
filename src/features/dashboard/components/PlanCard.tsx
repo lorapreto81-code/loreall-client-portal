@@ -1,8 +1,21 @@
-import { CalendarDays, Monitor, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap } from "lucide-react";
+import { CalendarDays, Monitor, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap, XCircle } from "lucide-react";
 import { Customer } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
 import { getStatusPill, telasLabel } from "@/utils/constants";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
+import { 
+  AlertDialog, 
+  AlertDialogTrigger, 
+  AlertDialogContent, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogCancel, 
+  AlertDialogAction 
+} from "@/components/ui/alert-dialog";
+import { getCustomerToken } from "@/store/authStore";
+import { toast } from "sonner";
 
 interface PlanCardProps {
   customer: Customer;
@@ -123,12 +136,57 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
               </div>
             )}
           </div>
-          <button
-            onClick={onRenewClick}
-            className="w-full text-xs font-medium text-muted-foreground border border-border rounded-lg py-2 flex items-center justify-center gap-1.5 hover:bg-muted/50 transition-colors"
-          >
-            <Settings className="h-3.5 w-3.5" /> Gerenciar assinatura
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                className="w-full text-xs font-medium text-muted-foreground border border-border rounded-lg py-2 flex items-center justify-center gap-1.5 hover:bg-muted/50 transition-colors"
+              >
+                <Settings className="h-3.5 w-3.5" /> Gerenciar assinatura
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="w-[90%] max-w-[400px] rounded-2xl border-white/10 bg-background/95 backdrop-blur-xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-destructive" />
+                  Cancelar assinatura automática?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-sm leading-relaxed">
+                  Ao cancelar, você para de ser cobrado automaticamente. 
+                  Seu acesso continuará válido até <strong>{formatDate(customer.data_de_vencimento)}</strong>.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+                <AlertDialogCancel className="rounded-xl border-white/5 hover:bg-white/5 mt-0">Manter ativa</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={async () => {
+                    const res = await fetch(
+                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/syncpay-subscriptions?action=customer-cancel-subscription`,
+                      {
+                        method: "POST",
+                        headers: {
+                          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                          "Content-Type": "application/json",
+                          "x-customer-token": getCustomerToken() || "",
+                        },
+                        body: JSON.stringify({ subscription_id: subscription?.syncpay_subscription_id }),
+                      }
+                    );
+                    if (res.ok) {
+                      toast.success("Assinatura cancelada com sucesso.");
+                      // Forçamos um refetch para atualizar o estado no card
+                      window.location.reload(); 
+                    } else {
+                      toast.error("Não foi possível cancelar agora. Tente novamente mais tarde.");
+                    }
+                  }}
+                  className="rounded-xl bg-destructive hover:bg-destructive/90 text-white"
+                >
+                  Confirmar cancelamento
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
 
