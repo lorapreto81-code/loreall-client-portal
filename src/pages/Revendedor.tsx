@@ -10,7 +10,7 @@ import geradorProLogo from "@/assets/gerador-pro-logo.png";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, getCustomerToken } from "@/store/authStore";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -221,7 +221,7 @@ export default function Revendedor() {
       headers: { 
         apikey: ANON_KEY, 
         Authorization: `Bearer ${ANON_KEY}`, 
-        "x-customer-token": (customer as any).token || "" 
+        "x-customer-token": getCustomerToken() || "" 
       },
     })
       .then((r) => r.json())
