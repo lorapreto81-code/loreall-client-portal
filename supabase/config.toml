@@ -40,3 +40,9 @@ verify_jwt = false
 verify_jwt = false
 [functions.reseller-signup-complete]
 verify_jwt = false
+
+[functions.admin-confirm-payment]
+verify_jwt = false
+
+[functions.syncpay-subscription-status]
+verify_jwt = false
