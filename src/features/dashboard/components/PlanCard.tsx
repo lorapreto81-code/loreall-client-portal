@@ -136,6 +136,12 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Botão de Cancelar Assinatura (Aparece em qualquer estado não cancelado) */}
+      {subscription && subscription.status !== 'cancelled' && (
+        <div className={isFullyActive ? "" : "mt-2"}>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button
@@ -174,7 +180,6 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
                     );
                     if (res.ok) {
                       toast.success("Assinatura cancelada com sucesso.");
-                      // Forçamos um refetch para atualizar o estado no card
                       window.location.reload(); 
                     } else {
                       toast.error("Não foi possível cancelar agora. Tente novamente mais tarde.");
