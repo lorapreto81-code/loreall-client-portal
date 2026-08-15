@@ -244,6 +244,7 @@ Deno.serve(async (req) => {
       phone: key,
       customer_id: typeof customerId === 'number' ? customerId : null,
       reseller_id: typeof customerId === 'string' ? customerId : null,
+      matched_customer_ids: context === "customer" ? matches.map((c) => Number(c.id)) : [],
       code_hash,
       expires_at: new Date(Date.now() + CODE_TTL_MINUTES * 60_000).toISOString(),
       ip_address: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
