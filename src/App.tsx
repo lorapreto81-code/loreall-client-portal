@@ -34,7 +34,7 @@ const App = () => (
           <Route path="/revendedor" element={<Revendedor />} />
           <Route path="/revendedor/:slug" element={<Revendedor />} />
           <Route path="/indicacao/:code" element={<IndicacaoTeste />} />
-          <Route path="/indicacao" element={<IndicacaoTeste />} />
+          
           <Route path="/instalacao" element={<Instalacao />} />
           
           <Route path="*" element={<NotFound />} />

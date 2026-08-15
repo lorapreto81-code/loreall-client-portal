@@ -1,12 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
+import { securityHeadersFor } from "../_shared/security.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-async function getConfig(supabase: ReturnType<typeof createClient>, key: string): Promise<string | null> {
+const getConfig = async (supabase: ReturnType<typeof createClient>, key: string): Promise<string | null> => {
   const { data } = await supabase.from("system_config").select("config_value").eq("config_key", key).maybeSingle();
   return data?.config_value ?? null;
 }
@@ -47,7 +43,7 @@ function formatWhatsapp(digits: string): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
 
   try {
     const supabase = createClient(
@@ -58,7 +54,7 @@ Deno.serve(async (req) => {
     const { signup_id } = await req.json().catch(() => ({}));
     if (!signup_id) {
       return new Response(JSON.stringify({ ok: false, error: "signup_id obrigatório" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
 
@@ -70,12 +66,12 @@ Deno.serve(async (req) => {
 
     if (sErr || !signup) {
       return new Response(JSON.stringify({ ok: false, error: "Cadastro não encontrado" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
     if (signup.status === "completed") {
       return new Response(JSON.stringify({ ok: true, alreadyDone: true }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
 
@@ -84,7 +80,7 @@ Deno.serve(async (req) => {
     if (!baseUrl || !token) {
       await supabase.from("reseller_signups").update({ status: "failed" }).eq("id", signup_id);
       return new Response(JSON.stringify({ ok: false, error: "WAREZ API não configurada" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
 
@@ -120,7 +116,7 @@ Deno.serve(async (req) => {
       await supabase.from("reseller_signups").update({ status: "failed" }).eq("id", signup_id);
       console.error("[reseller-signup-complete] WAREZ create falhou (rede)", msg);
       return new Response(JSON.stringify({ ok: false, error: msg }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 502, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
     clearTimeout(to);
@@ -139,7 +135,7 @@ Deno.serve(async (req) => {
       await supabase.from("reseller_signups").update({ status: "failed" }).eq("id", signup_id);
       console.error("[reseller-signup-complete] WAREZ recusou", warezRes.status, warezData);
       return new Response(JSON.stringify({ ok: false, error: warezData?.message || `WAREZ ${warezRes.status}` }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 502, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
 
@@ -171,7 +167,7 @@ Deno.serve(async (req) => {
       console.error("[reseller-signup-complete] falha ao criar reseller_links", linkErr);
       await supabase.from("reseller_signups").update({ status: "completed_no_link", warez_user_id: warezUserId }).eq("id", signup_id);
       return new Response(JSON.stringify({ ok: false, error: "Revenda criada no Warez mas falhou ao salvar localmente. Verificar manualmente." }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
       });
     }
 
@@ -202,13 +198,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ ok: true, warez_user_id: warezUserId, slug }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     console.error("[reseller-signup-complete]", message);
     return new Response(JSON.stringify({ ok: false, error: message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...securityHeadersFor(req), "Content-Type": "application/json" },
     });
   }
 });
