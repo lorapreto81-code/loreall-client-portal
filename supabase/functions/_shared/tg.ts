@@ -111,3 +111,17 @@ export async function tgSearchCustomers(query: string): Promise<Record<string, u
 
   return merged;
 }
+
+export async function tgGetCustomersByIds(ids: number[]): Promise<Record<string, unknown>[]> {
+  const results = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const r = await fetch(`${TG_API_BASE}/customers/${id}`, { headers: tgHeaders() });
+        if (!r.ok) return null;
+        const j = await r.json().catch(() => null);
+        return (j?.data ?? j) as Record<string, unknown> | null;
+      } catch { return null; }
+    })
+  );
+  return results.filter((c): c is Record<string, unknown> => !!c);
+}

@@ -45,6 +45,7 @@ export type Database = {
           expires_at: string
           id: string
           ip_address: string | null
+          matched_customer_ids: Json
           phone: string
           reseller_id: string | null
           updated_at: string
@@ -58,6 +59,7 @@ export type Database = {
           expires_at: string
           id?: string
           ip_address?: string | null
+          matched_customer_ids?: Json
           phone: string
           reseller_id?: string | null
           updated_at?: string
@@ -71,6 +73,7 @@ export type Database = {
           expires_at?: string
           id?: string
           ip_address?: string | null
+          matched_customer_ids?: Json
           phone?: string
           reseller_id?: string | null
           updated_at?: string

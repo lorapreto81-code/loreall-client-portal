@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { signCustomerToken } from "../_shared/auth.ts";
-import { tgSearchCustomers, sanitizeCustomerForClient } from "../_shared/tg.ts";
+import { tgSearchCustomers, sanitizeCustomerForClient, tgGetCustomersByIds } from "../_shared/tg.ts";
 import { hashOtp, onlyDigits, phoneKey } from "../_shared/otp.ts";
 import { otpVerifySchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
@@ -94,7 +94,10 @@ Deno.serve(async (req) => {
     } else {
       // Logic for customer verification
       const searchIdentifier = isEmail ? raw.slice(0, 100) : digits;
-      const customers = await tgSearchCustomers(searchIdentifier);
+      const matchedIds: number[] = Array.isArray(row.matched_customer_ids) ? row.matched_customer_ids : [];
+      const customers = matchedIds.length > 0
+        ? await tgGetCustomersByIds(matchedIds)
+        : await tgSearchCustomers(searchIdentifier); // fallback pra linhas antigas, criadas antes dessa mudança
       const matches = customers.filter((c) => {
         if (isEmail) {
           const cEmail = String(c.email || "").toLowerCase().trim();
