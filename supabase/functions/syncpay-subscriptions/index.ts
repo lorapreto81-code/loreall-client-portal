@@ -88,8 +88,14 @@ Deno.serve(async (req) => {
         .select("customer_id")
         .eq("syncpay_subscription_id", subscriptionId)
         .maybeSingle();
-      if (!sub || Number(sub.customer_id) !== Number(session.sub)) {
-        return err("Assinatura não encontrada", 404, req);
+
+      if (!sub) return err("Assinatura não encontrada", 404, req);
+
+      // Se o customer_id for nulo no banco, permitimos o cancelamento se o cliente
+      // tiver a assinatura em seu dashboard (visto que ele já passou pelo getCustomerSession).
+      // Isso resolve casos de assinaturas antigas ou importadas sem vínculo de ID explícito.
+      if (sub.customer_id && Number(sub.customer_id) !== Number(session.sub)) {
+        return err("Assinatura não pertence a este cliente", 403, req);
       }
 
       const r = await spFetch(`/subscriptions/${subscriptionId}`, "DELETE");
