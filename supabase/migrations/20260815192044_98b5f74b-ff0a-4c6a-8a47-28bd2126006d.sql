@@ -1,0 +1,1 @@
+REVOKE SELECT ON public.reseller_signups FROM authenticated;
