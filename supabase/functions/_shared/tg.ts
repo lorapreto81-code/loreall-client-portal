@@ -66,11 +66,15 @@ export async function tgSearchCustomers(query: string): Promise<Record<string, u
   const digits = query.replace(/\D/g, "");
   const isPhone = digits.length >= 8;
 
-  if (!isPhone) {
-    const r = await fetch(`${TG_API_BASE}/customers/search/${encodeURIComponent(query)}`, { headers: tgHeaders() });
-    if (!r.ok) return [];
-    return normalizeList(await r.json().catch(() => null));
-  }
+  // PRIORITY 1: Search exactly as provided.
+  const initialRes = await fetch(`${TG_API_BASE}/customers/search/${encodeURIComponent(query)}`, { headers: tgHeaders() });
+  const initialList = initialRes.ok ? normalizeList(await initialRes.json().catch(() => null)) : [];
+  
+  if (initialList.length > 0) return initialList;
+
+  if (!isPhone) return [];
+
+  // PRIORITY 2: Only if exact search fails, try variants.
 
   // OPTIMIZATION: Parallelize search across variants but only use variants that are actually likely to match.
   // We limit the number of variants to avoid hitting TopGestor rate limits too hard.

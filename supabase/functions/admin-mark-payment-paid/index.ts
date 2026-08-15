@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
         paid_at: payment.paid_at || nowIso,
         renewed_at: nowIso,
         renewal_response: renewalResponse,
+        metadata: { ...payment.metadata, manual_confirmation: true, admin_action: true }
       })
       .eq("id", payment.id);
 
