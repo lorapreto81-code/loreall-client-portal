@@ -38,3 +38,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.reseller-signup]
 verify_jwt = false
+[functions.reseller-signup-complete]
+verify_jwt = false

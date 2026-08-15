@@ -392,6 +392,40 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (!purchase) {
+        // Tenta achar em reseller_signups (cadastro automático de revenda)
+        if (!payment) {
+          const { data: signup } = await supabase
+            .from("reseller_signups")
+            .select("*")
+            .eq("fastdepix_transaction_id", txId)
+            .maybeSingle();
+
+          if (signup && isPaid && signup.status === "pending_payment") {
+            const { data: locked } = await supabase
+              .from("reseller_signups")
+              .update({ status: "processing" })
+              .eq("id", signup.id)
+              .eq("status", "pending_payment")
+              .select()
+              .maybeSingle();
+            if (locked) {
+              try {
+                await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/reseller-signup-complete`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({ signup_id: signup.id }),
+                });
+              } catch (e) { console.error("[syncpay-webhook] reseller-signup invoke failed", e); }
+            }
+            return new Response(JSON.stringify({ ok: true, kind: "reseller-signup" }), {
+              status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+
         console.warn("[syncpay-webhook] transaction not found", txId);
         return new Response(JSON.stringify({ ok: true, ignored: "tx not found" }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
