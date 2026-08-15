@@ -7,9 +7,8 @@
 //   sync-plans   (busca no SyncPay e espelha no banco local)
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isAdminPassword } from "../_shared/auth.ts";
-
-import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
+import { isAdminPassword, getCustomerSession } from "../_shared/auth.ts";
+import { corsHeadersFor } from "../_shared/security.ts";
 
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
@@ -70,17 +69,39 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeadersFor(req) });
 
   try {
-    const pwd = req.headers.get("x-admin-password");
-    if (!isAdminPassword(pwd)) return err("Unauthorized", 401, req);
-
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "";
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+
+    if (action === "customer-cancel-subscription") {
+      const session = await getCustomerSession(req);
+      if (!session || session.role !== "customer") return err("Unauthorized", 401, req);
+      const subscriptionId = body.subscription_id;
+      if (!subscriptionId) return err("subscription_id required", 400, req);
+
+      const { data: sub } = await supabase
+        .from("syncpay_subscriptions")
+        .select("customer_id")
+        .eq("syncpay_subscription_id", subscriptionId)
+        .maybeSingle();
+      if (!sub || Number(sub.customer_id) !== Number(session.sub)) {
+        return err("Assinatura não encontrada", 404, req);
+      }
+
+      const r = await spFetch(`/subscriptions/${subscriptionId}`, "DELETE");
+      if (!r.ok) return err(`SyncPay: ${r.status}`, r.status, req);
+      await supabase.from("syncpay_subscriptions")
+        .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+        .eq("syncpay_subscription_id", subscriptionId);
+      return ok({ success: true }, 200, req);
+    }
+
+    const pwd = req.headers.get("x-admin-password");
+    if (!isAdminPassword(pwd)) return err("Unauthorized", 401, req);
 
     switch (action) {
       case "list-plans": {
