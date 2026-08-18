@@ -545,8 +545,8 @@ const IndicacaoTeste = () => {
             <BenefitRow icon={<ShieldCheck className="h-4 w-4" />} text="Sem cartão de crédito, sem compromisso" />
             <BenefitRow icon={<MessageCircle className="h-4 w-4" />} text="Suporte humano no WhatsApp" />
           </div>
+          </>)}
         </SoftCard>
-        )}
 
         {choice === "payment" && (
           <SoftCard className="p-6 space-y-4 text-center">
