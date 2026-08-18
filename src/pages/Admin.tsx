@@ -8,6 +8,7 @@ import ResellerConfigTab from "@/components/admin/ResellerConfigTab";
 import CustomersPaymentsTab from "@/components/admin/CustomersPaymentsTab";
 import CustomersDashboardTab from "@/components/admin/CustomersDashboardTab";
 import ReferralTrialConfigTab from "@/components/admin/ReferralTrialConfigTab";
+import ReferralStatsTab from "@/components/admin/ReferralStatsTab";
 import TrialSignupsTab from "@/components/admin/TrialSignupsTab";
 import PixProviderTab from "@/components/admin/PixProviderTab";
 import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
