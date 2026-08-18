@@ -187,6 +187,33 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_tier_config: {
+        Row: {
+          bonus_days: number
+          bonus_description: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          min_referrals: number
+        }
+        Insert: {
+          bonus_days: number
+          bonus_description?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          min_referrals: number
+        }
+        Update: {
+          bonus_days?: number
+          bonus_description?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          min_referrals?: number
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           bonus_days: number
