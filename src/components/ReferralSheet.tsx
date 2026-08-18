@@ -47,6 +47,17 @@ const ReferralSheet = ({ open, onClose }: Props) => {
     setCopied(kind);
     toast.success("Copiado!");
     setTimeout(() => setCopied(null), 1500);
+    if (kind === "link" && code) {
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/referrals-api?action=track-copy`, {
+        method: "POST",
+        headers: {
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      }).catch(() => {});
+    }
   };
 
   const share = () => {
