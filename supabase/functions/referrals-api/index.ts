@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
         .eq("code", code)
         .maybeSingle();
       if (!data) return jsonRes({ valid: false }, 200, req);
-      return jsonRes({ valid: true, ...data }, req);
+      return jsonRes({ valid: true, ...data }, 200, req);
     }
 
     // ----- list-by-referrer -----
@@ -144,7 +144,62 @@ Deno.serve(async (req) => {
         .filter((r) => r.status === "credited")
         .reduce((acc, r) => acc + (r.bonus_days || 0), 0);
 
-      return jsonRes({ referrals: list, credited, pending, total_days: totalDays });
+      return jsonRes({ referrals: list, credited, pending, total_days: totalDays }, 200, req);
+    }
+
+    // ----- referral-progress (customer, indicador vê o progresso de cada indicação) -----
+    if (action === "referral-progress") {
+      const customerId = Number(url.searchParams.get("customer_id"));
+      if (!customerId) return jsonRes({ error: "customer_id required" }, 400, req);
+      const session = await getCustomerSession(req);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401, req);
+      if (session.sub !== customerId) return jsonRes({ error: "Forbidden" }, 403, req);
+
+      const { data: signups } = await supabase
+        .from("trial_signups")
+        .select("name, status, topgestor_customer_id, created_at")
+        .eq("referrer_customer_id", customerId)
+        .order("created_at", { ascending: false });
+
+      const { data: referrals } = await supabase
+        .from("referrals")
+        .select("id, referred_customer_id, referred_customer_name, status, created_at")
+        .eq("referrer_customer_id", customerId)
+        .order("created_at", { ascending: false });
+
+      const combined: Array<{ name: string; percent: number; stage: string; created_at: string }> = [];
+      const usedReferralIds = new Set<string>();
+
+      for (const s of signups || []) {
+        const matched = s.topgestor_customer_id
+          ? (referrals || []).find((r) => Number(r.referred_customer_id) === Number(s.topgestor_customer_id))
+          : null;
+        if (matched) {
+          usedReferralIds.add(matched.id);
+          combined.push({
+            name: s.name,
+            percent: matched.status === "credited" ? 100 : 90,
+            stage: matched.status === "credited" ? "Bônus creditado! 🎉" : "Pagou — aguardando liberação do bônus",
+            created_at: s.created_at,
+          });
+        } else {
+          const percent = s.status === "approved" ? 60 : s.status === "rejected" ? 0 : 25;
+          const stage = s.status === "approved" ? "Teste liberado, contando" : s.status === "rejected" ? "Não aprovado" : "Cadastro enviado";
+          combined.push({ name: s.name, percent, stage, created_at: s.created_at });
+        }
+      }
+      for (const r of referrals || []) {
+        if (usedReferralIds.has(r.id)) continue;
+        combined.push({
+          name: r.referred_customer_name,
+          percent: r.status === "credited" ? 100 : 90,
+          stage: r.status === "credited" ? "Bônus creditado! 🎉" : "Pagou — aguardando liberação do bônus",
+          created_at: r.created_at,
+        });
+      }
+      combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      return jsonRes({ referrals: combined }, 200, req);
     }
 
     // ----- get-trial-config (public — only returns non-sensitive fields) -----
@@ -215,7 +270,7 @@ Deno.serve(async (req) => {
 
       if (!code) return jsonRes({ error: "Código de indicação obrigatório" }, 400, req);
       if (name.length < 2 || name.length > 80) return jsonRes({ error: "Nome inválido" }, 400, req);
-      if (whatsapp.length < 10 || whatsapp.length > 13) return jsonRes({ error: "WhatsApp inválido (use DDD + número, 200, req)" }, 400);
+      if (whatsapp.length < 10 || whatsapp.length > 13) return jsonRes({ error: "WhatsApp inválido (use DDD + número)" }, 400, req);
 
       // 1) Validate referral code
       const { data: refRow } = await supabase
@@ -250,7 +305,7 @@ Deno.serve(async (req) => {
                 error: "Este WhatsApp já está cadastrado. Faça login ou fale com o suporte.",
                 already_exists: true,
                 support_whatsapp: supportWhatsapp,
-              }, 409);
+              }, 409, req);
             }
           }
         } catch (e) {
@@ -280,7 +335,7 @@ Deno.serve(async (req) => {
             error: "Este WhatsApp já tem um cadastro em análise ou aprovado. Fale com o suporte.",
             already_exists: true,
             support_whatsapp: supportWhatsapp,
-          }, 409);
+          }, 409, req);
         }
         console.error("[create-trial] signup insert error", insErr);
         return jsonRes({ error: insErr.message }, 500, req);
@@ -294,7 +349,7 @@ Deno.serve(async (req) => {
         telas,
         support_whatsapp: supportWhatsapp,
         referrer_name: refRow.customer_name,
-      });
+      }, 200, req);
     }
 
     // ----- list-signups (admin) -----
