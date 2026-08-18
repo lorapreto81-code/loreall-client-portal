@@ -76,6 +76,7 @@ const IndicacaoTeste = () => {
   const [invalid, setInvalid] = useState(false);
   const [needsCode, setNeedsCode] = useState(!initialCode);
   const [copied, setCopied] = useState(false);
+  const [choice, setChoice] = useState<"trial" | "payment" | null>(null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
