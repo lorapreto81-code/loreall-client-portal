@@ -598,6 +598,7 @@ const IndicacaoTeste = () => {
             </span>
           </div>
         </SoftCard>
+        )}
 
         <p className="text-xs text-center" style={{ color: MUTED }}>
           Já é cliente?{" "}
