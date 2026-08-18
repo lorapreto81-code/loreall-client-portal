@@ -467,6 +467,28 @@ const IndicacaoTeste = () => {
             </div>
           </div>
 
+          {choice === null && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setChoice("trial")}
+                className="w-full rounded-2xl p-4 text-left font-semibold text-sm"
+                style={{ backgroundColor: ACCENT, color: "#fff" }}
+              >
+                🎁 Quero testar grátis primeiro
+              </button>
+              <button
+                type="button"
+                onClick={() => setChoice("payment")}
+                className="w-full rounded-2xl p-4 text-left font-semibold text-sm border"
+                style={{ borderColor: BORDER, color: TEXT }}
+              >
+                💳 Já decidi, quero assinar agora
+              </button>
+            </div>
+          )}
+
+          {choice === "trial" && (<>
           {/* Código de indicação visível + copiar */}
           <div
             className="flex items-center justify-between gap-3 rounded-2xl p-3"
