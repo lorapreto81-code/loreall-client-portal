@@ -76,6 +76,7 @@ const IndicacaoTeste = () => {
   const [invalid, setInvalid] = useState(false);
   const [needsCode, setNeedsCode] = useState(!initialCode);
   const [copied, setCopied] = useState(false);
+  const [choice, setChoice] = useState<"trial" | "payment" | null>(null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -467,6 +468,28 @@ const IndicacaoTeste = () => {
             </div>
           </div>
 
+          {choice === null && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setChoice("trial")}
+                className="w-full rounded-2xl p-4 text-left font-semibold text-sm"
+                style={{ backgroundColor: ACCENT, color: "#fff" }}
+              >
+                🎁 Quero testar grátis primeiro
+              </button>
+              <button
+                type="button"
+                onClick={() => setChoice("payment")}
+                className="w-full rounded-2xl p-4 text-left font-semibold text-sm border"
+                style={{ borderColor: BORDER, color: TEXT }}
+              >
+                💳 Já decidi, quero assinar agora
+              </button>
+            </div>
+          )}
+
+          {choice === "trial" && (<>
           {/* Código de indicação visível + copiar */}
           <div
             className="flex items-center justify-between gap-3 rounded-2xl p-3"
@@ -523,10 +546,38 @@ const IndicacaoTeste = () => {
             <BenefitRow icon={<ShieldCheck className="h-4 w-4" />} text="Sem cartão de crédito, sem compromisso" />
             <BenefitRow icon={<MessageCircle className="h-4 w-4" />} text="Suporte humano no WhatsApp" />
           </div>
+          </>)}
         </SoftCard>
 
+        {choice === "payment" && (
+          <SoftCard className="p-6 space-y-4 text-center">
+            <p className="text-sm font-semibold" style={{ color: TEXT }}>
+              Perfeito! Fala com a gente agora pra ativar seu acesso.
+            </p>
+            <a
+              href={`https://wa.me/55${onlyDigits(config?.support_whatsapp || "").replace(/^55/, "")}?text=${encodeURIComponent(
+                `Olá! Fui indicado por ${referrerName} e quero assinar direto.`,
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl px-5 py-3 font-semibold text-sm"
+              style={{ backgroundColor: ACCENT, color: "#fff" }}
+            >
+              <MessageCircle className="h-4 w-4" /> Falar no WhatsApp
+            </a>
+            <button
+              type="button"
+              onClick={() => setChoice(null)}
+              className="block mx-auto text-xs font-semibold"
+              style={{ color: MUTED }}
+            >
+              Voltar
+            </button>
+          </SoftCard>
+        )}
 
         {/* Formulário */}
+        {choice === "trial" && (
         <SoftCard className="p-6 space-y-5">
           <div className="space-y-1">
             <h2 className="text-lg font-extrabold" style={headingFont}>
@@ -598,6 +649,7 @@ const IndicacaoTeste = () => {
             </span>
           </div>
         </SoftCard>
+        )}
 
         <p className="text-xs text-center" style={{ color: MUTED }}>
           Já é cliente?{" "}

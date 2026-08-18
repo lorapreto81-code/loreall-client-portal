@@ -166,6 +166,7 @@ export type Database = {
       referral_codes: {
         Row: {
           code: string
+          copy_count: number
           created_at: string
           customer_id: number
           customer_name: string | null
@@ -173,6 +174,7 @@ export type Database = {
         }
         Insert: {
           code: string
+          copy_count?: number
           created_at?: string
           customer_id: number
           customer_name?: string | null
@@ -180,6 +182,7 @@ export type Database = {
         }
         Update: {
           code?: string
+          copy_count?: number
           created_at?: string
           customer_id?: number
           customer_name?: string | null
@@ -846,7 +849,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_copy_count: { Args: { p_code: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

@@ -8,6 +8,7 @@ import ResellerConfigTab from "@/components/admin/ResellerConfigTab";
 import CustomersPaymentsTab from "@/components/admin/CustomersPaymentsTab";
 import CustomersDashboardTab from "@/components/admin/CustomersDashboardTab";
 import ReferralTrialConfigTab from "@/components/admin/ReferralTrialConfigTab";
+import ReferralStatsTab from "@/components/admin/ReferralStatsTab";
 import TrialSignupsTab from "@/components/admin/TrialSignupsTab";
 import PixProviderTab from "@/components/admin/PixProviderTab";
 import TopGestorCustomersTab from "@/components/admin/TopGestorCustomersTab";
@@ -22,8 +23,8 @@ interface Notice {
   atualizado_em: string;
 }
 
-type TabGroup = "revendedores" | "clientes" | "assinaturas" | "auditoria" | "config";
-type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
+type TabGroup = "revendedores" | "clientes" | "indicacao" | "assinaturas" | "auditoria" | "config";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
 
 const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: { id: Tab; label: string; icon: typeof Megaphone }[] }[] = [
   {
@@ -42,6 +43,15 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
     tabs: [
       { id: "clientes", label: "Pagamentos Diretos", icon: Users },
       { id: "assinaturas-ativas", label: "Assinantes Ativos", icon: ShieldCheck },
+    ]
+  },
+  {
+    group: "indicacao",
+    label: "Indicação",
+    icon: Gift,
+    tabs: [
+      { id: "indicacao-stats", label: "Estatísticas", icon: Gift },
+      { id: "indicacao-config", label: "Configurações", icon: Settings },
     ]
   },
   {
@@ -309,6 +319,8 @@ const Admin = () => {
           {tab === "links" && <ResellerLinksTab />}
           {tab === "recargas" && <ResellerPurchasesTab />}
           {tab === "clientes" && <CustomersPaymentsTab />}
+          {tab === "indicacao-stats" && <ReferralStatsTab />}
+          {tab === "indicacao-config" && <ReferralTrialConfigTab />}
           {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
           {tab === "assinaturas-ativas" && <SyncpayActiveSubscribersTab />}
           {tab === "auditoria-acesso" && <OtpAuditTab />}
