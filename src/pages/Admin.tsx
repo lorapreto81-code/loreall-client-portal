@@ -53,6 +53,7 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
       { id: "indicacao-config", label: "Configurações", icon: Settings },
     ]
   },
+  {
     group: "assinaturas",
     label: "Recorrência",
     icon: Repeat,
