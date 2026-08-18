@@ -132,7 +132,29 @@ const ReferralSheet = ({ open, onClose }: Props) => {
               <p className="text-[11px] text-foreground break-all font-mono">{shareUrl}</p>
             </div>
 
+            <div className="card-elevated p-3 mb-4">
+              <p className="text-xs font-semibold text-foreground mb-2">Como funciona</p>
+              <ol className="space-y-1.5">
+                {[
+                  "Compartilhe seu link com um amigo",
+                  "Ele testa grátis e conhece o serviço",
+                  "Quando ele assinar, você ganha +30 dias",
+                ].map((step, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span
+                      className="h-5 w-5 shrink-0 rounded-full text-[11px] font-bold flex items-center justify-center text-white"
+                      style={{ backgroundColor: "#7B2FD4" }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="text-[12px] text-muted-foreground leading-5">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
             <div className="grid grid-cols-2 gap-2 mb-5">
+
               <button
                 onClick={() => copy(shareUrl, "link")}
                 className="px-4 py-3 text-sm rounded-lg inline-flex items-center justify-center gap-1.5"
