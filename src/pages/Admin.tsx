@@ -45,6 +45,14 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
     ]
   },
   {
+    group: "indicacao",
+    label: "Indicação",
+    icon: Gift,
+    tabs: [
+      { id: "indicacao-stats", label: "Estatísticas", icon: Gift },
+      { id: "indicacao-config", label: "Configurações", icon: Settings },
+    ]
+  },
     group: "assinaturas",
     label: "Recorrência",
     icon: Repeat,
