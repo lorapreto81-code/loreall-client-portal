@@ -22,8 +22,8 @@ interface Notice {
   atualizado_em: string;
 }
 
-type TabGroup = "revendedores" | "clientes" | "assinaturas" | "auditoria" | "config";
-type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
+type TabGroup = "revendedores" | "clientes" | "indicacao" | "assinaturas" | "auditoria" | "config";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
 
 const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: { id: Tab; label: string; icon: typeof Megaphone }[] }[] = [
   {
