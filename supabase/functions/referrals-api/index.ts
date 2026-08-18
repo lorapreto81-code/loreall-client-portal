@@ -72,7 +72,45 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
 
+    // ----- track-copy (público, fire-and-forget) -----
+    if (action === "track-copy") {
+      const body = await req.json().catch(() => ({}));
+      const code = String(body.code || "").trim().toUpperCase();
+      if (code && /^[A-Z0-9]{4,16}$/.test(code)) {
+        try {
+          await supabase.rpc("increment_copy_count", { p_code: code });
+        } catch { /* ignore */ }
+      }
+      return jsonRes({ ok: true }, 200, req);
+    }
+
+    // ----- admin-referral-stats (admin) -----
+    if (action === "admin-referral-stats") {
+      const pwd = req.headers.get("x-admin-password");
+      if (!isAdminPassword(pwd)) return jsonRes({ error: "Unauthorized" }, 401, req);
+
+      const { count: totalCodes } = await supabase.from("referral_codes").select("*", { count: "exact", head: true });
+      const { data: codesRows } = await supabase.from("referral_codes").select("copy_count");
+      const totalCopies = (codesRows || []).reduce((sum: number, r: { copy_count: number | null }) => sum + (r.copy_count || 0), 0);
+
+      const { count: totalSignups } = await supabase.from("trial_signups").select("*", { count: "exact", head: true });
+      const { count: pendingSignups } = await supabase.from("trial_signups").select("*", { count: "exact", head: true }).eq("status", "pending");
+      const { count: creditedBonus } = await supabase.from("referrals").select("*", { count: "exact", head: true }).eq("status", "credited");
+      const { data: bonusRows } = await supabase.from("referrals").select("bonus_days").eq("status", "credited");
+      const totalBonusDays = (bonusRows || []).reduce((sum: number, r: { bonus_days: number | null }) => sum + (r.bonus_days || 0), 0);
+
+      return jsonRes({
+        total_codes: totalCodes || 0,
+        total_link_copies: totalCopies,
+        total_signups: totalSignups || 0,
+        pending_signups: pendingSignups || 0,
+        bonuses_credited: creditedBonus || 0,
+        total_bonus_days_given: totalBonusDays,
+      }, 200, req);
+    }
+
     // ----- get-or-create-code -----
+
     if (action === "get-or-create-code") {
       const body = await req.json().catch(() => ({}));
       const customerId = Number(body.customer_id);
