@@ -318,6 +318,8 @@ const Admin = () => {
           {tab === "links" && <ResellerLinksTab />}
           {tab === "recargas" && <ResellerPurchasesTab />}
           {tab === "clientes" && <CustomersPaymentsTab />}
+          {tab === "indicacao-stats" && <ReferralStatsTab />}
+          {tab === "indicacao-config" && <ReferralTrialConfigTab />}
           {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
           {tab === "assinaturas-ativas" && <SyncpayActiveSubscribersTab />}
           {tab === "auditoria-acesso" && <OtpAuditTab />}
