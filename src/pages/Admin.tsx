@@ -24,7 +24,7 @@ interface Notice {
 }
 
 type TabGroup = "revendedores" | "clientes" | "indicacao" | "assinaturas" | "auditoria" | "config";
-type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-signups" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
 
 const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: { id: Tab; label: string; icon: typeof Megaphone }[] }[] = [
   {
@@ -50,6 +50,7 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
     label: "Indicação",
     icon: Gift,
     tabs: [
+      { id: "indicacao-signups", label: "Solicitações de Teste", icon: Inbox },
       { id: "indicacao-stats", label: "Estatísticas", icon: Gift },
       { id: "indicacao-config", label: "Configurações", icon: Settings },
     ]
@@ -319,6 +320,7 @@ const Admin = () => {
           {tab === "links" && <ResellerLinksTab />}
           {tab === "recargas" && <ResellerPurchasesTab />}
           {tab === "clientes" && <CustomersPaymentsTab />}
+          {tab === "indicacao-signups" && <TrialSignupsTab />}
           {tab === "indicacao-stats" && <ReferralStatsTab />}
           {tab === "indicacao-config" && <ReferralTrialConfigTab />}
           {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
