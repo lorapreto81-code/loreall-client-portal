@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
         .eq("customer_id", customerId)
         .maybeSingle();
 
-      if (existing) return jsonRes({ code: existing.code, customer_id: customerId }, req);
+      if (existing) return jsonRes({ code: existing.code, customer_id: customerId }, 200, req);
 
       for (let i = 0; i < 5; i++) {
         const code = genCode();
@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
           .insert({ customer_id: customerId, customer_name: customerName, code })
           .select()
           .single();
-        if (!error && inserted) return jsonRes({ code: inserted.code, customer_id: customerId }, req);
+        if (!error && inserted) return jsonRes({ code: inserted.code, customer_id: customerId }, 200, req);
         if (error && !`${error.message}`.toLowerCase().includes("duplicate")) {
           console.error("[referrals-api] insert error", error);
           return jsonRes({ error: error.message }, 500, req);
