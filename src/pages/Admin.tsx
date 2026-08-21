@@ -95,21 +95,15 @@ const Admin = () => {
   const [mensagem, setMensagem] = useState("");
 
   useEffect(() => {
-    const stored = localStorage.getItem("admin_aviso");
-    if (stored) {
-      try {
-        const parsed: Notice = JSON.parse(stored);
-        setAtivo(parsed.ativo);
-        setMensagem(parsed.mensagem || "");
-      } catch {
-        /* ignore */
-      }
-    }
     if (sessionStorage.getItem("admin_password")) {
       // Revalida a senha guardada no servidor antes de liberar o painel.
       resellerAdmin
         .getConfig()
-        .then(() => setAuthenticated(true))
+        .then((res) => {
+          setAuthenticated(true);
+          setAtivo(res.config?.site_notice_ativo === "true");
+          setMensagem(res.config?.site_notice_mensagem || "");
+        })
         .catch(() => sessionStorage.removeItem("admin_password"));
     }
   }, []);
@@ -133,10 +127,17 @@ const Admin = () => {
     }
   };
 
-  const handleSaveAviso = () => {
-    const notice: Notice = { ativo, mensagem, atualizado_em: new Date().toISOString() };
-    localStorage.setItem("admin_aviso", JSON.stringify(notice));
-    alert("Aviso salvo com sucesso!");
+  const handleSaveAviso = async () => {
+    try {
+      await resellerAdmin.updateConfig({
+        site_notice_ativo: String(ativo),
+        site_notice_mensagem: mensagem,
+        site_notice_atualizado_em: new Date().toISOString(),
+      });
+      alert("Aviso salvo com sucesso!");
+    } catch {
+      alert("Erro ao salvar o aviso. Tente novamente.");
+    }
   };
 
   if (!authenticated) {

@@ -240,6 +240,16 @@ Deno.serve(async (req) => {
       return jsonRes({ referrals: combined }, 200, req);
     }
 
+    // ----- get-site-notice (público) -----
+    if (action === "get-site-notice") {
+      const cfg = await getConfigMap(supabase);
+      return jsonRes({
+        ativo: cfg.site_notice_ativo === "true",
+        mensagem: cfg.site_notice_mensagem || "",
+        atualizado_em: cfg.site_notice_atualizado_em || "",
+      }, 200, req);
+    }
+
     // ----- get-trial-config (public — only returns non-sensitive fields) -----
     if (action === "get-trial-config-public") {
       const cfg = await getConfigMap(supabase);

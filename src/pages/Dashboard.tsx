@@ -6,7 +6,7 @@ import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubsc
 
 import { useTheme } from "@/hooks/use-theme";
 import NoticeBanner from "@/components/NoticeBanner";
-import ExpirationPopup from "@/components/ExpirationPopup";
+import ExpirationPopup, { shouldShow, canShow } from "@/components/ExpirationPopup";
 import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
@@ -59,9 +59,11 @@ const Dashboard = () => {
     if (!customer || !profileIncomplete) return;
     const key = `loreall_profile_prompted_${customer.id}`;
     if (sessionStorage.getItem(key)) return;
+    const expirationType = shouldShow(days);
+    if (expirationType && canShow(expirationType)) return; // deixa o pop-up de vencimento aparecer sozinho primeiro
     sessionStorage.setItem(key, "1");
     setTimeout(() => openAccount("dados"), 600);
-  }, [profileIncomplete, customer]);
+  }, [profileIncomplete, customer, days]);
 
   if (!customer) return null;
 

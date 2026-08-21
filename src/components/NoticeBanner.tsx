@@ -12,19 +12,21 @@ const NoticeBanner = () => {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("admin_aviso");
-    if (stored) {
-      try {
-        const parsed: Notice = JSON.parse(stored);
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/referrals-api?action=get-site-notice`, {
+      headers: {
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+    })
+      .then((r) => r.json())
+      .then((parsed: Notice) => {
         if (parsed.ativo && parsed.mensagem) {
           const already = sessionStorage.getItem("aviso_dismissed");
-          if (already === parsed.atualizado_em) {
-            setDismissed(true);
-          }
+          if (already === parsed.atualizado_em) setDismissed(true);
           setNotice(parsed);
         }
-      } catch {}
-    }
+      })
+      .catch(() => {});
   }, []);
 
   if (!notice || !notice.ativo || dismissed) return null;
