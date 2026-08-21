@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import QRCode from "qrcode";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles, ShieldCheck } from "lucide-react";
@@ -66,6 +67,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const [subLoading, setSubLoading] = useState(false);
   const [subResult, setSubResult] = useState<SubscribeResult | null>(null);
   const [checkingSub, setCheckingSub] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrDataUrl2, setQrDataUrl2] = useState<string | null>(null);
 
   const plansQuery = useQuery({
     queryKey: ["plans"],
@@ -478,9 +481,29 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   if (subForm) {
     const isPixAuto = subForm.billing_method === "pix_automatico";
     const qrText = subResult?.qr_code_text;
-    const qrImg = subResult?.qr_code_base64
-      ? (subResult.qr_code_base64.startsWith("data:") ? subResult.qr_code_base64 : `data:image/png;base64,${subResult.qr_code_base64}`)
-      : null;
+    // Gera QR Code localmente para a tela de Assinatura
+    useEffect(() => {
+      if (!qrText) {
+        setQrDataUrl(null);
+        return;
+      }
+      QRCode.toDataURL(qrText, { width: 220, margin: 1 })
+        .then(setQrDataUrl)
+        .catch(() => setQrDataUrl(null));
+    }, [qrText]);
+
+    // Gera QR Code localmente para a tela de Pix direto
+    useEffect(() => {
+      if (!pix?.qr_code_text) {
+        setQrDataUrl2(null);
+        return;
+      }
+      QRCode.toDataURL(pix.qr_code_text, { width: 220, margin: 1 })
+        .then(setQrDataUrl2)
+        .catch(() => setQrDataUrl2(null));
+    }, [pix?.qr_code_text]);
+
+    const qrImg = qrDataUrl;
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={closeSubscribeForm}>
         <div
@@ -608,7 +631,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mb-2">
                       <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-amber-700 leading-relaxed">
-                        🔒 Cobrança oficial Loreall Play. Não pedimos pagamento por outro link ou contato.{" "}
+                        🔒 Cobrança oficial Loreall Play. Se seu banco alertar sobre possível golpe, fica tranquilo — é comum em pagamento pra empresa, pode confirmar normalmente.{" "}
                         <a
                           href={`https://wa.me/${WHATSAPP_NUMBER}`}
                           target="_blank"
@@ -678,10 +701,10 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                 {expired ? "QR Code expirado" : `Expira em ${minutes}:${String(seconds).padStart(2, "0")}`}
               </p>
 
-              {pix.qr_code_url && (
+              {qrDataUrl2 && (
                 <div className="flex justify-center mb-4">
                   <div className="bg-white p-3 rounded-xl">
-                    <img src={pix.qr_code_url} alt="QR Code PIX" style={{ width: 220, height: 220 }} />
+                    <img src={qrDataUrl2} alt="QR Code PIX" style={{ width: 220, height: 220 }} />
                   </div>
                 </div>
               )}
@@ -703,7 +726,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mb-2">
                       <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-amber-700 leading-relaxed">
-                        🔒 Cobrança oficial Loreall Play. Não pedimos pagamento por outro link ou contato.{" "}
+                        🔒 Cobrança oficial Loreall Play. Se seu banco alertar sobre possível golpe, fica tranquilo — é comum em pagamento pra empresa, pode confirmar normalmente.{" "}
                         <a
                           href={`https://wa.me/${WHATSAPP_NUMBER}`}
                           target="_blank"
