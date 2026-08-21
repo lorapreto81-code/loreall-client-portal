@@ -155,6 +155,8 @@ const Dashboard = () => {
 
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
+      <SupportSheet open={supportOpen} onClose={() => setSupportOpen(false)} customerUsuario={customer.usuario} />
+
       <MyAccountSheet
         open={accountOpen}
         onClose={() => setAccountOpen(false)}
