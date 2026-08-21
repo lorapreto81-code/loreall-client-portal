@@ -80,6 +80,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeaders });
 
   try {
+    const session = await getCustomerSession(req);
+    if (!session || session.role !== "customer") {
+      return json({ error: "Unauthorized" }, 401, {}, req);
+    }
+
     const rawBody = await req.json().catch(() => ({}));
     const parse = resellerCreatePixSchema.safeParse(rawBody);
     if (!parse.success) {

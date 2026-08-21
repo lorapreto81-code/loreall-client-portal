@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
 
   try {
     const session = await getCustomerSession(req);
-    if (!session) {
+    if (!session || session.role !== "customer") {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
