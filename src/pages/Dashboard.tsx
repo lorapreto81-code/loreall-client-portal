@@ -36,6 +36,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
+  const [supportOpen, setSupportOpen] = useState(false);
+
 
   const openAccount = (tab: "dados" | "faturas") => {
     setAccountTab(tab);
