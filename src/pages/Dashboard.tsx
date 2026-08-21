@@ -11,6 +11,8 @@ import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
+import SupportSheet from "@/components/SupportSheet";
+
 
 import { PlanCard } from "@/features/dashboard/components/PlanCard";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
