@@ -35,6 +35,27 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_overrides: {
+        Row: {
+          customer_id: number
+          notes: string | null
+          telas_override: number | null
+          updated_at: string
+        }
+        Insert: {
+          customer_id: number
+          notes?: string | null
+          telas_override?: number | null
+          updated_at?: string
+        }
+        Update: {
+          customer_id?: number
+          notes?: string | null
+          telas_override?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       otp_codes: {
         Row: {
           attempts: number
