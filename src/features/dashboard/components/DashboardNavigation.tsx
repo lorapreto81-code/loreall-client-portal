@@ -1,4 +1,4 @@
-import { User, Receipt, Download, HelpCircle, Gift, LogOut, ChevronRight } from "lucide-react";
+import { User, Receipt, Download, HelpCircle, Gift, LogOut, ChevronRight, LifeBuoy } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 
 interface NavProps {
@@ -7,9 +7,11 @@ interface NavProps {
   onOpenAccount: (tab: "dados" | "faturas") => void;
   onNavigate: (path: string) => void;
   onOpenReferral: () => void;
+  onOpenSupport: () => void;
   onLogout: () => void;
   onCloseMenu: () => void;
 }
+
 
 export const DashboardNavigation = ({
   customer,
