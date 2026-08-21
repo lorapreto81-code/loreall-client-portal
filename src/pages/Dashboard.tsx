@@ -94,6 +94,8 @@ const Dashboard = () => {
           onOpenAccount={openAccount}
           onNavigate={navigate}
           onOpenReferral={() => setReferralOpen(true)}
+          onOpenSupport={() => setSupportOpen(true)}
+
           onLogout={logout}
           onCloseMenu={() => setMenuOpen(false)}
         />
@@ -128,7 +130,21 @@ const Dashboard = () => {
             Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
           </p>
         </button>
+
+        <button
+          onClick={() => setSupportOpen(true)}
+          className="card-elevated p-5 text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <LifeBuoy className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-medium text-foreground">Resolve alguns problemas!</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Renovou agora e o app não liberou? Feche e abra novamente ou desligue por 2 minutos. Veja o passo a passo.
+          </p>
+        </button>
       </main>
+
 
       <footer className="px-4 py-8 pb-12 max-w-[480px] mx-auto text-center space-y-6">
         <LaunchesBanner />
