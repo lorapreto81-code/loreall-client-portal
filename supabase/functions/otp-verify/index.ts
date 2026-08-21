@@ -57,38 +57,22 @@ Deno.serve(async (req) => {
     await supabase.from("otp_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id);
 
     if (context === "reseller") {
-      // Logic for reseller verification
-      const { data: link, error: linkError } = await supabase
+      const { data: link } = await supabase
         .from("reseller_links")
         .select("id, slug, display_name, whatsapp")
-        .or(`reseller_id.eq.${row.reseller_id},id.eq.${row.reseller_id}`) // row.reseller_id is uuid
+        .eq("id", row.reseller_id)
         .maybeSingle();
 
-      if (linkError || !link) {
-        // Fallback: search by phone key again if direct match fails
-        const { data: fallbackLink } = await supabase
-          .from("reseller_links")
-          .select("id, slug, display_name, whatsapp")
-          .filter("whatsapp", "ilike", `%${key}`)
-          .maybeSingle();
-        
-        if (!fallbackLink) return json({ error: "Revendedor não encontrado." }, 404, {}, req);
-        
-        const token = await signCustomerToken(fallbackLink.id, "reseller");
-        return json({ 
-          accounts: [{
-            token,
-            customer: { id: fallbackLink.id, name: fallbackLink.display_name, slug: fallbackLink.slug, role: "reseller" }
-          }] 
-        }, 200, {}, req);
+      if (!link) {
+        return json({ error: "Revendedor não encontrado." }, 404, {}, req);
       }
 
       const token = await signCustomerToken(link.id, "reseller");
-      return json({ 
+      return json({
         accounts: [{
           token,
           customer: { id: link.id, name: link.display_name, slug: link.slug, role: "reseller" }
-        }] 
+        }]
       }, 200, {}, req);
 
     } else {
