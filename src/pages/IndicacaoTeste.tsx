@@ -17,6 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/authStore";
 import { lookupReferralCode } from "@/lib/api";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
