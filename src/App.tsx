@@ -7,6 +7,8 @@ import { lazy, Suspense } from "react";
 
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+import CookieConsent from "./components/CookieConsent";
+
 const Admin = lazy(() => import("./pages/Admin"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Revendedor = lazy(() => import("./pages/Revendedor"));
