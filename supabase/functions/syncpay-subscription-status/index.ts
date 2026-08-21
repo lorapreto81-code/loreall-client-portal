@@ -1,5 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { securityHeadersFor, jsonResponse as json } from "../_shared/security.ts";
+import { getCustomerSession, isAdminRequest } from "../_shared/auth.ts";
+
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
 
@@ -28,17 +30,32 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, {}, req);
 
   try {
+    const session = await getCustomerSession(req);
     const { subscription_id, customer_id } = await req.json().catch(() => ({}));
+
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Validação de acesso: ou é admin ou é o próprio cliente dono da assinatura
+    const isAdmin = isAdminRequest(req);
+    const isCustomer = session?.role === "customer";
+    if (!isAdmin && !isCustomer) {
+      return json({ error: "Unauthorized" }, 401, {}, req);
+    }
+
+
     let subId = subscription_id;
     let planIdHint: string | null = null;
 
     if (!subId && customer_id) {
+      // Se for cliente, só pode consultar o seu próprio ID
+      if (isCustomer && Number(session.sub) !== Number(customer_id)) {
+        return json({ error: "Forbidden" }, 403, {}, req);
+      }
+
       const { data: latest } = await supabase
         .from("syncpay_subscriptions")
         .select("syncpay_subscription_id, syncpay_plan_id")
@@ -51,6 +68,19 @@ Deno.serve(async (req) => {
     }
 
     if (!subId) return json({ error: "subscription_id ou customer_id não encontrado" }, 400, {}, req);
+
+    // Se passou apenas subId, valida se o cliente é dono dessa sub específica
+    if (isCustomer && !customer_id) {
+      const { data: subCheck } = await supabase
+        .from("syncpay_subscriptions")
+        .select("customer_id")
+        .eq("syncpay_subscription_id", subId)
+        .maybeSingle();
+      if (!subCheck || Number(subCheck.customer_id) !== Number(session.sub)) {
+        return json({ error: "Forbidden" }, 403, {}, req);
+      }
+    }
+
 
     const token = await getToken();
     const res = await fetch(`${SP_BASE}/subscriptions/${encodeURIComponent(subId)}`, {

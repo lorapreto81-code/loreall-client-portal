@@ -6,6 +6,8 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { securityHeadersFor, jsonResponse as json } from "../_shared/security.ts";
+import { getCustomerSession } from "../_shared/auth.ts";
+
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
 
@@ -98,10 +100,20 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, {}, req);
 
   try {
+    const session = await getCustomerSession(req);
+    if (!session || session.role !== "customer") {
+      return json({ error: "Unauthorized" }, 401, {}, req);
+    }
+
     const body = await req.json().catch(() => ({}));
     const {
       plan_id, customer_id, name, email, cpf, phone,
     } = body as Record<string, string | number>;
+
+    if (Number(customer_id) !== Number(session.sub)) {
+      return json({ error: "Forbidden" }, 403, {}, req);
+    }
+
 
     if (!plan_id) return json({ error: "plan_id obrigatório" }, 400, {}, req);
     if (!name || String(name).trim().length < 3) return json({ error: "Nome inválido" }, 400, {}, req);
