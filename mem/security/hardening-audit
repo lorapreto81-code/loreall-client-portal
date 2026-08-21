@@ -1,0 +1,8 @@
+---
+name: Security Audit Ignore List
+description: Documenting ignored security findings that are intentional or unfixable.
+type: constraint
+---
+### Ignored Findings
+
+- **Extension in Public (pg_net)**: The `pg_net` extension is installed in the `public` schema. Attempting to move it via `ALTER EXTENSION SET SCHEMA` failed as the extension does not support schema migration. Since this is a managed extension and no active triggers are currently depending on it in a way that creates a vulnerability, this finding is currently ignored.
