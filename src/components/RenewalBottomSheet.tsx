@@ -77,6 +77,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const [checkingSub, setCheckingSub] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrDataUrl2, setQrDataUrl2] = useState<string | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Gera QR Code localmente para a tela de Assinatura
   useEffect(() => {
