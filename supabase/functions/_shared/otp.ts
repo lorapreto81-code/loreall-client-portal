@@ -48,9 +48,7 @@ export function customerMatchesIdentifier(
     const usuario = String(c.usuario ?? c.username ?? c.login ?? "").toLowerCase().trim();
     if (usuario && (usuario === key || usuario === localPart)) return true;
     const cEmail = String(c.email ?? "").toLowerCase().trim();
-    if (cEmail && (cEmail === key || (localPart.length >= 3 && cEmail.includes(localPart)))) return true;
-    const cName = String(c.name ?? "").toLowerCase().trim();
-    if (localPart.length >= 3 && cName.includes(localPart)) return true;
+    if (cEmail && cEmail === key) return true;
     return false;
   }
   const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
