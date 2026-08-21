@@ -3,6 +3,14 @@ import QRCode from "qrcode";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles, ShieldCheck } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer, authHeaders } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
@@ -69,6 +77,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const [checkingSub, setCheckingSub] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrDataUrl2, setQrDataUrl2] = useState<string | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Gera QR Code localmente para a tela de Assinatura
   useEffect(() => {
@@ -674,10 +683,14 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
         <div
-          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto"
+          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
           onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={handleClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
+          <button
+            onClick={() => (isPaid ? handleClose() : setShowExitConfirm(true))}
+            className="absolute top-4 right-4 bg-muted/60 hover:bg-muted text-foreground rounded-full p-2 z-10"
+            style={{ minHeight: 44, minWidth: 44 }}
+          >
             <X className="h-5 w-5" />
           </button>
           <div className="flex justify-center mb-3">
@@ -753,6 +766,38 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               </div>
             </>
           )}
+
+          <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+            <AlertDialogContent className="w-[90%] max-w-[380px] rounded-2xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Falta pouco pra renovar!</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Você já gerou o Pix. O que prefere fazer?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col gap-2 mt-2">
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm text-white"
+                  style={{ background: "linear-gradient(90deg,#3b82f6,#8b5cf6)" }}
+                >
+                  Continuar pagamento
+                </button>
+                <button
+                  onClick={() => { setShowExitConfirm(false); resetState(); }}
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm border border-border text-foreground"
+                >
+                  Trocar de plano
+                </button>
+                <button
+                  onClick={() => { setShowExitConfirm(false); handleClose(); }}
+                  className="w-full py-2 text-xs text-muted-foreground underline"
+                >
+                  Cancelar e sair
+                </button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     );
