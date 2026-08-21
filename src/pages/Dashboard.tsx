@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Gift } from "lucide-react";
+import { Gift, LifeBuoy } from "lucide-react";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 
 import { useTheme } from "@/hooks/use-theme";
