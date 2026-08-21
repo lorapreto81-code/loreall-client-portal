@@ -688,7 +688,12 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                 <Check className="h-8 w-8" style={{ color: "#5DCAA5" }} />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-1">Pagamento confirmado!</h3>
-              <p className="text-sm text-muted-foreground mb-5">Seu acesso já foi renovado.</p>
+              <p className="text-sm text-muted-foreground mb-3">Seu acesso já foi renovado.</p>
+              <div className="text-left text-[13px] text-muted-foreground bg-muted/40 border border-border/60 rounded-xl p-3 mb-5">
+                <p className="font-semibold text-foreground mb-1">Ainda não liberou no aplicativo?</p>
+                <p>Feche o aplicativo por completo e entre novamente para atualizar. Se precisar, aguarde 1 minutinho ou desligue o aparelho da tomada por 2 minutos e ligue de novo.</p>
+              </div>
+
               <button onClick={handleClose} className="btn-primary-gradient w-full py-3 font-semibold text-sm" style={{ minHeight: 48 }}>
                 Concluir
               </button>

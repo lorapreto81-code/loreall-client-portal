@@ -1,4 +1,4 @@
-import { User, Receipt, Download, HelpCircle, Gift, LogOut, ChevronRight } from "lucide-react";
+import { User, Receipt, Download, HelpCircle, Gift, LogOut, ChevronRight, LifeBuoy } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 
 interface NavProps {
@@ -7,9 +7,11 @@ interface NavProps {
   onOpenAccount: (tab: "dados" | "faturas") => void;
   onNavigate: (path: string) => void;
   onOpenReferral: () => void;
+  onOpenSupport: () => void;
   onLogout: () => void;
   onCloseMenu: () => void;
 }
+
 
 export const DashboardNavigation = ({
   customer,
@@ -17,11 +19,22 @@ export const DashboardNavigation = ({
   onOpenAccount,
   onNavigate,
   onOpenReferral,
+  onOpenSupport,
   onLogout,
   onCloseMenu
 }: NavProps) => (
   <>
     <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
+      <button onClick={() => { onOpenSupport(); onCloseMenu(); }} className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left">
+        <LifeBuoy className="h-[18px] w-[18px] text-primary shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium text-foreground">Resolve alguns problemas!</div>
+          <div className="text-[11px] text-muted-foreground">App travando, não abre ou renovou agora</div>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </button>
+
+
       <button onClick={() => onOpenAccount("dados")} className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left">
         <User className="h-[18px] w-[18px] text-primary shrink-0" />
         <div className="flex-1 min-w-0">

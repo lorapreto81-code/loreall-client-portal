@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Gift } from "lucide-react";
+import { Gift, LifeBuoy } from "lucide-react";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -11,6 +11,8 @@ import LaunchesBanner from "@/components/LaunchesBanner";
 import ReferralSheet from "@/components/ReferralSheet";
 import MyAccountSheet from "@/components/MyAccountSheet";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
+import SupportSheet from "@/components/SupportSheet";
+
 
 import { PlanCard } from "@/features/dashboard/components/PlanCard";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
@@ -34,6 +36,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
+  const [supportOpen, setSupportOpen] = useState(false);
+
 
   const openAccount = (tab: "dados" | "faturas") => {
     setAccountTab(tab);
@@ -90,6 +94,8 @@ const Dashboard = () => {
           onOpenAccount={openAccount}
           onNavigate={navigate}
           onOpenReferral={() => setReferralOpen(true)}
+          onOpenSupport={() => setSupportOpen(true)}
+
           onLogout={logout}
           onCloseMenu={() => setMenuOpen(false)}
         />
@@ -124,7 +130,21 @@ const Dashboard = () => {
             Cada amigo que renovar com seu código te dá 1 mês grátis. Sem limite!
           </p>
         </button>
+
+        <button
+          onClick={() => setSupportOpen(true)}
+          className="card-elevated p-5 text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <LifeBuoy className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-medium text-foreground">Resolve alguns problemas!</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Renovou agora e o app não liberou? Feche e abra novamente ou desligue por 2 minutos. Veja o passo a passo.
+          </p>
+        </button>
       </main>
+
 
       <footer className="px-4 py-8 pb-12 max-w-[480px] mx-auto text-center space-y-6">
         <LaunchesBanner />
@@ -135,6 +155,8 @@ const Dashboard = () => {
 
       <RenewalBottomSheet open={renewalOpen} onClose={handleRenewalClose} />
       <ReferralSheet open={referralOpen} onClose={() => setReferralOpen(false)} />
+      <SupportSheet open={supportOpen} onClose={() => setSupportOpen(false)} customerUsuario={customer.usuario} />
+
       <MyAccountSheet
         open={accountOpen}
         onClose={() => setAccountOpen(false)}
