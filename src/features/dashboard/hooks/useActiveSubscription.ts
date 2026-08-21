@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/store/authStore";
 
 export interface ActiveSubscription {
   subscription_id: string | null;
@@ -16,10 +17,17 @@ export function useActiveSubscription(customerId?: number) {
       if (!customerId) return null;
       const { data, error } = await supabase.functions.invoke("syncpay-subscription-status", {
         body: { customer_id: customerId },
+        headers: {
+          "x-customer-token": useAuthStore.getState().token || "",
+        }
       });
       
       if (error) {
-        console.warn("[useActiveSubscription] Edge function error:", error);
+        if (error.status === 401) {
+          window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+        } else {
+          console.warn("[useActiveSubscription] Erro na função:", error);
+        }
         return null;
       }
 

@@ -54,6 +54,7 @@ const ReferralSheet = ({ open, onClose }: Props) => {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           "Content-Type": "application/json",
+          "x-customer-token": useAuthStore.getState().token || "",
         },
         body: JSON.stringify({ code }),
       }).catch(() => {});

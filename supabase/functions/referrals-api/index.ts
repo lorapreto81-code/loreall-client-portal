@@ -74,7 +74,10 @@ Deno.serve(async (req) => {
 
     // ----- track-copy (público, fire-and-forget) -----
     if (action === "track-copy") {
+      const session = await getCustomerSession(req);
+      if (!session || session.role !== "customer") return jsonRes({ error: "Unauthorized" }, 401, req);
       const body = await req.json().catch(() => ({}));
+
       const code = String(body.code || "").trim().toUpperCase();
       if (code && /^[A-Z0-9]{4,16}$/.test(code)) {
         try {
@@ -240,9 +243,12 @@ Deno.serve(async (req) => {
       return jsonRes({ referrals: combined }, 200, req);
     }
 
-    // ----- get-site-notice (público) -----
+    // ----- get-site-notice (requer auth básica para evitar bots, mas aberto a qualquer cliente) -----
     if (action === "get-site-notice") {
+      const session = await getCustomerSession(req);
+      if (!session) return jsonRes({ error: "Unauthorized" }, 401, req);
       const cfg = await getConfigMap(supabase);
+
       return jsonRes({
         ativo: cfg.site_notice_ativo === "true",
         mensagem: cfg.site_notice_mensagem || "",

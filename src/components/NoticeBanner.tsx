@@ -16,6 +16,9 @@ const NoticeBanner = () => {
       headers: {
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        "x-customer-token": localStorage.getItem("loreall-auth") 
+          ? JSON.parse(localStorage.getItem("loreall-auth")!).state.token 
+          : "",
       },
     })
       .then((r) => r.json())
