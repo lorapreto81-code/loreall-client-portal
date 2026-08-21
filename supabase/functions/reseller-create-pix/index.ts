@@ -2,6 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resellerCreatePixSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeaders, corsHeadersFor } from "../_shared/security.ts";
+import { calculateTieredPrice } from "../_shared/prices.ts";
 
  
 
@@ -127,9 +128,10 @@ Deno.serve(async (req) => {
 
     const minC = Number(link.min_credits ?? 10);
     const maxC = Number(link.max_credits ?? 30);
-    const price = Number(link.price_per_credit ?? link.amount / (link.credits || 1));
+    const basePrice = Number(link.price_per_credit ?? link.amount / (link.credits || 1));
     const requested = Number.isFinite(Number(body.credits)) ? Math.floor(Number(body.credits)) : Number(link.credits);
     const credits = Math.max(minC, Math.min(maxC, requested));
+    const price = calculateTieredPrice(credits, basePrice);
     const amount = Number((credits * price).toFixed(2));
 
     // Reaproveita um Pix já pendente e ainda válido para o mesmo revendedor + mesma quantidade de créditos

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -69,6 +69,16 @@ function useCountdown(expiresAt: string | null | undefined) {
   const m = Math.floor(ms / 60000);
   const s = Math.floor((ms % 60000) / 1000);
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function getTieredPrice(credits: number, basePrice: number): number {
+  if (Number(basePrice) !== 11.00) return Number(basePrice);
+  if (credits >= 1000) return 5.50;
+  if (credits >= 500) return 6.00;
+  if (credits >= 100) return 7.00;
+  if (credits >= 50) return 8.00;
+  if (credits >= 30) return 10.00;
+  return 11.00;
 }
 
 export default function Revendedor() {
@@ -176,10 +186,14 @@ export default function Revendedor() {
     };
   }, [pix]);
 
-  const totalAmount = useMemo(() => {
+  const currentUnitPrice = useMemo(() => {
     if (!link) return 0;
-    return Number((credits * Number(link.price_per_credit || 0)).toFixed(2));
+    return getTieredPrice(credits, Number(link.price_per_credit || 0));
   }, [credits, link]);
+
+  const totalAmount = useMemo(() => {
+    return Number((credits * currentUnitPrice).toFixed(2));
+  }, [credits, currentUnitPrice]);
 
   const stepCredits = (delta: number) => {
     if (!link) return;
@@ -431,7 +445,7 @@ export default function Revendedor() {
 
               <div className="flex items-center justify-between w-full">
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                  {link.min_credits}–{link.max_credits} · {formatBRL(Number(link.price_per_credit))}/cr
+                  {link.min_credits}–{link.max_credits} · {formatBRL(currentUnitPrice)}/cr
                 </span>
                 <span className="text-xl font-extrabold text-slate-900 dark:text-slate-50">{formatBRL(totalAmount)}</span>
               </div>
