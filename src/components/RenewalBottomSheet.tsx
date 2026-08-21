@@ -156,6 +156,9 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         // Se existe, consulta o status real na SyncPay
         const { data: statusData, error: statusError } = await supabase.functions.invoke("syncpay-subscription-status", {
           body: { subscription_id: existingSub.syncpay_subscription_id },
+          headers: {
+            "x-customer-token": useAuthStore.getState().token || "",
+          }
         });
 
         if (!statusError && statusData) {
@@ -250,6 +253,9 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           cpf: cleanCpf,
           phone: cleanPhone,
         },
+        headers: {
+          "x-customer-token": useAuthStore.getState().token || "",
+        }
       });
       if (error) {
         const detail = await error.context?.json().catch(() => null);
@@ -356,6 +362,9 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
             subscription_id: subResult.subscription_id,
             customer_id: customer?.id 
           },
+          headers: {
+            "x-customer-token": useAuthStore.getState().token || "",
+          }
         });
         
         if (stop || error) return;
