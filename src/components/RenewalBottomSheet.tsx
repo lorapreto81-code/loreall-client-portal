@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer, authHeaders } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
@@ -10,6 +10,7 @@ import { useAuthStore, Customer } from "@/store/authStore";
 import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
 } from "@/lib/planUtils";
+import { WHATSAPP_NUMBER } from "@/utils/constants";
 const logo = "/logo.png";
 
 interface SyncpayPublicPlan {
@@ -602,9 +603,23 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                         style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
                       >
                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        {copied ? "Copiado!" : isPixAuto ? "Copiar código de autorização" : "Copiar código PIX"}
-                      </button>
-                    </>
+                      {copied ? "Copiado!" : isPixAuto ? "Copiar código de autorização" : "Copiar código PIX"}
+                    </button>
+                    <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mb-2">
+                      <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-amber-700 leading-relaxed">
+                        🔒 Cobrança oficial Loreall Play. Não pedimos pagamento por outro link ou contato.{" "}
+                        <a
+                          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-semibold underline hover:text-amber-800"
+                        >
+                          Não conseguiu pagar por aqui? Fala com a gente.
+                        </a>
+                      </p>
+                    </div>
+                  </>
                   )}
 
                   {isPixAuto && <p className="text-[11px] text-muted-foreground text-center mt-2">Status: aguardando autorização do Pix Automático.</p>}
@@ -683,9 +698,23 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     style={{ minHeight: 48, border: "1.5px solid hsl(var(--secondary))", color: "hsl(var(--secondary))" }}
                   >
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? "Copiado!" : "Copiar código PIX"}
-                  </button>
-                </>
+                      {copied ? "Copiado!" : "Copiar código PIX"}
+                    </button>
+                    <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mb-2">
+                      <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-amber-700 leading-relaxed">
+                        🔒 Cobrança oficial Loreall Play. Não pedimos pagamento por outro link ou contato.{" "}
+                        <a
+                          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-semibold underline hover:text-amber-800"
+                        >
+                          Não conseguiu pagar por aqui? Fala com a gente.
+                        </a>
+                      </p>
+                    </div>
+                  </>
               )}
 
               <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground justify-center">
