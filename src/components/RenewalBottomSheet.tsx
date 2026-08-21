@@ -70,6 +70,29 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrDataUrl2, setQrDataUrl2] = useState<string | null>(null);
 
+  // Gera QR Code localmente para a tela de Assinatura
+  useEffect(() => {
+    if (!subResult?.qr_code_text) {
+      setQrDataUrl(null);
+      return;
+    }
+    QRCode.toDataURL(subResult.qr_code_text, { width: 220, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
+  }, [subResult?.qr_code_text]);
+
+  // Gera QR Code localmente para a tela de Pix direto
+  useEffect(() => {
+    if (!pix?.qr_code_text) {
+      setQrDataUrl2(null);
+      return;
+    }
+    QRCode.toDataURL(pix.qr_code_text, { width: 220, margin: 1 })
+      .then(setQrDataUrl2)
+      .catch(() => setQrDataUrl2(null));
+  }, [pix?.qr_code_text]);
+
+
   const plansQuery = useQuery({
     queryKey: ["plans"],
     queryFn: getPlans,
@@ -481,27 +504,6 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   if (subForm) {
     const isPixAuto = subForm.billing_method === "pix_automatico";
     const qrText = subResult?.qr_code_text;
-    // Gera QR Code localmente para a tela de Assinatura
-    useEffect(() => {
-      if (!qrText) {
-        setQrDataUrl(null);
-        return;
-      }
-      QRCode.toDataURL(qrText, { width: 220, margin: 1 })
-        .then(setQrDataUrl)
-        .catch(() => setQrDataUrl(null));
-    }, [qrText]);
-
-    // Gera QR Code localmente para a tela de Pix direto
-    useEffect(() => {
-      if (!pix?.qr_code_text) {
-        setQrDataUrl2(null);
-        return;
-      }
-      QRCode.toDataURL(pix.qr_code_text, { width: 220, margin: 1 })
-        .then(setQrDataUrl2)
-        .catch(() => setQrDataUrl2(null));
-    }, [pix?.qr_code_text]);
 
     const qrImg = qrDataUrl;
     return (
