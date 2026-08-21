@@ -19,7 +19,11 @@ export function useActiveSubscription(customerId?: number) {
       });
       
       if (error) {
-        console.warn("[useActiveSubscription] Edge function error:", error);
+        if (error.status === 401) {
+          console.warn("[useActiveSubscription] Sessão expirada ou não autorizada.");
+        } else {
+          console.warn("[useActiveSubscription] Erro na função:", error);
+        }
         return null;
       }
 
