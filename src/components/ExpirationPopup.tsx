@@ -13,14 +13,14 @@ interface ExpirationPopupProps {
   isReady: boolean; // true when dashboard data finished loading
 }
 
-function shouldShow(days: number): PopupType {
+export function shouldShow(days: number): PopupType {
   if (days < 0) return "expired";
   if (days <= 3) return "urgent";
   if (days <= 7) return "nearby";
   return null;
 }
 
-function canShow(type: PopupType): boolean {
+export function canShow(type: PopupType): boolean {
   if (!type) return false;
   if (type === "expired") return true;
 
