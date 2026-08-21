@@ -52,6 +52,29 @@ export function sanitizeCustomerForClient(c: Record<string, unknown>): Record<st
   return safe;
 }
 
+/**
+ * Applies a customer override for the number of screens (telas) if one exists in the database.
+ * This allows fixing display issues without changing the TopGestor data directly.
+ */
+export async function applyTelasOverride(
+  supabase: { from: (table: string) => any },
+  customer: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const id = Number(customer.id);
+  if (!id) return customer;
+
+  const { data } = await supabase
+    .from("customer_overrides")
+    .select("telas_override")
+    .eq("customer_id", id)
+    .maybeSingle();
+
+  if (data?.telas_override != null) {
+    return { ...customer, telas: data.telas_override };
+  }
+  return customer;
+}
+
 function normalizeList(j: unknown): Record<string, unknown>[] {
   if (!j) return [];
   if (Array.isArray(j)) return j as Record<string, unknown>[];

@@ -1,5 +1,5 @@
 import { getCustomerSession, isAdminRequest } from "../_shared/auth.ts";
-import { TG_API_BASE as API_BASE, tgHeaders, tgSearchCustomers } from "../_shared/tg.ts";
+import { TG_API_BASE as API_BASE, tgHeaders, tgSearchCustomers, applyTelasOverride } from "../_shared/tg.ts";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
 async function proxyResponse(res: Response, req: Request): Promise<Response> {
@@ -58,8 +58,20 @@ Deno.serve(async (req) => {
       }
 
       case "get-customer": {
-        apiRes = await fetch(`${API_BASE}/customers/${id}`, { headers: tgHeaders() });
-        break;
+        const r = await fetch(`${API_BASE}/customers/${id}`, { headers: tgHeaders() });
+        const raw = await r.json().catch(() => ({}));
+        if (!r.ok) return json(raw, r.status, {}, req);
+        
+        // Use service_role client to check for overrides
+        const supaUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const { createClient } = await import("npm:@supabase/supabase-js@2");
+        const supabaseClient = createClient(supaUrl, serviceKey);
+
+        const customerObj = (raw?.data ?? raw) as Record<string, unknown>;
+        const withOverride = await applyTelasOverride(supabaseClient, customerObj);
+        
+        return json(raw?.data ? { ...raw, data: withOverride } : withOverride, 200, {}, req);
       }
 
       case "get-invoices": {
