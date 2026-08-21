@@ -52,7 +52,6 @@ export class BaseApi {
         });
         clearTimeout(id);
 
-
         if (response.status === 401) {
           window.dispatchEvent(new CustomEvent("auth:unauthorized"));
           throw new Error("Sessão expirada. Faça login novamente.");
