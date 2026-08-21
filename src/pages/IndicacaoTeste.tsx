@@ -89,7 +89,13 @@ const IndicacaoTeste = () => {
       try {
         const cfgRes = await fetch(
           `${SUPABASE_URL}/functions/v1/referrals-api?action=get-trial-config-public`,
-          { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } },
+          { 
+            headers: { 
+              apikey: ANON_KEY, 
+              Authorization: `Bearer ${ANON_KEY}`,
+              "x-customer-token": useAuthStore.getState().token || "",
+            } 
+          },
         ).then((r) => r.json());
         setConfig(cfgRes as PublicConfig);
       } catch {
@@ -198,6 +204,7 @@ const IndicacaoTeste = () => {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
           Authorization: `Bearer ${ANON_KEY}`,
+          "x-customer-token": useAuthStore.getState().token || "",
         },
         body: JSON.stringify({ code, name: name.trim(), whatsapp: phoneDigits }),
       });

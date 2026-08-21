@@ -118,7 +118,11 @@ export default function Revendedor() {
       const supaUrl = import.meta.env.VITE_SUPABASE_URL;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const res = await fetch(`${supaUrl}/functions/v1/reseller-link-info?slug=${encodeURIComponent(slug.toLowerCase())}`, {
-        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+        headers: { 
+          apikey: anonKey, 
+          Authorization: `Bearer ${anonKey}`,
+          "x-customer-token": useAuthStore.getState().token || "",
+        },
       });
       const data = res.ok ? await res.json() : null;
       if (cancelled) return;
@@ -142,7 +146,13 @@ export default function Revendedor() {
       try {
         const r = await fetch(
           `${SUPABASE_URL}/functions/v1/reseller-check-status?id=${pix.purchase_id}`,
-          { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } },
+          { 
+            headers: { 
+              apikey: ANON_KEY, 
+              Authorization: `Bearer ${ANON_KEY}`,
+              "x-customer-token": useAuthStore.getState().token || "",
+            } 
+          },
         );
         const data = (await r.json()) as StatusData;
         if (stop) return;
@@ -187,6 +197,7 @@ export default function Revendedor() {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
           Authorization: `Bearer ${ANON_KEY}`,
+          "x-customer-token": useAuthStore.getState().token || "",
         },
         body: JSON.stringify({ slug: link.slug, credits }),
       });
@@ -234,7 +245,11 @@ export default function Revendedor() {
     if (!pix) return;
     toast.info("Reprocessando recarga...");
     await fetch(`${SUPABASE_URL}/functions/v1/reseller-check-status?id=${pix.purchase_id}`, {
-      headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
+      headers: { 
+        apikey: ANON_KEY, 
+        Authorization: `Bearer ${ANON_KEY}`,
+        "x-customer-token": useAuthStore.getState().token || "",
+      },
     });
   };
 

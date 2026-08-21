@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
 import { Megaphone, X } from "lucide-react";
 
 interface Notice {
@@ -16,9 +17,7 @@ const NoticeBanner = () => {
       headers: {
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        "x-customer-token": localStorage.getItem("loreall-auth") 
-          ? JSON.parse(localStorage.getItem("loreall-auth")!).state.token 
-          : "",
+        "x-customer-token": useAuthStore.getState().token || "",
       },
     })
       .then((r) => r.json())
