@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { tgSearchCustomers } from "../_shared/tg.ts";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
-import { generateOtpCode, hashOtp, onlyDigits, phoneKey } from "../_shared/otp.ts";
+import { generateOtpCode, hashOtp, onlyDigits, phoneKey, classifyIdentifier, customerMatchesIdentifier } from "../_shared/otp.ts";
 import { otpRequestSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
@@ -28,11 +28,8 @@ Deno.serve(async (req) => {
     const context = parse.data.context || "customer";
     const slug = parse.data.slug;
     
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-    const digits = onlyDigits(input);
-    const isFictitiousEmail = !isEmail && /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(input) && digits.length < 8;
-
-    const key = (isEmail || isFictitiousEmail) ? input.toLowerCase().trim() : phoneKey(digits);
+    const { isEmail, digits, isTextual, key } = classifyIdentifier(input);
+    const isFictitiousEmail = isTextual && !isEmail;
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -193,30 +190,18 @@ Deno.serve(async (req) => {
         clearTimeout(timeoutId);
       }
 
-      if ((isEmail || isFictitiousEmail) && customers.length === 0) {
+      if (isTextual && customers.length === 0) {
         const localPart = key.split('@')[0];
         if (localPart.length >= 3) {
           customers = await tgSearchCustomers(localPart);
         }
       }
 
-      matches = customers.filter((c) => {
-        if (isEmail || isFictitiousEmail) {
-          const cEmail = String(c.email || "").toLowerCase().trim();
-          const cName = String(c.name || "").toLowerCase().trim();
-          const localPart = key.split('@')[0];
-          return cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
-        }
-        const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
-        return phoneFields
-          .filter(Boolean)
-          .map((v) => phoneKey(String(v)))
-          .some((p) => p === key);
-      });
+      matches = customers.filter((c) => customerMatchesIdentifier(c, key, isTextual));
 
       if (matches.length === 0) {
-        const errorMsg = isEmail 
-          ? "E-mail não vinculado a nenhuma conta."
+        const errorMsg = isTextual
+          ? "E-mail ou usuário não vinculado a nenhuma conta."
           : "Número não vinculado a nenhuma conta.";
         return json({ error: errorMsg }, 404, {}, req);
       }

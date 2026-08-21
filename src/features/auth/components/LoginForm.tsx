@@ -40,7 +40,7 @@ export const LoginForm = ({
           <>
             <p className="text-sm font-medium text-foreground mb-1">Identifique-se para continuar</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Informe seu <span className="text-foreground font-semibold">WhatsApp</span> ou <span className="text-foreground font-semibold">E-mail</span>. 
+              Informe seu <span className="text-foreground font-semibold">WhatsApp</span>, <span className="text-foreground font-semibold">E-mail</span> ou <span className="text-foreground font-semibold">Usuário</span>. 
               Você receberá um <span className="text-primary font-bold">Código de Acesso Seguro</span> instantaneamente.
             </p>
           </>
@@ -88,7 +88,7 @@ export const LoginForm = ({
                 }
               }}
               className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-              placeholder="WhatsApp ou E-mail"
+              placeholder="WhatsApp, e-mail ou usuário"
               autoComplete="username"
             />
             <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
