@@ -117,7 +117,9 @@ const Admin = () => {
     sessionStorage.setItem("admin_password", trimmedPassword);
 
     try {
-      await resellerAdmin.getConfig();
+      const res = await resellerAdmin.getConfig();
+      setAtivo(res.config?.site_notice_ativo === "true");
+      setMensagem(res.config?.site_notice_mensagem || "");
       setAuthenticated(true);
     } catch {
       sessionStorage.removeItem("admin_password");
