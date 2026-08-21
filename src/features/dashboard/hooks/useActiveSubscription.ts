@@ -17,8 +17,15 @@ export function useActiveSubscription(customerId?: number) {
       const { data, error } = await supabase.functions.invoke("syncpay-subscription-status", {
         body: { customer_id: customerId },
       });
-      if (error) return null;
-      if (!data || data.error || !data.status || data.status === "cancelled") return null;
+      
+      if (error) {
+        console.warn("[useActiveSubscription] Edge function error:", error);
+        return null;
+      }
+
+      if (!data || data.error || !data.status || data.status === "cancelled") {
+        return null;
+      }
       return {
         subscription_id: data.subscription_id || null,
         status: data.status,
