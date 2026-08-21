@@ -683,10 +683,14 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
         <div
-          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto"
+          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
           onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={handleClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
+          <button
+            onClick={() => (isPaid ? handleClose() : setShowExitConfirm(true))}
+            className="absolute top-4 right-4 bg-muted/60 hover:bg-muted text-foreground rounded-full p-2 z-10"
+            style={{ minHeight: 44, minWidth: 44 }}
+          >
             <X className="h-5 w-5" />
           </button>
           <div className="flex justify-center mb-3">
