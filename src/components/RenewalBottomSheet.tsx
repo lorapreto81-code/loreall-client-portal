@@ -3,6 +3,14 @@ import QRCode from "qrcode";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, Copy, Check, X, QrCode, Zap, Repeat, Sparkles, ShieldCheck } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer, authHeaders } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
