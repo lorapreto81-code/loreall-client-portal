@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { signCustomerToken } from "../_shared/auth.ts";
 import { tgSearchCustomers, sanitizeCustomerForClient, tgGetCustomersByIds, applyTelasOverride } from "../_shared/tg.ts";
-import { hashOtp, onlyDigits, phoneKey } from "../_shared/otp.ts";
+import { hashOtp, onlyDigits, classifyIdentifier, customerMatchesIdentifier } from "../_shared/otp.ts";
 import { otpVerifySchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
@@ -21,10 +21,7 @@ Deno.serve(async (req) => {
     const code = onlyDigits(parse.data.code);
     const context = parse.data.context || "customer";
     
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
-    const digits = onlyDigits(raw);
-
-    const key = isEmail ? raw.toLowerCase().trim() : phoneKey(digits);
+    const { isEmail, digits, isTextual, key } = classifyIdentifier(raw);
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -77,24 +74,12 @@ Deno.serve(async (req) => {
 
     } else {
       // Logic for customer verification
-      const searchIdentifier = isEmail ? raw.slice(0, 100) : digits;
+      const searchIdentifier = isTextual ? key.slice(0, 100) : digits;
       const matchedIds: number[] = Array.isArray(row.matched_customer_ids) ? row.matched_customer_ids : [];
       const customers = matchedIds.length > 0
         ? await tgGetCustomersByIds(matchedIds)
         : await tgSearchCustomers(searchIdentifier); // fallback pra linhas antigas, criadas antes dessa mudança
-      const matches = customers.filter((c) => {
-        if (isEmail) {
-          const cEmail = String(c.email || "").toLowerCase().trim();
-          const cName = String(c.name || "").toLowerCase().trim();
-          const localPart = key.split('@')[0];
-          return cEmail === key || cEmail.includes(localPart) || cName.includes(localPart);
-        }
-        const phoneFields = [c.whatsapp, c.celular, c.phone, c.telefone, c.whatsapp_c];
-        return phoneFields
-          .filter(Boolean)
-          .map((v) => phoneKey(String(v)))
-          .some((p) => p === key);
-      });
+      const matches = customers.filter((c) => customerMatchesIdentifier(c, key, isTextual));
 
       if (matches.length === 0) {
         return json({ error: "Conta não encontrada." }, 404, {}, req);
