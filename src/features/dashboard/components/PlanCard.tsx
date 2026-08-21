@@ -1,4 +1,4 @@
-import { CalendarDays, Monitor, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap, XCircle } from "lucide-react";
+import { CalendarDays, Monitor, Tv, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap, XCircle } from "lucide-react";
 import { Customer } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
 import { getStatusPill, telasLabel } from "@/utils/constants";
@@ -69,9 +69,13 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
           </div>
         </div>
         <div className="flex items-start gap-2">
-          <Monitor className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div className="flex -space-x-1 mt-0.5 shrink-0">
+            {Array.from({ length: Math.min(Number(customer.telas) || 1, 4) }).map((_, i) => (
+              <Tv key={i} className="h-4 w-4 text-muted-foreground" style={{ zIndex: 4 - i }} />
+            ))}
+          </div>
           <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground mb-0.5">Telas</p>
+            <p className="text-[11px] text-muted-foreground mb-0.5">Telas simultâneas</p>
             <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
           </div>
         </div>
@@ -85,7 +89,7 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
           style={{ minHeight: 52, borderRadius: 14 }}
         >
           <Zap className="h-4 w-4 group-hover:scale-110 transition-transform" />
-          Renovar acesso
+          {days > 7 ? "Adiantar renovação" : "Renovar acesso"}
         </button>
       )}
 
