@@ -15,6 +15,7 @@ function makeCaller(fnName: string) {
         apikey: ANON_KEY,
         Authorization: `Bearer ${ANON_KEY}`,
         "x-admin-password": getAdminPassword(),
+        "x-customer-token": sessionStorage.getItem("admin_password") || "", // Compatibility if needed
       },
       ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
     });

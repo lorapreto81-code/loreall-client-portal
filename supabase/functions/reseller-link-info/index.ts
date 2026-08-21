@@ -1,9 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getCustomerSession } from "../_shared/auth.ts";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: securityHeadersFor(req) });
   try {
+    const session = await getCustomerSession(req);
+    if (!session || session.role !== "customer") {
+      return json({ error: "Unauthorized" }, 401, {}, req);
+    }
+
     const url = new URL(req.url);
     const slug = (url.searchParams.get("slug") || "").trim().toLowerCase();
     if (!slug) return json({ error: "slug required" }, 400, {}, req);
