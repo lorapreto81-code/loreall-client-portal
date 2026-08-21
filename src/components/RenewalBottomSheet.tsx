@@ -766,6 +766,38 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               </div>
             </>
           )}
+
+          <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+            <AlertDialogContent className="w-[90%] max-w-[380px] rounded-2xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Falta pouco pra renovar!</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Você já gerou o Pix. O que prefere fazer?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col gap-2 mt-2">
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm text-white"
+                  style={{ background: "linear-gradient(90deg,#3b82f6,#8b5cf6)" }}
+                >
+                  Continuar pagamento
+                </button>
+                <button
+                  onClick={() => { setShowExitConfirm(false); resetState(); }}
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm border border-border text-foreground"
+                >
+                  Trocar de plano
+                </button>
+                <button
+                  onClick={() => { setShowExitConfirm(false); handleClose(); }}
+                  className="w-full py-2 text-xs text-muted-foreground underline"
+                >
+                  Cancelar e sair
+                </button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     );
