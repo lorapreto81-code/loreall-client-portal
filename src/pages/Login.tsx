@@ -86,4 +86,69 @@ const Login = () => {
   );
 };
 
+const banners = [
+  {
+    id: "renove",
+    asset: renoveBanner,
+    alt: "Renove sua assinatura ou atualize seu acesso agora",
+    href: "https://wa.me/5583985591952?text=Olá!%20Quero%20renovar%20minha%20assinatura.",
+    label: "Renove sua assinatura"
+  },
+  {
+    id: "indique",
+    asset: indiqueBanner,
+    alt: "Indique e ganhe +1 mês grátis para cada amigo que assinar",
+    href: "https://wa.me/5583985591952?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe.",
+    label: "Indique e ganhe 1 mês grátis"
+  }
+];
+
+const BannerRotativo = () => {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActive((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden">
+      {banners.map((banner, index) => (
+        <a
+          key={banner.id}
+          href={banner.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`absolute inset-0 transition-opacity duration-700 ${
+            index === active ? "opacity-100 z-10" : "opacity-0 z-0"
+          }`}
+          aria-label={banner.label}
+          aria-hidden={index !== active}
+        >
+          <img
+            src={banner.asset.url}
+            alt={banner.alt}
+            className="w-full h-full object-cover block"
+            loading={index === 0 ? "eager" : "lazy"}
+          />
+        </a>
+      ))}
+      {/* Indicadores */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+        {banners.map((_, index) => (
+          <span
+            key={index}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              index === active ? "w-4 bg-white" : "w-1.5 bg-white/50"
+            }`}
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default Login;
