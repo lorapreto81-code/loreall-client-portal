@@ -1,7 +1,7 @@
-import { CalendarDays, Monitor, Tv, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap, XCircle } from "lucide-react";
+import { CalendarDays, Monitor, Tv, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap, XCircle, MonitorUp } from "lucide-react";
 import { Customer } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
-import { getStatusPill, telasLabel } from "@/utils/constants";
+import { getStatusPill, telasLabel, WHATSAPP_NUMBER } from "@/utils/constants";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 import { 
   AlertDialog, 
