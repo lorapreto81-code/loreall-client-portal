@@ -72,21 +72,10 @@ const Login = () => {
           )}
         </div>
 
-        {/* Banner Indique e Ganhe */}
-        <a
-          href="https://wa.me/5583985591952?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] active:scale-[0.99]"
-          aria-label="Indique e ganhe 1 mês grátis"
-        >
-          <img
-            src={indiqueBanner.url}
-            alt="Indique e ganhe +1 mês grátis para cada amigo que assinar"
-            className="w-full h-auto block"
-            loading="lazy"
-          />
-        </a>
+        {/* Banner rotativo: Renove → Indique e Ganhe */}
+        <div className="relative h-auto">
+          <BannerRotativo />
+        </div>
 
         <p className="text-[10px] text-muted-foreground/60 text-center font-medium flex flex-col gap-1">
           <span>🔒 Acesso 100% seguro e protegido</span>
