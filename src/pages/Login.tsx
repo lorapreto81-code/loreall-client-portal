@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
 import { AccountSelection } from "@/features/auth/components/AccountSelection";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { logo } from "@/utils/constants";
 import indiqueBanner from "@/assets/indique-ganhe-banner-v2.png.asset.json";
+import renoveBanner from "@/assets/renove-assinatura-banner.png.asset.json";
 
 const Login = () => {
   const {
@@ -70,26 +72,80 @@ const Login = () => {
           )}
         </div>
 
-        {/* Banner Indique e Ganhe */}
-        <a
-          href="https://wa.me/5583985591952?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] active:scale-[0.99]"
-          aria-label="Indique e ganhe 1 mês grátis"
-        >
-          <img
-            src={indiqueBanner.url}
-            alt="Indique e ganhe +1 mês grátis para cada amigo que assinar"
-            className="w-full h-auto block"
-            loading="lazy"
-          />
-        </a>
+        {/* Banner rotativo: Renove → Indique e Ganhe */}
+        <div className="relative h-auto">
+          <BannerRotativo />
+        </div>
 
         <p className="text-[10px] text-muted-foreground/60 text-center font-medium flex flex-col gap-1">
           <span>🔒 Acesso 100% seguro e protegido</span>
           <span>© Loreall Play TV — Entretenimento Premium Sem Limites.</span>
         </p>
+      </div>
+    </div>
+  );
+};
+
+const banners = [
+  {
+    id: "renove",
+    asset: renoveBanner,
+    alt: "Renove sua assinatura ou atualize seu acesso agora",
+    href: "https://wa.me/5583985591952?text=Olá!%20Quero%20renovar%20minha%20assinatura.",
+    label: "Renove sua assinatura"
+  },
+  {
+    id: "indique",
+    asset: indiqueBanner,
+    alt: "Indique e ganhe +1 mês grátis para cada amigo que assinar",
+    href: "https://wa.me/5583985591952?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe.",
+    label: "Indique e ganhe 1 mês grátis"
+  }
+];
+
+const BannerRotativo = () => {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActive((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden">
+      {banners.map((banner, index) => (
+        <a
+          key={banner.id}
+          href={banner.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`absolute inset-0 transition-opacity duration-700 ${
+            index === active ? "opacity-100 z-10" : "opacity-0 z-0"
+          }`}
+          aria-label={banner.label}
+          aria-hidden={index !== active}
+        >
+          <img
+            src={banner.asset.url}
+            alt={banner.alt}
+            className="w-full h-full object-cover block"
+            loading={index === 0 ? "eager" : "lazy"}
+          />
+        </a>
+      ))}
+      {/* Indicadores */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+        {banners.map((_, index) => (
+          <span
+            key={index}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              index === active ? "w-4 bg-white" : "w-1.5 bg-white/50"
+            }`}
+            aria-hidden="true"
+          />
+        ))}
       </div>
     </div>
   );
