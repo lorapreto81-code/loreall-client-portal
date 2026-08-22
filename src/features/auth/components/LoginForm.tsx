@@ -1,6 +1,8 @@
 import { MessageCircle, Lock, Loader2, User, ArrowLeft, Gift } from "lucide-react";
 import { EMAIL_RE } from "@/utils/constants";
 import { formatPhone, onlyDigits } from "@/utils/formatters";
+import { useState } from "react";
+import { COUNTRIES, formatNational, splitPhone, toE164Digits } from "@/utils/countries";
 
 interface LoginFormProps {
   step: "phone" | "code";
@@ -33,6 +35,9 @@ export const LoginForm = ({
   onBackToPhone,
   onSubmit
 }: LoginFormProps) => {
+  const [dial, setDial] = useState(() => splitPhone(phone).dial);
+  const isPhoneMode = phone === "" || /^\+?[\d\s()\-]+$/.test(phone);
+
   return (
     <>
       <div className="mb-5">
@@ -68,30 +73,50 @@ export const LoginForm = ({
 
       <form onSubmit={onSubmit} className="space-y-3">
         {step === "phone" ? (
-          <div className="relative">
-            <input
-              type="text"
-              value={EMAIL_RE.test(phone) || /[a-zA-Z]/.test(phone) ? phone : formatPhone(phone)}
-              onChange={(e) => {
-                const raw = e.target.value;
-                const val = raw.slice(0, 100);
-                
-                // If it contains letters or @, treat as email/text
-                if (/[a-zA-Z]/.test(val) || val.includes("@")) {
-                  onPhoneChange(val.toLowerCase());
-                } else if (val === "") {
-                  onPhoneChange("");
-                } else {
-                  // If it's just numbers and phone formatting chars, keep it as digits
-                  // but ONLY if there are no letters.
-                  onPhoneChange(onlyDigits(val).slice(0, 15));
-                }
-              }}
-              className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-              placeholder="WhatsApp, e-mail ou usuário"
-              autoComplete="username"
-            />
-            <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="flex items-stretch gap-2">
+            {isPhoneMode && (
+              <select
+                aria-label="País"
+                value={dial}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setDial(next);
+                  const nat = splitPhone(phone).national;
+                  onPhoneChange(toE164Digits(next, nat));
+                }}
+                className="shrink-0 w-[92px] px-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.dial}>
+                    {c.flag} +{c.dial}
+                  </option>
+                ))}
+              </select>
+            )}
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={isPhoneMode ? formatNational(dial, splitPhone(phone).national) : phone}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const val = raw.slice(0, 100);
+
+                  // If it contains letters or @, treat as email/text
+                  if (/[a-zA-Z]/.test(val) || val.includes("@")) {
+                    onPhoneChange(val.toLowerCase());
+                  } else if (val === "") {
+                    onPhoneChange("");
+                  } else {
+                    const nat = onlyDigits(val).slice(0, 13);
+                    onPhoneChange(toE164Digits(dial, nat));
+                  }
+                }}
+                className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
+                placeholder="WhatsApp, e-mail ou usuário"
+                autoComplete="username"
+              />
+              <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
         ) : (
           <>
