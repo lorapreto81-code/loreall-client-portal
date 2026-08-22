@@ -42,7 +42,7 @@ export const LoginForm = ({
     if (phone === "") setRaw("");
   }, [phone]);
 
-  const isTextMode = /[a-zA-Z@._-]/.test(raw);
+  const isTextMode = /[a-zA-Z@]/.test(raw);
   const digits = onlyDigits(raw);
   // Country selector only appears once we are sure it is a phone number
   const showCountry = !isTextMode && digits.length >= 4;
@@ -108,7 +108,7 @@ export const LoginForm = ({
                   value={showCountry ? formatNational(dial, digits) : raw}
                   onChange={(e) => {
                     const val = e.target.value.slice(0, 100);
-                    const isText = /[a-zA-Z@._-]/.test(val);
+                    const isText = /[a-zA-Z@]/.test(val);
                     if (isText) {
                       setRaw(val);
                       onPhoneChange(val.toLowerCase().trim());
