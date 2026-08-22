@@ -119,7 +119,7 @@ const BannerRotativo = () => {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden border border-white/5 bg-transparent p-[1.5px]">
+      <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden border border-white/5 bg-transparent p-[3px] pb-2">
         <div className="w-full h-full rounded-[calc(1rem-1.5px)] overflow-hidden relative">
           {banners.map((banner, index) => (
             <a
