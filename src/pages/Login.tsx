@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
 import { AccountSelection } from "@/features/auth/components/AccountSelection";
 import { LoginForm } from "@/features/auth/components/LoginForm";
@@ -113,39 +114,80 @@ const BannerRotativo = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const next = () => setActive((prev) => (prev + 1) % banners.length);
+  const prev = () => setActive((prev) => (prev - 1 + banners.length) % banners.length);
+
   return (
-    <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden">
-      {banners.map((banner, index) => (
-        <a
-          key={banner.id}
-          href={banner.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            index === active ? "opacity-100 z-10" : "opacity-0 z-0"
-          }`}
-          aria-label={banner.label}
-          aria-hidden={index !== active}
-        >
-          <img
-            src={banner.asset.url}
-            alt={banner.alt}
-            className="w-full h-full object-cover block"
-            loading={index === 0 ? "eager" : "lazy"}
-          />
-        </a>
-      ))}
-      {/* Indicadores */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-        {banners.map((_, index) => (
-          <span
-            key={index}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              index === active ? "w-4 bg-white" : "w-1.5 bg-white/50"
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden">
+        {banners.map((banner, index) => (
+          <a
+            key={banner.id}
+            href={banner.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              index === active ? "opacity-100 z-10" : "opacity-0 z-0"
             }`}
-            aria-hidden="true"
-          />
+            aria-label={banner.label}
+            aria-hidden={index !== active}
+          >
+            <img
+              src={banner.asset.url}
+              alt={banner.alt}
+              className="w-full h-full object-cover block"
+              loading={index === 0 ? "eager" : "lazy"}
+            />
+          </a>
         ))}
+        {/* Indicadores internos */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+          {banners.map((_, index) => (
+            <span
+              key={index}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === active ? "w-4 bg-white" : "w-1.5 bg-white/50"
+              }`}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Seletor manual de banners */}
+      <div className="flex items-center gap-2" role="group" aria-label="Selecionar banner">
+        <button
+          type="button"
+          onClick={prev}
+          className="h-8 w-8 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+          aria-label="Banner anterior"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+
+        <div className="flex items-center gap-1.5">
+          {banners.map((banner, index) => (
+            <button
+              key={banner.id}
+              type="button"
+              onClick={() => setActive(index)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === active ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"
+              }`}
+              aria-label={`Ver ${banner.label}`}
+              aria-pressed={index === active}
+            />
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={next}
+          className="h-8 w-8 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+          aria-label="Próximo banner"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
