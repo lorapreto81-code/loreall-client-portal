@@ -181,9 +181,9 @@ export const LoginForm = ({
           {loading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : step === "phone" ? (
-            <>
+          <>
               <MessageCircle className="h-5 w-5" />
-              Obter Acesso Imediato
+              Receber código de acesso
             </>
           ) : (
             <>
