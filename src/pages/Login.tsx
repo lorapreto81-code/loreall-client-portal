@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
 import { AccountSelection } from "@/features/auth/components/AccountSelection";
 import { LoginForm } from "@/features/auth/components/LoginForm";
