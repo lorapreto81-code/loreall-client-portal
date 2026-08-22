@@ -2,7 +2,7 @@ import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
 import { AccountSelection } from "@/features/auth/components/AccountSelection";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { logo } from "@/utils/constants";
-import indiqueBanner from "@/assets/indique-ganhe-banner.jpg.asset.json";
+import indiqueBanner from "@/assets/indique-ganhe-banner-v2.png.asset.json";
 
 const Login = () => {
   const {
