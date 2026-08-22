@@ -1,6 +1,6 @@
 import { MessageCircle, Lock, Loader2, User, ArrowLeft, Gift } from "lucide-react";
 import { onlyDigits } from "@/utils/formatters";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { COUNTRIES, formatNational, splitPhone, toE164Digits } from "@/utils/countries";
 
 interface LoginFormProps {
@@ -35,7 +35,17 @@ export const LoginForm = ({
   onSubmit
 }: LoginFormProps) => {
   const [dial, setDial] = useState(() => splitPhone(phone).dial);
-  const isPhoneMode = phone === "" || /^\+?[\d\s()\-]+$/.test(phone);
+  // Raw text exactly as typed by the user (keeps "24max..." intact while it is still ambiguous)
+  const [raw, setRaw] = useState(() => (phone ? splitPhone(phone).national : ""));
+
+  useEffect(() => {
+    if (phone === "") setRaw("");
+  }, [phone]);
+
+  const isTextMode = /[a-zA-Z@._-]/.test(raw);
+  const digits = onlyDigits(raw);
+  // Country selector only appears once we are sure it is a phone number
+  const showCountry = !isTextMode && digits.length >= 4;
 
   return (
     <>
@@ -73,15 +83,14 @@ export const LoginForm = ({
       <form onSubmit={onSubmit} className="space-y-3">
         {step === "phone" ? (
           <div className="flex items-stretch gap-2">
-            {isPhoneMode && (
+            {showCountry && (
               <select
                 aria-label="País"
                 value={dial}
                 onChange={(e) => {
                   const next = e.target.value;
                   setDial(next);
-                  const nat = splitPhone(phone).national;
-                  onPhoneChange(toE164Digits(next, nat));
+                  onPhoneChange(toE164Digits(next, digits));
                 }}
                 className="shrink-0 w-[92px] px-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
@@ -95,19 +104,23 @@ export const LoginForm = ({
             <div className="relative flex-1">
               <input
                 type="text"
-                value={isPhoneMode ? formatNational(dial, splitPhone(phone).national) : phone}
+                value={showCountry ? formatNational(dial, digits) : raw}
                 onChange={(e) => {
-                  const raw = e.target.value;
-                  const val = raw.slice(0, 100);
-
-                  // If it contains letters or @, treat as email/text
-                  if (/[a-zA-Z]/.test(val) || val.includes("@")) {
-                    onPhoneChange(val.toLowerCase());
-                  } else if (val === "") {
+                  const val = e.target.value.slice(0, 100);
+                  const isText = /[a-zA-Z@._-]/.test(val);
+                  if (isText) {
+                    setRaw(val);
+                    onPhoneChange(val.toLowerCase().trim());
+                    return;
+                  }
+                  const nat = onlyDigits(val).slice(0, 15);
+                  setRaw(nat);
+                  if (nat === "") {
                     onPhoneChange("");
-                  } else {
-                    const nat = onlyDigits(val).slice(0, 13);
+                  } else if (nat.length >= 4) {
                     onPhoneChange(toE164Digits(dial, nat));
+                  } else {
+                    onPhoneChange(nat);
                   }
                 }}
                 className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
@@ -115,6 +128,11 @@ export const LoginForm = ({
                 autoComplete="username"
               />
               <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              {isTextMode && (
+                <p className="mt-1.5 text-[10px] text-muted-foreground">
+                  Detectamos e-mail ou usuário — o seletor de país não é necessário.
+                </p>
+              )}
             </div>
           </div>
         ) : (
