@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { tgSearchCustomers } from "../_shared/tg.ts";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
-import { generateOtpCode, hashOtp, onlyDigits, phoneKey, classifyIdentifier, customerMatchesIdentifier } from "../_shared/otp.ts";
+import { generateOtpCode, hashOtp, onlyDigits, phoneMatches, classifyIdentifier, customerMatchesIdentifier } from "../_shared/otp.ts";
 import { otpRequestSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
 
         }
 
-        return !!l.whatsapp && phoneKey(onlyDigits(l.whatsapp)) === key;
+        return !!l.whatsapp && phoneMatches(l.whatsapp, key);
 
       };
 

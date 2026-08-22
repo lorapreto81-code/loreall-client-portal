@@ -3,21 +3,15 @@ import { toast } from "sonner";
 import { Loader2, X, User, Phone, Mail, IdCard } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
+import { formatPhone, onlyDigits } from "@/utils/formatters";
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-const onlyDigits = (v: string) => v.replace(/\D/g, "");
 
-const formatPhone = (v: string) => {
-  const d = onlyDigits(v).slice(0, 11);
-  if (d.length <= 2) return d;
-  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-};
+
 
 const formatCpf = (v: string) => {
   const d = onlyDigits(v).slice(0, 11);
@@ -56,7 +50,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
     const trimmedEmail = email.trim().toLowerCase();
 
     if (trimmed.length < 3) return toast.error("Informe seu nome completo.");
-    if (phoneDigits.length < 10) return toast.error("WhatsApp inválido.");
+    if (phoneDigits.length < 8 || phoneDigits.length > 15) return toast.error("WhatsApp inválido.");
     if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
       return toast.error("E-mail inválido.");
     if (cpfDigits && cpfDigits.length !== 11) return toast.error("CPF inválido.");
@@ -125,7 +119,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
               value={whatsapp}
               onChange={(e) => setWhatsapp(formatPhone(e.target.value))}
               inputMode="tel"
-              maxLength={16}
+              maxLength={20}
               className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
               placeholder="(00) 00000-0000"
             />

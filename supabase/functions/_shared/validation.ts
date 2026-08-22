@@ -1,9 +1,10 @@
 import { z } from "npm:zod";
 
 export const phoneSchema = z.string()
-  .min(10, "Número muito curto")
-  .max(13, "Número muito longo")
+  .min(8, "Número muito curto")
+  .max(15, "Número muito longo")
   .regex(/^\d+$/, "Número deve conter apenas dígitos");
+
 
 export const emailSchema = z.string()
   .email("E-mail inválido")
