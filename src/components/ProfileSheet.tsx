@@ -3,13 +3,14 @@ import { toast } from "sonner";
 import { Loader2, X, User, Phone, Mail, IdCard } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
+import { formatPhone, onlyDigits } from "@/utils/formatters";
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-import { formatPhone, onlyDigits } from "@/utils/formatters";
+
 
 
 const formatCpf = (v: string) => {
