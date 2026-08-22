@@ -84,7 +84,7 @@ export const LoginForm = ({
                 } else {
                   // If it's just numbers and phone formatting chars, keep it as digits
                   // but ONLY if there are no letters.
-                  onPhoneChange(onlyDigits(val).slice(0, 13));
+                  onPhoneChange(onlyDigits(val).slice(0, 15));
                 }
               }}
               className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
