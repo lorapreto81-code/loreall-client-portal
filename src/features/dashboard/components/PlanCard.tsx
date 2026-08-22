@@ -1,7 +1,7 @@
-import { CalendarDays, Monitor, Tv, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap, XCircle } from "lucide-react";
+import { CalendarDays, Monitor, Tv, Sparkles, Repeat, Clock, Settings, AlertTriangle, Zap, XCircle, MonitorUp } from "lucide-react";
 import { Customer } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
-import { getStatusPill, telasLabel } from "@/utils/constants";
+import { getStatusPill, telasLabel, WHATSAPP_NUMBER } from "@/utils/constants";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 import { 
   AlertDialog, 
@@ -86,6 +86,17 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
           </div>
         </div>
       </div>
+
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+          `Olá! Sou ${customer.name}, cliente do plano "${customer.plan?.name || ""}" (${telasLabel(customer.telas)}). Gostaria de adicionar mais telas ao meu plano.`
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+      >
+        <MonitorUp className="h-3.5 w-3.5" /> Quero mais telas no meu plano
+      </a>
 
       {/* Sem assinatura automática: botão de renovar de sempre */}
       {!subscription && (
