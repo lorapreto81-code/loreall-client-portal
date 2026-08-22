@@ -25,7 +25,7 @@ const Login = () => {
   } = useLoginFlow();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-start justify-center bg-background px-4 pt-16 pb-8 relative overflow-hidden">
       {/* Ambient gradient glow */}
       <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full bg-primary/15 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
