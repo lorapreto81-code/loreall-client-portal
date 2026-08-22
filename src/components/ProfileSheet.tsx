@@ -4,6 +4,8 @@ import { Loader2, X, User, Phone, Mail, IdCard } from "lucide-react";
 import { updateCustomer, getCustomer } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 import { formatPhone, onlyDigits } from "@/utils/formatters";
+import PhoneInput from "@/components/PhoneInput";
+import { isValidPhone, splitPhone } from "@/utils/countries";
 
 interface Props {
   open: boolean;
@@ -36,7 +38,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
       (customer as any).whatsapp ||
       (customer as any).celular ||
       "";
-    setWhatsapp(formatPhone(String(raw)));
+    setWhatsapp(String(raw).replace(/\D/g, ""));
     setEmail(String((customer as any).email || ""));
     setCpf(formatCpf(String((customer as any).cpf || "")));
   }, [open, customer]);
@@ -50,7 +52,10 @@ const ProfileSheet = ({ open, onClose }: Props) => {
     const trimmedEmail = email.trim().toLowerCase();
 
     if (trimmed.length < 3) return toast.error("Informe seu nome completo.");
-    if (phoneDigits.length < 8 || phoneDigits.length > 15) return toast.error("WhatsApp inválido.");
+    {
+      const sp = splitPhone(whatsapp);
+      if (!isValidPhone(sp.dial, sp.national)) return toast.error("WhatsApp inválido.");
+    }
     if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
       return toast.error("E-mail inválido.");
     if (cpfDigits && cpfDigits.length !== 11) return toast.error("CPF inválido.");
@@ -115,14 +120,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
             <label className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
               <Phone className="h-3.5 w-3.5" /> WhatsApp para cobranças
             </label>
-            <input
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(formatPhone(e.target.value))}
-              inputMode="tel"
-              maxLength={20}
-              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
-              placeholder="(00) 00000-0000"
-            />
+            <PhoneInput value={whatsapp} onChange={setWhatsapp} />
           </div>
 
           <div>

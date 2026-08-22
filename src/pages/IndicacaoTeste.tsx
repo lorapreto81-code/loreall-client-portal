@@ -46,6 +46,9 @@ interface PendingResult {
   support_whatsapp: string;
 }
 
+import PhoneInputBase from "@/components/PhoneInput";
+import { formatFullPhone, isValidPhone, splitPhone } from "@/utils/countries";
+
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
 const formatPhone = (raw: string) => {
@@ -167,7 +170,7 @@ const IndicacaoTeste = () => {
     `Olá! 👋 Acabei de me cadastrar pelo link de indicação e quero ativar meu *teste grátis* na *Loreall Play TV*.\n\n` +
     `━━━━━━━━━━━━━━━━━━\n` +
     `📛 *Nome:* ${name.trim()}\n` +
-    `📱 *WhatsApp:* ${formatPhone(phone)}\n` +
+    `📱 *WhatsApp:* ${formatFullPhone(phone)}\n` +
     `🎁 *Indicado por:* ${referrerName || "—"}\n` +
     `🔖 *Código:* ${code}\n` +
     `🎫 *Protocolo:* ${pending.signup_id.slice(0, 8).toUpperCase()}\n` +
@@ -193,8 +196,9 @@ const IndicacaoTeste = () => {
       toast.error("Informe seu nome completo");
       return;
     }
-    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-      toast.error("WhatsApp inválido — use DDD + número");
+    const sp = splitPhone(phone);
+    if (!isValidPhone(sp.dial, sp.national)) {
+      toast.error("WhatsApp inválido — verifique o país e o número");
       return;
     }
     setSubmitting(true);
@@ -394,7 +398,7 @@ const IndicacaoTeste = () => {
             >
               <Row label="Protocolo" value={result.signup_id.slice(0, 8).toUpperCase()} mono />
               <Row label="Nome" value={name} />
-              <Row label="WhatsApp" value={formatPhone(phone)} />
+              <Row label="WhatsApp" value={formatFullPhone(phone)} />
               <Row label="Teste liberado" value="4 horas" />
             </div>
 
@@ -617,15 +621,11 @@ const IndicacaoTeste = () => {
               label="WhatsApp com DDD"
               icon={<Phone className="h-4 w-4" style={{ color: MUTED }} />}
             >
-              <input
-                type="tel"
-                inputMode="numeric"
+              <PhoneInputBase
                 value={phone}
-                onChange={(e) => setPhone(formatPhone(e.target.value))}
-                className="w-full bg-transparent outline-none text-sm font-medium"
-                style={{ color: TEXT }}
-                placeholder="(11) 99999-9999"
+                onChange={setPhone}
                 required
+                inputClassName="w-full bg-transparent outline-none text-sm font-medium"
               />
             </Field>
 
