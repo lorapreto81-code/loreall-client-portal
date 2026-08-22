@@ -1,6 +1,6 @@
 import { MessageCircle, Lock, Loader2, User, ArrowLeft, Gift } from "lucide-react";
 import { onlyDigits } from "@/utils/formatters";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { COUNTRIES, formatNational, splitPhone, toE164Digits } from "@/utils/countries";
 
 interface LoginFormProps {
@@ -128,6 +128,11 @@ export const LoginForm = ({
                 autoComplete="username"
               />
               <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              {isTextMode && (
+                <p className="mt-1.5 text-[10px] text-muted-foreground">
+                  Detectamos e-mail ou usuário — o seletor de país não é necessário.
+                </p>
+              )}
             </div>
           </div>
         ) : (
