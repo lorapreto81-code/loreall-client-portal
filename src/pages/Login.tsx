@@ -119,7 +119,7 @@ const BannerRotativo = () => {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden">
+      <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden border border-white/5">
         {banners.map((banner, index) => (
           <a
             key={banner.id}
@@ -135,59 +135,27 @@ const BannerRotativo = () => {
             <img
               src={banner.asset.url}
               alt={banner.alt}
-              className="w-full h-full object-cover block"
+              className="w-full h-full object-contain block bg-[#0F0F0F]"
               loading={index === 0 ? "eager" : "lazy"}
             />
           </a>
         ))}
-        {/* Indicadores internos */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-          {banners.map((_, index) => (
-            <span
-              key={index}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                index === active ? "w-4 bg-white" : "w-1.5 bg-white/50"
-              }`}
-              aria-hidden="true"
-            />
-          ))}
-        </div>
       </div>
 
-      {/* Seletor manual de banners */}
-      <div className="flex items-center gap-2" role="group" aria-label="Selecionar banner">
-        <button
-          type="button"
-          onClick={prev}
-          className="h-8 w-8 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
-          aria-label="Banner anterior"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-
-        <div className="flex items-center gap-1.5">
-          {banners.map((banner, index) => (
-            <button
-              key={banner.id}
-              type="button"
-              onClick={() => setActive(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === active ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"
-              }`}
-              aria-label={`Ver ${banner.label}`}
-              aria-pressed={index === active}
-            />
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={next}
-          className="h-8 w-8 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
-          aria-label="Próximo banner"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+      {/* Indicadores que funcionam como seletores */}
+      <div className="flex items-center justify-center gap-2 mt-1" role="group" aria-label="Selecionar banner">
+        {banners.map((banner, index) => (
+          <button
+            key={banner.id}
+            type="button"
+            onClick={() => setActive(index)}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              index === active ? "w-8 bg-primary shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+            }`}
+            aria-label={`Ver ${banner.label}`}
+            aria-pressed={index === active}
+          />
+        ))}
       </div>
     </div>
   );
