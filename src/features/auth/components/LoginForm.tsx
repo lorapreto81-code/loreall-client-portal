@@ -82,59 +82,62 @@ export const LoginForm = ({
 
       <form onSubmit={onSubmit} className="space-y-3">
         {step === "phone" ? (
-          <div className="flex items-stretch gap-2">
-            {showCountry && (
-              <select
-                aria-label="País"
-                value={dial}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setDial(next);
-                  onPhoneChange(toE164Digits(next, digits));
-                }}
-                className="shrink-0 w-[92px] px-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.dial}>
-                    {c.flag} +{c.dial}
-                  </option>
-                ))}
-              </select>
-            )}
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={showCountry ? formatNational(dial, digits) : raw}
-                onChange={(e) => {
-                  const val = e.target.value.slice(0, 100);
-                  const isText = /[a-zA-Z@._-]/.test(val);
-                  if (isText) {
-                    setRaw(val);
-                    onPhoneChange(val.toLowerCase().trim());
-                    return;
-                  }
-                  const nat = onlyDigits(val).slice(0, 15);
-                  setRaw(nat);
-                  if (nat === "") {
-                    onPhoneChange("");
-                  } else if (nat.length >= 4) {
-                    onPhoneChange(toE164Digits(dial, nat));
-                  } else {
-                    onPhoneChange(nat);
-                  }
-                }}
-                className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
-                placeholder="WhatsApp, e-mail ou usuário"
-                autoComplete="username"
-              />
-              <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              {isTextMode && (
-                <p className="mt-1.5 text-[10px] text-muted-foreground">
-                  Detectamos e-mail ou usuário — o seletor de país não é necessário.
-                </p>
+          <div>
+            <div className="flex items-stretch gap-2">
+              {showCountry && (
+                <select
+                  aria-label="País"
+                  value={dial}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setDial(next);
+                    onPhoneChange(toE164Digits(next, digits));
+                  }}
+                  className="shrink-0 w-[88px] px-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.dial}>
+                      {c.flag} +{c.dial}
+                    </option>
+                  ))}
+                </select>
               )}
+              <div className="relative flex-1 min-w-0">
+                <input
+                  type="text"
+                  value={showCountry ? formatNational(dial, digits) : raw}
+                  onChange={(e) => {
+                    const val = e.target.value.slice(0, 100);
+                    const isText = /[a-zA-Z@._-]/.test(val);
+                    if (isText) {
+                      setRaw(val);
+                      onPhoneChange(val.toLowerCase().trim());
+                      return;
+                    }
+                    const nat = onlyDigits(val).slice(0, 15);
+                    setRaw(nat);
+                    if (nat === "") {
+                      onPhoneChange("");
+                    } else if (nat.length >= 4) {
+                      onPhoneChange(toE164Digits(dial, nat));
+                    } else {
+                      onPhoneChange(nat);
+                    }
+                  }}
+                  className="w-full h-12 pl-10 pr-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
+                  placeholder="WhatsApp, e-mail ou usuário"
+                  autoComplete="username"
+                />
+                <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
+            {isTextMode && (
+              <p className="mt-1.5 text-[10px] text-muted-foreground leading-snug">
+                E-mail ou usuário detectado — seletor de país não é necessário.
+              </p>
+            )}
           </div>
+
         ) : (
           <>
             <div className="relative">
