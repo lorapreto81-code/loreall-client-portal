@@ -208,7 +208,7 @@ export const LoginForm = ({
           className="w-full text-[11px] font-medium text-muted-foreground transition-colors flex items-center justify-center gap-1 group"
         >
           <span>Novo por aqui?</span>
-          <span className="text-primary font-bold hover:underline decoration-2 underline-offset-2">Experimentar Grátis 📺</span>
+          <span className="text-primary font-bold hover:underline decoration-2 underline-offset-2">Experimente grátis</span>
         </a>
       </div>
     </>
