@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import {
   COUNTRIES,
@@ -10,21 +10,24 @@ import {
 interface PhoneInputProps {
   /** Digits (with or without country code) or a formatted string. */
   value: string;
-  /** Emits digits only, always including the country code (e.g. 5583999998888). */
+  /** Emits digits only, always including the country code (e.g. 5583985591952). */
   onChange: (digits: string) => void;
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
   className?: string;
-  /** Extra classes for the text input (defaults keep the field transparent). */
+  /** Extra classes for the text input. */
   inputClassName?: string;
   autoFocus?: boolean;
   id?: string;
 }
 
+const flagUrl = (countryCode: string) =>
+  `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png`;
+
 /**
- * Phone field with a country selector. The emitted value is standardized
- * (digits + country code) everywhere in the app.
+ * Compact phone field with a visual country selector.
+ * The emitted value is standardized (digits + country code) everywhere.
  */
 export const PhoneInput = ({
   value,
@@ -40,6 +43,8 @@ export const PhoneInput = ({
   const parsed = useMemo(() => splitPhone(value), [value]);
   const [dial, setDial] = useState(parsed.dial);
   const [national, setNational] = useState(parsed.national);
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Sync when the value changes from the outside
   useEffect(() => {
@@ -53,6 +58,21 @@ export const PhoneInput = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
   const emit = (nextDial: string, nextNational: string) => {
     setDial(nextDial);
     setNational(nextNational);
@@ -63,23 +83,77 @@ export const PhoneInput = ({
     COUNTRIES.find((c) => c.dial === dial) || COUNTRIES[0];
 
   return (
-    <div className={`flex items-stretch gap-2 ${className}`}>
-      <div className="relative shrink-0">
-        <select
-          aria-label="País"
-          disabled={disabled}
-          value={`${selected.code}:${selected.dial}`}
-          onChange={(e) => emit(e.target.value.split(":")[1], national)}
-          className="appearance-none h-full w-[92px] pl-2.5 pr-6 rounded-lg bg-muted/40 border border-border/60 text-sm text-foreground outline-none focus:border-primary/50 cursor-pointer"
+    <div
+      ref={wrapperRef}
+      className={`relative flex items-center gap-1 rounded-lg border border-border/60 bg-background h-9 overflow-hidden focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/10 ${className}`}
+    >
+      <button
+        type="button"
+        aria-label="Selecionar país"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => setOpen((v) => !v)}
+        className="shrink-0 flex items-center gap-1 h-full pl-2 pr-1.5 text-xs text-foreground outline-none transition-colors hover:bg-muted/30 disabled:opacity-50"
+      >
+        <img
+          src={flagUrl(selected.code)}
+          alt={selected.name}
+          className="h-3.5 w-5 rounded-sm object-cover"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+            const fallback = e.currentTarget
+              .nextElementSibling as HTMLElement | null;
+            if (fallback) fallback.style.display = "inline";
+          }}
+        />
+        <span className="hidden text-sm leading-none" aria-hidden="true">
+          {selected.flag}
+        </span>
+        <span className="font-medium tabular-nums">+{selected.dial}</span>
+        <ChevronDown
+          className={`h-3 w-3 text-muted-foreground transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Países"
+          className="absolute top-full left-0 mt-1.5 z-50 max-h-56 w-48 overflow-auto rounded-lg border border-border bg-popover shadow-lg p-1"
         >
           {COUNTRIES.map((c) => (
-            <option key={c.code} value={`${c.code}:${c.dial}`}>
-              {c.flag} +{c.dial}
-            </option>
+            <button
+              key={c.code}
+              type="button"
+              role="option"
+              aria-selected={c.dial === dial}
+              onClick={() => {
+                emit(c.dial, national);
+                setOpen(false);
+              }}
+              className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left text-popover-foreground hover:bg-muted ${
+                c.dial === dial ? "bg-muted/70" : ""
+              }`}
+            >
+              <img
+                src={flagUrl(c.code)}
+                alt={c.name}
+                className="h-3.5 w-5 rounded-sm object-cover"
+              />
+              <span className="flex-1 truncate">{c.name}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                +{c.dial}
+              </span>
+            </button>
           ))}
-        </select>
-        <ChevronDown className="h-3.5 w-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
-      </div>
+        </div>
+      )}
+
+      <div className="w-px h-4 bg-border/60" />
+
       <input
         id={id}
         type="tel"
@@ -92,10 +166,12 @@ export const PhoneInput = ({
         onChange={(e) =>
           emit(dial, e.target.value.replace(/\D/g, "").slice(0, 13))
         }
-        placeholder={placeholder || (dial === "55" ? "(00) 00000-0000" : "000 000 000")}
+        placeholder={
+          placeholder || (dial === "55" ? "(00) 00000-0000" : "000 000 000")
+        }
         className={
           inputClassName ||
-          "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm outline-none focus:border-primary/50"
+          "min-w-0 flex-1 h-full bg-transparent border-0 px-2 py-0 text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-50"
         }
       />
     </div>
