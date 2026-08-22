@@ -1,6 +1,5 @@
 import { MessageCircle, Lock, Loader2, User, ArrowLeft, Gift } from "lucide-react";
-import { EMAIL_RE } from "@/utils/constants";
-import { formatPhone, onlyDigits } from "@/utils/formatters";
+import { onlyDigits } from "@/utils/formatters";
 import { useState } from "react";
 import { COUNTRIES, formatNational, splitPhone, toE164Digits } from "@/utils/countries";
 
