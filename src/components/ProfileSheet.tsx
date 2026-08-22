@@ -50,7 +50,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
     const trimmedEmail = email.trim().toLowerCase();
 
     if (trimmed.length < 3) return toast.error("Informe seu nome completo.");
-    if (phoneDigits.length < 10) return toast.error("WhatsApp inválido.");
+    if (phoneDigits.length < 8 || phoneDigits.length > 15) return toast.error("WhatsApp inválido.");
     if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
       return toast.error("E-mail inválido.");
     if (cpfDigits && cpfDigits.length !== 11) return toast.error("CPF inválido.");
@@ -119,7 +119,7 @@ const ProfileSheet = ({ open, onClose }: Props) => {
               value={whatsapp}
               onChange={(e) => setWhatsapp(formatPhone(e.target.value))}
               inputMode="tel"
-              maxLength={16}
+              maxLength={20}
               className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
               placeholder="(00) 00000-0000"
             />
