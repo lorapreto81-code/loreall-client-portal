@@ -119,7 +119,7 @@ const BannerRotativo = () => {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/5 bg-[#0F0F0F]">
+      <div className="relative w-full aspect-[1200/628] rounded-2xl overflow-hidden border border-white/5 bg-transparent">
         {banners.map((banner, index) => (
           <a
             key={banner.id}
@@ -135,7 +135,7 @@ const BannerRotativo = () => {
             <img
               src={banner.asset.url}
               alt={banner.alt}
-              className="w-full h-full object-contain p-1 rounded-2xl block"
+              className="w-full h-full object-cover block"
               loading={index === 0 ? "eager" : "lazy"}
             />
           </a>
