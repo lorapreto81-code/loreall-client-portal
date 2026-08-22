@@ -36,6 +36,9 @@ interface Invoice {
   renewed_at: string | null;
 }
 
+import PhoneInput from "@/components/PhoneInput";
+import { isValidPhone, splitPhone } from "@/utils/countries";
+
 const onlyDigits = (v: string) => v.replace(/\D/g, "");
 const formatPhone = (v: string) => {
   const d = onlyDigits(v).slice(0, 11);
@@ -121,7 +124,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     if (!open || !customer) return;
     setName(customer.name || "");
     const raw = (customer as any).whatsapp || (customer as any).celular || "";
-    setWhatsapp(formatPhone(String(raw)));
+    setWhatsapp(String(raw).replace(/\D/g, ""));
     setEmail(String((customer as any).email || ""));
   }, [open, customer]);
 
@@ -156,7 +159,10 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     const trimmedEmail = email.trim().toLowerCase();
 
     if (trimmed.split(" ").filter(Boolean).length < 2) return toast.error("Informe seu nome completo.");
-    if (phoneDigits.length < 10) return toast.error("WhatsApp inválido.");
+    {
+      const sp = splitPhone(whatsapp);
+      if (!isValidPhone(sp.dial, sp.national)) return toast.error("WhatsApp inválido.");
+    }
     if (!trimmedEmail) return toast.error("Informe seu e-mail.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return toast.error("E-mail inválido.");
 
@@ -358,13 +364,10 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-semibold text-muted-foreground ml-1">WhatsApp</label>
-                      <input
+                      <PhoneInput
                         value={whatsapp}
-                        onChange={(e) => setWhatsapp(formatPhone(e.target.value))}
-                        inputMode="tel"
-                        maxLength={16}
-                        className="w-full px-4 py-3 rounded-xl bg-muted/30 border border-border/50 text-sm focus:border-primary/50 outline-none transition-all"
-                        placeholder="(00) 00000-0000"
+                        onChange={setWhatsapp}
+                        inputClassName="w-full px-4 py-3 rounded-xl bg-muted/30 border border-border/50 text-sm focus:border-primary/50 outline-none transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
