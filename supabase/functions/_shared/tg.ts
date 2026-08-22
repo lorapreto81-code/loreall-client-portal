@@ -16,14 +16,21 @@ export function tgHeaders(): Record<string, string> {
   };
 }
 
-/** Builds tolerant phone variants (with/without country code, DDD, extra 9). */
+/** Builds tolerant phone variants (with/without country code, DDD, extra 9).
+ *  Works for Brazilian and international numbers. */
 export function buildPhoneVariants(d: string): string[] {
   const set = new Set<string>();
+  d = d.replace(/^0+/, "");
   set.add(d);
   let local = d;
   if ((local.length === 12 || local.length === 13) && local.startsWith("55")) {
     local = local.slice(2);
     set.add(local);
+  } else if (local.length >= 11) {
+    // Foreign number: also try without the 1-3 digit country code.
+    set.add(local.slice(1));
+    set.add(local.slice(2));
+    set.add(local.slice(3));
   }
   if (local.length >= 11) set.add(local.slice(-11));
   if (local.length >= 10) set.add(local.slice(-10));
@@ -33,7 +40,7 @@ export function buildPhoneVariants(d: string): string[] {
   const tail8 = local.slice(-8);
   const tail9 = local.length >= 9 ? local.slice(-9) : "";
 
-  if (local.length >= 10) {
+  if (local.length >= 10 && local.length <= 11) {
     const ddd = local.slice(0, 2);
     const rest = local.slice(2);
     if (rest.length === 8) set.add(ddd + "9" + rest);
@@ -43,8 +50,9 @@ export function buildPhoneVariants(d: string): string[] {
   set.add(tail8);
   if (tail9) set.add(tail9);
 
-  return Array.from(set).filter((v) => v.length >= 8).slice(0, 6);
+  return Array.from(set).filter((v) => v.length >= 8).slice(0, 8);
 }
+
 
 /** Returns a customer object without the sensitive IPTV password field. */
 export function sanitizeCustomerForClient(c: Record<string, unknown>): Record<string, unknown> {
