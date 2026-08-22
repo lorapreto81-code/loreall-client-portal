@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      area_plan_mapping: {
+        Row: {
+          base_amount: number
+          created_at: string
+          display_name: string
+          id: string
+          periodicidade: string
+          servidor: string
+          telas: number
+          topgestor_plan_id: number
+          updated_at: string
+        }
+        Insert: {
+          base_amount: number
+          created_at?: string
+          display_name: string
+          id?: string
+          periodicidade: string
+          servidor: string
+          telas: number
+          topgestor_plan_id: number
+          updated_at?: string
+        }
+        Update: {
+          base_amount?: number
+          created_at?: string
+          display_name?: string
+          id?: string
+          periodicidade?: string
+          servidor?: string
+          telas?: number
+          topgestor_plan_id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       confirmed_customer_emails: {
         Row: {
           confirmed_at: string
