@@ -246,10 +246,10 @@ export async function processRecharge(
 
   // Notify reseller about credits
   try {
-    const { data: link } = await supabase.from("reseller_links").select("whatsapp, reseller_name").eq("id", purchase.reseller_link_id).maybeSingle();
+    const { data: link } = await supabase.from("reseller_links").select("whatsapp, display_name").eq("id", purchase.reseller_link_id).maybeSingle();
     if (link?.whatsapp) {
       const msg = `💰 *Loreall Play* — Créditos Recebidos!\n\n` +
-        `Olá, ${link.reseller_name}! Sua compra de *${purchase.package_credits}* créditos foi confirmada e adicionada ao seu painel.\n\n` +
+        `Olá, ${link.display_name}! Sua compra de *${purchase.package_credits}* créditos foi confirmada e adicionada ao seu painel.\n\n` +
         `Bom trabalho e ótimas vendas! 🚀`;
       await sendWhatsappText(String(link.whatsapp), msg);
     }
