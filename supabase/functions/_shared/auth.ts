@@ -67,7 +67,9 @@ export async function getCustomerSession(req: Request): Promise<CustomerSession 
 
 /** Legacy tokens were signed without a role: treat them as customer sessions. */
 export function isCustomerSession(session: CustomerSession | null): boolean {
-  return !!session && (session.role === "customer" || session.role === undefined);
+  if (!session) return false;
+  // Allow null/undefined role as 'customer' for backward compatibility
+  return session.role === "customer" || !session.role;
 }
 
 /**
