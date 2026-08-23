@@ -114,15 +114,28 @@ export const LoginForm = ({
                       onPhoneChange(val.toLowerCase().trim());
                       return;
                     }
-                    const nat = onlyDigits(val).slice(0, 15);
+                    const typed = onlyDigits(val).slice(0, 15);
+                    // If the user typed/pasted the country code (e.g. "+55 83..." or
+                    // "5583..."), detect it instead of prefixing another one.
+                    let nextDial = dial;
+                    let nat = typed;
+                    if (val.trim().startsWith("+") || typed.length >= 12) {
+                      const sp = splitPhone(val);
+                      if (sp.national) {
+                        nextDial = sp.dial;
+                        nat = sp.national;
+                      }
+                    }
+                    if (nextDial !== dial) setDial(nextDial);
                     setRaw(nat);
                     if (nat === "") {
                       onPhoneChange("");
                     } else if (nat.length >= 4) {
-                      onPhoneChange(toE164Digits(dial, nat));
+                      onPhoneChange(toE164Digits(nextDial, nat));
                     } else {
                       onPhoneChange(nat);
                     }
+
                   }}
                   className="w-full h-12 pl-10 pr-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
                   placeholder="WhatsApp, e-mail ou usuário"
