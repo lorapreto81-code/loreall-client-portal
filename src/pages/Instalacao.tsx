@@ -341,99 +341,98 @@ const Instalacao = () => {
                         Aplicativos
                       </p>
                       <div className="space-y-2">
-                        {s.apps.map((app) => {
-                          const isLink = !!app.href;
-                          return (
-                            <div
-                              key={app.name}
-                              className="rounded-xl border border-border bg-muted/30 p-3 flex items-center gap-3"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <p className="text-sm font-semibold text-foreground">{app.name}</p>
-                                  {app.recommended && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-0.5">
-                                      <CheckCircle2 className="h-2.5 w-2.5" /> RECOMENDADO
-                                    </span>
-                                  )}
-                                  {app.singleScreen && (
-                                    <span
-                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-warning/15"
-                                      style={{ color: "hsl(var(--warning))" }}
-                                    >
-                                      1 TELA
-                                    </span>
-                                  )}
-                                </div>
-                                {app.note && (
-                                  <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{app.note}</p>
-                                )}
-                                {app.downloaderCode && (
-                                  <div className="mt-2 flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-background/50 border border-border/50">
-                                      <img 
-                                        src={iconDownloader.url} 
-                                        alt="Downloader" 
-                                        className="h-3.5 w-3.5 object-contain"
-                                      />
-                                      <div className="flex flex-col">
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase leading-none mb-0.5">Código</span>
-                                        <span 
-                                          className="text-[13px] font-mono font-bold leading-none"
-                                          style={{ color: "rgb(243, 118, 35)" }}
-                                        >
-                                          {app.downloaderCode}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    {app.screenshot && (
-                                      <button
-                                        type="button"
-                                        onClick={() => setPreviewImg(app.screenshot!)}
-                                        className="text-[10px] font-semibold text-muted-foreground underline underline-offset-2"
-                                      >
-                                        Ver tela do app
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                                {app.ntDownCode && (
-                                  <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                                    Downloader não funcionou? ntDown, código {app.ntDownCode}
-                                    {app.ntDownVersion && ` (versão ${app.ntDownVersion})`}
-                                  </p>
-                                )}
-                              </div>
+                        {s.apps.map((app) => (
+                          <div
+                            key={app.name}
+                            className={app.recommended
+                              ? "rounded-2xl border border-primary/30 bg-card p-4 shadow-sm"
+                              : "rounded-2xl border border-border bg-muted/20 p-3.5"
+                            }
+                          >
+                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                              <p className={app.recommended ? "text-[15px] font-semibold text-foreground" : "text-[14px] font-semibold text-foreground"}>
+                                {app.name}
+                              </p>
+                              {app.recommended && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">
+                                  RECOMENDADO
+                                </span>
+                              )}
+                              {app.singleScreen && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-warning/15" style={{ color: "hsl(var(--warning))" }}>
+                                  1 TELA
+                                </span>
+                              )}
+                            </div>
+                            {app.note && <p className="text-[11px] text-muted-foreground mb-2">{app.note}</p>}
 
-                              {isLink ? (
-                                <a
-                                  href={app.href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="shrink-0 inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                                  style={{ minHeight: 40 }}
+                            {app.downloaderCode && (
+                              app.recommended ? (
+                                <button
+                                  onClick={() => copyCode(app.downloaderCode!)}
+                                  className="w-full flex items-center justify-between bg-background/80 border border-border/40 rounded-xl px-3 py-2.5 mt-1 hover:bg-background transition-colors shadow-inner"
                                 >
-                                  {app.href?.startsWith("https://apps.apple.com") ? (
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                  ) : (
-                                    <Download className="h-3.5 w-3.5" />
-                                  )}
-                                  {app.hrefLabel || "Baixar"}
-                                </a>
+                                  <div className="text-left">
+                                    <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Código Downloader</p>
+                                    <p 
+                                      className="text-xl font-bold font-mono tracking-wide"
+                                      style={{ color: "rgb(243, 118, 35)" }}
+                                    >
+                                      {app.downloaderCode}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-center gap-1">
+                                    <Download className="h-4 w-4 text-muted-foreground rotate-180" />
+                                    <span className="text-[8px] text-muted-foreground uppercase font-bold">Copiar</span>
+                                  </div>
+                                </button>
                               ) : (
                                 <button
-                                  disabled
-                                  className="shrink-0 inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-2 rounded-lg bg-muted text-muted-foreground cursor-not-allowed"
-                                  style={{ minHeight: 40 }}
-                                  title="APK em breve"
+                                  onClick={() => copyCode(app.downloaderCode!)}
+                                  className="flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg bg-background/40 border border-border/30"
                                 >
-                                  <Download className="h-3.5 w-3.5" />
-                                  {app.hrefLabel || "Em breve"}
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Código:</span>
+                                  <span 
+                                    className="text-sm font-bold font-mono"
+                                    style={{ color: "rgb(243, 118, 35)" }}
+                                  >
+                                    {app.downloaderCode}
+                                  </span>
+                                </button>
+                              )
+                            )}
+
+                            {app.href ? (
+                              <a
+                                href={app.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-[13px] hover:opacity-90 transition-opacity"
+                                style={{ minHeight: 44 }}
+                              >
+                                {app.href.includes("apple.com") ? <ExternalLink className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+                                {app.hrefLabel || "Instalar agora"}
+                              </a>
+                            ) : null}
+
+                            <div className="flex items-center justify-between mt-2.5">
+                              {app.ntDownCode && (
+                                <p className="text-[10px] text-muted-foreground/60 leading-tight">
+                                  Sem sinal? ntDown: <span className="font-mono font-bold text-muted-foreground/80">{app.ntDownCode}</span>
+                                  {app.ntDownVersion && <span className="text-[9px] opacity-70"> (v{app.ntDownVersion})</span>}
+                                </p>
+                              )}
+                              {app.screenshot && (
+                                <button 
+                                  onClick={() => setPreviewImg(app.screenshot!)} 
+                                  className="text-[10px] font-medium text-muted-foreground underline underline-offset-2 ml-auto"
+                                >
+                                  Ver tela do app
                                 </button>
                               )}
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
