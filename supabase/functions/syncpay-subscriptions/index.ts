@@ -7,7 +7,7 @@
 //   sync-plans   (busca no SyncPay e espelha no banco local)
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isAdminPassword, getCustomerSession } from "../_shared/auth.ts";
+import { isAdminPassword, getCustomerSession, isCustomerSession } from "../_shared/auth.ts";
 import { corsHeadersFor } from "../_shared/security.ts";
 
 
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
 
     if (action === "customer-cancel-subscription") {
       const session = await getCustomerSession(req);
-      if (!session || session.role !== "customer") return err("Unauthorized", 401, req);
+      if (!isCustomerSession(session)) return err("Unauthorized", 401, req);
       const subscriptionId = body.subscription_id;
       if (!subscriptionId) return err("subscription_id required", 400, req);
 

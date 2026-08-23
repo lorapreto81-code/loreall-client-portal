@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { securityHeadersFor, jsonResponse as json } from "../_shared/security.ts";
-import { getCustomerSession, isAdminRequest } from "../_shared/auth.ts";
+import { getCustomerSession, isAdminRequest, isCustomerSession } from "../_shared/auth.ts";
 
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
 
     // Validação de acesso: ou é admin ou é o próprio cliente dono da assinatura
     const isAdmin = isAdminRequest(req);
-    const isCustomer = session?.role === "customer";
+    const isCustomer = isCustomerSession(session);
     if (!isAdmin && !isCustomer) {
       return json({ error: "Unauthorized" }, 401, {}, req);
     }
