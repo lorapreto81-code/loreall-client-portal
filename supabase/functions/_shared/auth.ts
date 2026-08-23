@@ -65,6 +65,11 @@ export async function getCustomerSession(req: Request): Promise<CustomerSession 
   return await verifyCustomerToken(req.headers.get("x-customer-token"));
 }
 
+/** Legacy tokens were signed without a role: treat them as customer sessions. */
+export function isCustomerSession(session: CustomerSession | null): boolean {
+  return !!session && (session.role === "customer" || session.role === undefined);
+}
+
 /**
  * Constant-time comparison to prevent timing attacks.
  */
