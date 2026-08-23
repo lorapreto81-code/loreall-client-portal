@@ -103,8 +103,8 @@ export default function CustomersPaymentsTab() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="card-elevated overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="card-elevated border border-border/50 rounded-2xl">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                 <tr>
@@ -182,6 +182,63 @@ export default function CustomersPaymentsTab() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="md:hidden divide-y divide-border">
+            {items.map((p) => (
+              <div key={p.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-bold text-foreground">{p.customer_name}</div>
+                    <div className="text-[10px] text-muted-foreground font-mono">
+                      ID: #{p.customer_id} • {fmtDate(p.created_at)}
+                    </div>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${statusBadge[p.fastdepix_status] || "bg-muted"}`}>
+                    {statusLabel[p.fastdepix_status] || p.fastdepix_status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Plano</div>
+                    <div className="font-bold text-foreground truncate">{p.plan_name}</div>
+                  </div>
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Valor</div>
+                    <div className="font-bold text-foreground">{fmtBRL(p.amount)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+                  <div className="text-[10px] text-muted-foreground">
+                    {p.paid_at ? `Pago: ${fmtDate(p.paid_at)}` : "Aguardando"}
+                  </div>
+                  <div className="flex gap-1">
+                    {p.fastdepix_status !== "paid" && p.fastdepix_status !== "PAID" && (
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Confirmar e RENOVAR?`)) return;
+                          try { await resellerAdmin.confirmPayment(p.id); toast.success("Confirmado"); await load(); } catch (e) { toast.error("Erro"); }
+                        }}
+                        className="p-2 rounded-lg bg-green-500/10 text-green-500"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`APAGAR registro?`)) return;
+                        try { await resellerAdmin.deletePayment(p.id); toast.success("Apagado"); await load(); } catch (e) { toast.error("Erro"); }
+                      }}
+                      className="p-2 rounded-lg bg-destructive/10 text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
