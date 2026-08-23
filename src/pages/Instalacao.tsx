@@ -12,6 +12,8 @@ import imgTvBox from "@/assets/dev-tvbox.png.asset.json";
 import imgFireStick from "@/assets/dev-firestick.png.asset.json";
 import imgCelular from "@/assets/dev-celular.png.asset.json";
 import imgComputador from "@/assets/dev-computador.png.asset.json";
+import imgWplayScreenshot from "@/assets/wplay-screenshot.png.asset.json";
+import imgWplayProScreenshot from "@/assets/wplay-pro-screenshot.png.asset.json";
 
 const logo = "/logo.png";
 
@@ -22,6 +24,10 @@ type App = {
   href?: string;
   hrefLabel?: string;
   note?: string;
+  downloaderCode?: string;
+  ntDownCode?: string;
+  ntDownVersion?: string;
+  screenshot?: string;
 };
 
 type Section = {
@@ -75,7 +81,23 @@ const SECTIONS: Section[] = [
       "Informe seu usuário e senha da Loreall Play e aguarde a lista carregar.",
     ],
     apps: [
-      { name: "Wplay P2P", recommended: true, singleScreen: true, hrefLabel: "Em breve" },
+      {
+        name: "Wplay P2P",
+        recommended: true,
+        singleScreen: true,
+        downloaderCode: "2943496",
+        ntDownCode: "44892",
+        ntDownVersion: "11.8.6b",
+        screenshot: imgWplayScreenshot.url,
+      },
+      {
+        name: "P2P PRO",
+        singleScreen: true,
+        note: "Mesmo usuário e senha do Wplay P2P.",
+        downloaderCode: "1362324",
+        ntDownCode: "21241",
+        screenshot: imgWplayProScreenshot.url,
+      },
       { name: "Blessed Player", recommended: true, hrefLabel: "Em breve" },
     ],
     warning: "Se a sua TV tem Google Play Store, ela é Android TV — use os apps desta seção, não os de Samsung/LG.",
@@ -97,7 +119,23 @@ const SECTIONS: Section[] = [
       "Se a lista não carregar, feche o app por completo e abra novamente.",
     ],
     apps: [
-      { name: "Wplay P2P", recommended: true, singleScreen: true, hrefLabel: "Em breve" },
+      {
+        name: "Wplay P2P",
+        recommended: true,
+        singleScreen: true,
+        downloaderCode: "2943496",
+        ntDownCode: "44892",
+        ntDownVersion: "11.8.6b",
+        screenshot: imgWplayScreenshot.url,
+      },
+      {
+        name: "P2P PRO",
+        singleScreen: true,
+        note: "Mesmo usuário e senha do Wplay P2P.",
+        downloaderCode: "1362324",
+        ntDownCode: "21241",
+        screenshot: imgWplayProScreenshot.url,
+      },
       { name: "Blessed Player", recommended: true, hrefLabel: "Em breve" },
     ],
     warning: "O Wplay P2P funciona em apenas 1 tela por vez. Para assistir em mais aparelhos ao mesmo tempo, use outro app da lista.",
@@ -325,6 +363,26 @@ const Instalacao = () => {
                                 </div>
                                 {app.note && (
                                   <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{app.note}</p>
+                                )}
+                                {(app.downloaderCode || app.ntDownCode) && (
+                                  <div className="mt-2 space-y-1">
+                                    {app.downloaderCode && (
+                                      <div className="text-[10px] font-mono bg-background/50 px-2 py-0.5 rounded border border-border/50 inline-block mr-2">
+                                        Código Downloader: <span className="text-primary font-bold">{app.downloaderCode}</span>
+                                      </div>
+                                    )}
+                                    {app.ntDownCode && (
+                                      <div className="text-[10px] font-mono bg-background/50 px-2 py-0.5 rounded border border-border/50 inline-block">
+                                        ntDown: código <span className="text-primary font-bold">{app.ntDownCode}</span>
+                                        {app.ntDownVersion && ` · versão ${app.ntDownVersion}`}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {app.screenshot && (
+                                  <div className="mt-2 rounded-lg overflow-hidden border border-border/50 max-w-[200px]">
+                                    <img src={app.screenshot} alt={`Captura ${app.name}`} className="w-full h-auto" />
+                                  </div>
                                 )}
                               </div>
 
