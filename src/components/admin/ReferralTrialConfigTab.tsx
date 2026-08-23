@@ -83,7 +83,7 @@ export default function ReferralTrialConfigTab() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl md:max-w-4xl mx-auto space-y-4 px-2 sm:px-0">
       <h2 className="text-xl font-bold text-foreground inline-flex items-center gap-2">
         <Gift className="h-5 w-5" /> Teste grátis por indicação
       </h2>
@@ -173,8 +173,10 @@ export default function ReferralTrialConfigTab() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {saving ? "Salvando..." : "Salvar configurações"}
         </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
   );
 }
 
