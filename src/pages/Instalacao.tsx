@@ -73,11 +73,10 @@ const SECTIONS: Section[] = [
     icon: <Tv className="h-4 w-4" />,
     accent: "from-teal-500/25 to-emerald-500/10 border-teal-500/25 text-teal-400",
     steps: [
-      "Ligue a TV, conecte na internet e finalize o login da conta Google.",
-      "Abra a Google Play Store na tela inicial da TV.",
-      "Busque pelo aplicativo recomendado abaixo e instale.",
-      "Se o app não aparecer na loja, instale pelo Downloader usando o link do APK.",
-      "Abra o player e selecione login por usuário e senha (Xtream Codes).",
+      "Conecte a TV na internet e finalize o login da conta Google.",
+      "Na Play Store da TV, busque e instale o app Downloader (é gratuito — ele serve só pra instalar outros apps usando um código, sem precisar baixar arquivo nenhum).",
+      "Abra o Downloader, digite o código do app escolhido abaixo em \"URL\" e toque em Ir.",
+      "Aguarde instalar, abra o app e escolha login por usuário e senha.",
       "Informe seu usuário e senha da Loreall Play e aguarde a lista carregar.",
     ],
     apps: [
@@ -111,12 +110,11 @@ const SECTIONS: Section[] = [
     icon: <MonitorPlay className="h-4 w-4" />,
     accent: "from-violet-500/25 to-fuchsia-500/10 border-violet-500/25 text-violet-400",
     steps: [
-      "Conecte o TV Box na TV pelo cabo HDMI e ligue na tomada.",
-      "Conecte o aparelho na internet — de preferência por cabo de rede.",
-      "Abra a Play Store (ou o navegador, se for instalar por APK).",
-      "Instale o aplicativo recomendado abaixo.",
-      "Abra o app, escolha login por usuário e senha e informe seus dados.",
-      "Se a lista não carregar, feche o app por completo e abra novamente.",
+      "Conecte o TV Box na TV pelo cabo HDMI, ligue na tomada e conecte na internet.",
+      "Na Play Store do aparelho, busque e instale o app Downloader (é gratuito — ele serve só pra instalar outros apps usando um código, sem precisar baixar arquivo nenhum).",
+      "Abra o Downloader, digite o código do app escolhido abaixo em \"URL\" e toque em Ir.",
+      "Aguarde instalar, abra o app e escolha login por usuário e senha.",
+      "Informe seu usuário e senha da Loreall Play e aguarde a lista carregar.",
     ],
     apps: [
       {
@@ -225,6 +223,7 @@ const Instalacao = () => {
   const navigate = useNavigate();
   const { customer } = useAuthStore();
   const [openId, setOpenId] = useState<string | null>("smarttv");
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -364,25 +363,26 @@ const Instalacao = () => {
                                 {app.note && (
                                   <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{app.note}</p>
                                 )}
-                                {(app.downloaderCode || app.ntDownCode) && (
-                                  <div className="mt-2 space-y-1">
-                                    {app.downloaderCode && (
-                                      <div className="text-[10px] font-mono bg-background/50 px-2 py-0.5 rounded border border-border/50 inline-block mr-2">
-                                        Código Downloader: <span className="text-primary font-bold">{app.downloaderCode}</span>
-                                      </div>
-                                    )}
-                                    {app.ntDownCode && (
-                                      <div className="text-[10px] font-mono bg-background/50 px-2 py-0.5 rounded border border-border/50 inline-block">
-                                        ntDown: código <span className="text-primary font-bold">{app.ntDownCode}</span>
-                                        {app.ntDownVersion && ` · versão ${app.ntDownVersion}`}
-                                      </div>
+                                {app.downloaderCode && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Código:</span>
+                                    <span className="text-[13px] font-mono font-bold text-primary">{app.downloaderCode}</span>
+                                    {app.screenshot && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setPreviewImg(app.screenshot!)}
+                                        className="ml-auto text-[10px] font-semibold text-muted-foreground underline underline-offset-2"
+                                      >
+                                        Ver tela do app
+                                      </button>
                                     )}
                                   </div>
                                 )}
-                                {app.screenshot && (
-                                  <div className="mt-2 rounded-lg overflow-hidden border border-border/50 max-w-[200px]">
-                                    <img src={app.screenshot} alt={`Captura ${app.name}`} className="w-full h-auto" />
-                                  </div>
+                                {app.ntDownCode && (
+                                  <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                                    Downloader não funcionou? ntDown, código {app.ntDownCode}
+                                    {app.ntDownVersion && ` (versão ${app.ntDownVersion})`}
+                                  </p>
                                 )}
                               </div>
 
@@ -445,6 +445,15 @@ const Instalacao = () => {
 
         <div className="h-4" />
       </main>
+
+      {previewImg && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6"
+          onClick={() => setPreviewImg(null)}
+        >
+          <img src={previewImg} alt="Tela do app" className="max-w-full max-h-full rounded-xl" />
+        </div>
+      )}
     </div>
   );
 };
