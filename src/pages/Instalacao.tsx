@@ -372,14 +372,17 @@ const Instalacao = () => {
                                   onClick={() => copyCode(app.downloaderCode!)}
                                   className="w-full flex items-center justify-between bg-background/80 border border-border/40 rounded-xl px-3 py-2.5 mt-1 hover:bg-background transition-colors shadow-inner"
                                 >
-                                  <div className="text-left">
-                                    <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Código Downloader</p>
-                                    <p 
-                                      className="text-xl font-bold font-mono tracking-wide"
-                                      style={{ color: "rgb(243, 118, 35)" }}
-                                    >
-                                      {app.downloaderCode}
-                                    </p>
+                                  <div className="text-left flex items-center gap-2">
+                                    <img src={iconDownloader.url} alt="Downloader" className="h-7 w-7 rounded-lg shrink-0" />
+                                    <div>
+                                      <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Código Downloader</p>
+                                      <p 
+                                        className="text-xl font-bold font-mono tracking-wide"
+                                        style={{ color: "rgb(243, 118, 35)" }}
+                                      >
+                                        {app.downloaderCode}
+                                      </p>
+                                    </div>
                                   </div>
                                   <div className="flex flex-col items-center gap-1">
                                     <Download className="h-4 w-4 text-muted-foreground rotate-180" />
