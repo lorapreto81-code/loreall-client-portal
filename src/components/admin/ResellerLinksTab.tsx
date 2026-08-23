@@ -166,8 +166,8 @@ export default function ResellerLinksTab() {
           <p className="text-sm text-muted-foreground animate-pulse">Carregando base de revendedores...</p>
         </div>
       ) : (
-        <div className="card-elevated overflow-hidden border border-border/50 rounded-2xl">
-          <div className="overflow-x-auto">
+        <div className="card-elevated border border-border/50 rounded-2xl">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                 <tr>
@@ -217,6 +217,47 @@ export default function ResellerLinksTab() {
                 )}
               </tbody>
             </table>
+          </div>
+          
+          <div className="md:hidden divide-y divide-border">
+            {links.map((l) => (
+              <div key={l.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-bold text-foreground text-base">{l.display_name}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{l.warez_username} (ID {l.warez_user_id})</div>
+                  </div>
+                  <button onClick={() => toggle(l)} className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${l.is_active ? "bg-green-500/15 text-green-500 border border-green-500/20" : "bg-muted text-muted-foreground border border-border"}`}>
+                    {l.is_active ? "Ativo" : "Inativo"}
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 uppercase tracking-tighter font-bold">R$/crédito</div>
+                    <div className="font-bold text-foreground">{Number(l.price_per_credit ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
+                  </div>
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 uppercase tracking-tighter font-bold">Mín/Máx</div>
+                    <div className="font-bold text-foreground">{l.min_credits ?? 10} – {l.max_credits ?? 30}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <a href={`${PUBLIC_BASE_URL}/revendedor/${l.slug}`} target="_blank" rel="noreferrer" className="text-xs text-primary font-semibold flex items-center gap-1">
+                    <Link2 className="h-3 w-3" /> Ver link
+                  </a>
+                  <div className="flex gap-1">
+                    <button onClick={() => copyLink(l.slug)} className="p-2 rounded-lg bg-muted text-foreground" style={{ minHeight: 40, minWidth: 40 }}><Copy className="h-4 w-4" /></button>
+                    <button onClick={() => openEdit(l)} className="p-2 rounded-lg bg-muted text-foreground" style={{ minHeight: 40, minWidth: 40 }}><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => remove(l)} className="p-2 rounded-lg bg-destructive/10 text-destructive" style={{ minHeight: 40, minWidth: 40 }}><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {links.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground py-8">Nenhum revendedor cadastrado.</div>
+            )}
           </div>
         </div>
       )}
