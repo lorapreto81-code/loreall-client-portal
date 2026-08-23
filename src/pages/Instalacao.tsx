@@ -226,6 +226,10 @@ const Instalacao = () => {
   const [openId, setOpenId] = useState<string | null>("smarttv");
   const [previewImg, setPreviewImg] = useState<string | null>(null);
 
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
