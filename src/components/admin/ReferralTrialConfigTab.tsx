@@ -111,7 +111,8 @@ export default function ReferralTrialConfigTab() {
         </div>
       </div>
 
-      <div className="card-elevated p-6 space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="card-elevated p-5 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-foreground">Sistema de teste ativo</p>
