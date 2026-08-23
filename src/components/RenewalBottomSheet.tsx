@@ -518,7 +518,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={closeSubscribeForm}>
         <div
-          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
+          className="bg-card w-full max-w-[480px] md:max-w-2xl md:rounded-2xl rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
           onClick={(e) => e.stopPropagation()}
         >
           <button onClick={closeSubscribeForm} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
@@ -683,7 +683,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
         <div
-          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
+          className="bg-card w-full max-w-[480px] md:max-w-2xl md:rounded-2xl rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200 max-h-[95vh] overflow-y-auto relative"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -808,7 +808,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
         <div
-          className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200"
+          className="bg-card w-full max-w-[480px] md:max-w-2xl md:rounded-2xl rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           <button onClick={handleClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
@@ -854,7 +854,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
       <div
-        className="bg-card w-full max-w-[480px] rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200"
+        className="bg-card w-full max-w-[480px] md:max-w-2xl md:rounded-2xl rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
