@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getCustomerSession, isAdminPassword } from "../_shared/auth.ts";
+import { getCustomerSession, isAdminPassword, isCustomerSession } from "../_shared/auth.ts";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
 
 import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     // ----- track-copy (público, fire-and-forget) -----
     if (action === "track-copy") {
       const session = await getCustomerSession(req);
-      if (!session || session.role !== "customer") return jsonRes({ error: "Unauthorized" }, 401, req);
+      if (!isCustomerSession(session)) return jsonRes({ error: "Unauthorized" }, 401, req);
       const body = await req.json().catch(() => ({}));
 
       const code = String(body.code || "").trim().toUpperCase();

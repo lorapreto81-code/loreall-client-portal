@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getCustomerSession } from "../_shared/auth.ts";
+import { getCustomerSession, isCustomerSession } from "../_shared/auth.ts";
 import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
  
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
 
   try {
     const session = await getCustomerSession(req);
-    if (!session || session.role !== "customer") {
+    if (!isCustomerSession(session)) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
