@@ -263,9 +263,9 @@ const Admin = () => {
       </aside>
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-6 py-10 md:px-12 md:py-16">
-          <div className="mb-10 md:mb-16 animate-in fade-in slide-in-from-left-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">
+        <div className="w-full max-w-7xl mx-auto px-4 py-8 md:px-12 md:py-16">
+          <div className="mb-8 md:mb-16 animate-in fade-in slide-in-from-left-4 duration-700">
+            <h2 className="text-2xl md:text-4xl font-black text-foreground tracking-tight mb-2">
               {GROUPED_TABS.find(g => g.tabs.some(t => t.id === tab))?.label}
             </h2>
             <p className="text-muted-foreground text-sm md:text-base font-medium opacity-80">
