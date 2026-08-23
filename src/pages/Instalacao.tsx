@@ -14,6 +14,7 @@ import imgCelular from "@/assets/dev-celular.png.asset.json";
 import imgComputador from "@/assets/dev-computador.png.asset.json";
 import imgWplayScreenshot from "@/assets/wplay-screenshot.png.asset.json";
 import imgWplayProScreenshot from "@/assets/wplay-pro-screenshot.png.asset.json";
+import iconDownloader from "@/assets/downloader-icon.png.asset.json";
 
 const logo = "/logo.png";
 
@@ -364,14 +365,28 @@ const Instalacao = () => {
                                   <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{app.note}</p>
                                 )}
                                 {app.downloaderCode && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Código:</span>
-                                    <span className="text-[13px] font-mono font-bold text-primary">{app.downloaderCode}</span>
+                                  <div className="mt-2 flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-background/50 border border-border/50">
+                                      <img 
+                                        src={iconDownloader.url} 
+                                        alt="Downloader" 
+                                        className="h-3.5 w-3.5 object-contain"
+                                      />
+                                      <div className="flex flex-col">
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase leading-none mb-0.5">Código</span>
+                                        <span 
+                                          className="text-[13px] font-mono font-bold leading-none"
+                                          style={{ color: "rgb(243, 118, 35)" }}
+                                        >
+                                          {app.downloaderCode}
+                                        </span>
+                                      </div>
+                                    </div>
                                     {app.screenshot && (
                                       <button
                                         type="button"
                                         onClick={() => setPreviewImg(app.screenshot!)}
-                                        className="ml-auto text-[10px] font-semibold text-muted-foreground underline underline-offset-2"
+                                        className="text-[10px] font-semibold text-muted-foreground underline underline-offset-2"
                                       >
                                         Ver tela do app
                                       </button>
