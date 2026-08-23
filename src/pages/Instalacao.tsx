@@ -14,6 +14,7 @@ import imgCelular from "@/assets/dev-celular.png.asset.json";
 import imgComputador from "@/assets/dev-computador.png.asset.json";
 import imgWplayScreenshot from "@/assets/wplay-screenshot.png.asset.json";
 import imgWplayProScreenshot from "@/assets/wplay-pro-screenshot.png.asset.json";
+import iconDownloader from "@/assets/downloader-icon.png.asset.json";
 
 const logo = "/logo.png";
 
