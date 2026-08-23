@@ -177,7 +177,6 @@ export default function ReferralTrialConfigTab() {
     </div>
   );
 }
-}
 
 function Field({ label, hint, value, onChange, placeholder }: { label: string; hint?: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
