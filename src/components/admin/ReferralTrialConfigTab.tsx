@@ -83,7 +83,7 @@ export default function ReferralTrialConfigTab() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl md:max-w-4xl mx-auto space-y-4 px-2 sm:px-0">
       <h2 className="text-xl font-bold text-foreground inline-flex items-center gap-2">
         <Gift className="h-5 w-5" /> Teste grátis por indicação
       </h2>
@@ -111,68 +111,70 @@ export default function ReferralTrialConfigTab() {
         </div>
       </div>
 
-      <div className="card-elevated p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-foreground">Sistema de teste ativo</p>
-            <p className="text-xs text-muted-foreground">Desative para parar de aceitar novos cadastros pela página de indicação.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="card-elevated p-5 md:p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Sistema de teste ativo</p>
+              <p className="text-xs text-muted-foreground">Desative para parar de aceitar novos cadastros pela página de indicação.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={cfg.trial_enabled !== "false"}
+                onChange={(e) => set("trial_enabled", e.target.checked ? "true" : "false")}
+              />
+              <div className="w-11 h-6 bg-muted peer-checked:bg-primary rounded-full transition" />
+              <div className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition ${cfg.trial_enabled !== "false" ? "translate-x-5" : ""}`} />
+            </label>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={cfg.trial_enabled !== "false"}
-              onChange={(e) => set("trial_enabled", e.target.checked ? "true" : "false")}
+
+          <Field
+            label="Product ID (servidor)"
+            hint="ID do produto/servidor no TopGestor que será usado pro teste (ex: Uniplay). Pegue em Produtos → editar."
+            value={cfg.trial_product_id}
+            onChange={(v) => set("trial_product_id", onlyDigits(v))}
+            placeholder="123"
+          />
+          <Field
+            label="Plan ID"
+            hint="ID do plano no TopGestor que será atribuído (geralmente um plano mensal barato — vai virar pago na renovação)."
+            value={cfg.trial_plan_id}
+            onChange={(v) => set("trial_plan_id", onlyDigits(v))}
+            placeholder="456"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Telas"
+              value={cfg.trial_telas}
+              onChange={(v) => set("trial_telas", onlyDigits(v) || "1")}
+              placeholder="1"
             />
-            <div className="w-11 h-6 bg-muted peer-checked:bg-primary rounded-full transition" />
-            <div className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition ${cfg.trial_enabled !== "false" ? "translate-x-5" : ""}`} />
-          </label>
-        </div>
-
-        <Field
-          label="Product ID (servidor)"
-          hint="ID do produto/servidor no TopGestor que será usado pro teste (ex: Uniplay). Pegue em Produtos → editar."
-          value={cfg.trial_product_id}
-          onChange={(v) => set("trial_product_id", onlyDigits(v))}
-          placeholder="123"
-        />
-        <Field
-          label="Plan ID"
-          hint="ID do plano no TopGestor que será atribuído (geralmente um plano mensal barato — vai virar pago na renovação)."
-          value={cfg.trial_plan_id}
-          onChange={(v) => set("trial_plan_id", onlyDigits(v))}
-          placeholder="456"
-        />
-        <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Dias de teste"
+              value={cfg.trial_days}
+              onChange={(v) => set("trial_days", onlyDigits(v) || "1")}
+              placeholder="1"
+            />
+          </div>
           <Field
-            label="Telas"
-            value={cfg.trial_telas}
-            onChange={(v) => set("trial_telas", onlyDigits(v) || "1")}
-            placeholder="1"
+            label="WhatsApp do suporte"
+            hint="Com DDI + DDD. Ex: 5511999998888 — usado no botão 'Falar com suporte' após o cadastro."
+            value={cfg.trial_support_whatsapp}
+            onChange={(v) => set("trial_support_whatsapp", onlyDigits(v))}
+            placeholder="5511999998888"
           />
-          <Field
-            label="Dias de teste"
-            value={cfg.trial_days}
-            onChange={(v) => set("trial_days", onlyDigits(v) || "1")}
-            placeholder="1"
-          />
-        </div>
-        <Field
-          label="WhatsApp do suporte"
-          hint="Com DDI + DDD. Ex: 5511999998888 — usado no botão 'Falar com suporte' após o cadastro."
-          value={cfg.trial_support_whatsapp}
-          onChange={(v) => set("trial_support_whatsapp", onlyDigits(v))}
-          placeholder="5511999998888"
-        />
 
-        <button
-          onClick={save}
-          disabled={saving}
-          className="w-full py-3 btn-primary-gradient font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
-        >
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {saving ? "Salvando..." : "Salvar configurações"}
-        </button>
+          <button
+            onClick={save}
+            disabled={saving}
+            className="w-full py-3 btn-primary-gradient font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving ? "Salvando..." : "Salvar configurações"}
+          </button>
+        </div>
       </div>
     </div>
   );

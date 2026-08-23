@@ -40,13 +40,13 @@ const NoticeBanner = () => {
 
   return (
     <div className="w-full border-b notice-banner">
-      <div className="flex items-center gap-2.5 px-4 py-3 max-w-[480px] mx-auto">
+      <div className="flex items-center gap-2.5 px-4 py-2.5 w-full max-w-[480px] md:max-w-4xl mx-auto">
         <Megaphone className="h-5 w-5 shrink-0" />
-        <p className="text-sm font-medium flex-1">{notice.mensagem}</p>
+        <p className="text-[12px] sm:text-sm font-medium flex-1">{notice.mensagem}</p>
         <button
           onClick={handleDismiss}
           className="p-1.5 rounded-lg hover:opacity-80 transition-opacity shrink-0"
-          style={{ minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <X className="h-4 w-4" />
         </button>

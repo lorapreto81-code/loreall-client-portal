@@ -228,7 +228,7 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-md bg-card sm:rounded-2xl rounded-t-2xl max-h-[92vh] flex flex-col animate-in slide-in-from-bottom duration-300"
+        className="w-full sm:max-w-md md:max-w-2xl bg-card sm:rounded-2xl rounded-t-2xl max-h-[92vh] flex flex-col animate-in slide-in-from-bottom duration-300"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">

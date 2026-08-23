@@ -15,7 +15,7 @@ interface Props {
 
 export const DashboardHeader = ({ customer, theme, toggleTheme, menuOpen, setMenuOpen, profileIncomplete, children }: Props) => (
   <header className="bg-card/40 backdrop-blur-2xl sticky top-0 z-10 border-b border-white/5 shadow-sm">
-    <div className="flex items-center justify-between px-4 py-2.5 max-w-[480px] mx-auto">
+    <div className="flex items-center justify-between px-4 py-2.5 w-full max-w-[480px] md:max-w-4xl mx-auto">
       <div className="flex items-center gap-2.5 min-w-0">
         <img src={logo} alt="Loreall Play TV" style={{ height: 32, width: "auto" }} />
         <div className="hidden min-[360px]:block min-w-0">

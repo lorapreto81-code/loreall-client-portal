@@ -307,7 +307,7 @@ export default function Revendedor() {
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150%] h-[500px] bg-blue-400/15 dark:bg-blue-600/20 blur-[120px] rounded-[100%]" />
       </div>
 
-      <div className="w-full max-w-md px-5 pt-3 pb-6 flex flex-col gap-4 relative">
+      <div className="w-full max-w-md md:max-w-2xl px-5 pt-3 pb-6 flex flex-col gap-4 relative">
         {!isAuthenticated ? (
           <div className="flex flex-col gap-6 pt-10">
             <div className="flex flex-col items-center gap-3 text-center">
@@ -322,7 +322,7 @@ export default function Revendedor() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/50 dark:border-slate-800 shadow-2xl shadow-blue-900/10">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/50 dark:border-slate-800 shadow-2xl shadow-blue-900/10 w-full max-w-sm mx-auto">
               <LoginForm 
                 step={step}
                 phone={phone}

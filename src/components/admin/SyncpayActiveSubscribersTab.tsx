@@ -110,8 +110,8 @@ export default function SyncpayActiveSubscribersTab() {
           Nenhuma assinatura automática encontrada.
         </div>
       ) : (
-        <div className="card-elevated overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="card-elevated border border-border/50 rounded-2xl">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                 <tr>
@@ -151,6 +151,44 @@ export default function SyncpayActiveSubscribersTab() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="md:hidden divide-y divide-border">
+            {subscribers.map((sub) => (
+              <div key={sub.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-foreground truncate">{sub.customer_name}</div>
+                    <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Mail className="h-3 w-3" /> {sub.customer_email}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">📱 {sub.customer_whatsapp || "—"}</div>
+                  </div>
+                  <div className="shrink-0">{statusBadge(sub.status)}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Plano</div>
+                    <div className="font-bold text-foreground truncate">{sub.plan_name}</div>
+                  </div>
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Valor</div>
+                    <div className="font-bold text-foreground">
+                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(sub.amount)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] pt-1 text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Cobrança: {formatDate(sub.next_charge_at)}
+                  </div>
+                  <div>Início: {formatDate(sub.created_at)}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

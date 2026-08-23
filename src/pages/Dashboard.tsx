@@ -101,7 +101,7 @@ const Dashboard = () => {
         />
       </DashboardHeader>
 
-      <main className="px-4 py-4 max-w-[480px] mx-auto flex flex-col gap-[14px]">
+      <main className="px-4 py-4 w-full max-w-[480px] md:max-w-4xl mx-auto flex flex-col md:grid md:grid-cols-2 gap-[14px]">
         <DashboardBanners
           profileIncomplete={profileIncomplete}
           hasValidPhone={String((customer as any)?.whatsapp || (customer as any)?.celular || "").replace(/\D/g, "").length >= 10}
@@ -146,7 +146,7 @@ const Dashboard = () => {
       </main>
 
 
-      <footer className="px-4 py-8 pb-12 max-w-[480px] mx-auto text-center space-y-6">
+      <footer className="px-4 py-8 pb-12 w-full max-w-[480px] md:max-w-4xl mx-auto text-center space-y-6">
         <LaunchesBanner />
         <div className="pt-4 border-t border-white/5 opacity-40">
           <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">Loreall Play • 2026</p>

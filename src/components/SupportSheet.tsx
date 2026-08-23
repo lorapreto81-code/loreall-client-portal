@@ -60,7 +60,7 @@ const SupportSheet = ({ open, onClose, customerUsuario }: Props) => {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-card w-full max-w-[480px] rounded-t-2xl p-5 pb-8 animate-in slide-in-from-bottom duration-200 max-h-[92vh] overflow-y-auto relative"
+        className="bg-card w-full max-w-[480px] md:max-w-2xl rounded-t-2xl p-5 pb-8 md:p-8 animate-in slide-in-from-bottom duration-200 max-h-[92vh] overflow-y-auto relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button

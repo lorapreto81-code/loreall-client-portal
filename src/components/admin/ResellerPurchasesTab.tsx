@@ -156,8 +156,8 @@ export default function ResellerPurchasesTab() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="card-elevated overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="card-elevated border border-border/50 rounded-2xl">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                 <tr>
@@ -245,6 +245,83 @@ export default function ResellerPurchasesTab() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="md:hidden divide-y divide-border">
+            {items.map((p) => {
+              const canReprocess = p.status === "paid" && p.recharge_status !== "recharged";
+              return (
+                <div key={p.id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-mono text-sm text-foreground">{p.warez_username}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold">#{p.warez_user_id} • {fmtDate(p.created_at)}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${statusBadge[p.status] || "bg-muted"}`}>
+                        {statusLabel[p.status] || p.status}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${rechargeBadge[p.recharge_status] || "bg-muted"}`}>
+                        {rechargeLabel[p.recharge_status] || p.recharge_status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-muted/30 p-2 rounded-lg">
+                      <div className="text-muted-foreground mb-0.5 uppercase font-bold tracking-tighter">Créditos</div>
+                      <div className="font-bold text-foreground">{p.package_credits}</div>
+                    </div>
+                    <div className="bg-muted/30 p-2 rounded-lg">
+                      <div className="text-muted-foreground mb-0.5 uppercase font-bold tracking-tighter">Valor</div>
+                      <div className="font-bold text-foreground">{fmtBRL(p.amount)}</div>
+                    </div>
+                  </div>
+
+                  {p.error_message && (
+                    <div className="p-2 rounded-lg bg-destructive/5 border border-destructive/20 text-[11px] text-destructive">
+                      <strong>Erro:</strong> {friendlyError(p.error_message)}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+                    <div className="text-[10px] text-muted-foreground italic">
+                      {p.paid_at ? `Pago em ${fmtDate(p.paid_at)}` : "Aguardando pagamento"}
+                    </div>
+                    <div className="flex gap-1">
+                      {p.status === "pending" && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`Marcar como PAGA?`)) return;
+                            try { await resellerAdmin.markPaid(p.id); toast.success("Paga"); await load(); } catch (e) { toast.error("Erro"); }
+                          }}
+                          className="p-2 rounded-lg bg-green-500/10 text-green-500"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                      )}
+                      {canReprocess && (
+                        <button onClick={() => reprocess(p.id)} disabled={reprocessing === p.id} className="p-2 rounded-lg bg-primary/10 text-primary disabled:opacity-50">
+                          {reprocessing === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                        </button>
+                      )}
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`APAGAR definitivamente?`)) return;
+                          try { await resellerAdmin.deletePurchase(p.id); toast.success("Apagada"); await load(); } catch (e) { toast.error("Erro"); }
+                        }}
+                        className="p-2 rounded-lg bg-destructive/10 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {items.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground py-8">Nenhuma recarga.</div>
+            )}
           </div>
         </div>
       )}
