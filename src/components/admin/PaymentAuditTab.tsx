@@ -97,8 +97,8 @@ const PaymentAuditTab = () => {
         </div>
       </div>
 
-      <div className="card-elevated overflow-hidden border border-border/50">
-        <div className="overflow-x-auto">
+      <div className="card-elevated border border-border/50 rounded-2xl">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
@@ -195,6 +195,67 @@ const PaymentAuditTab = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="md:hidden divide-y divide-border">
+          {filteredPayments.map((p) => {
+            const isSuccess = p.renewed_at !== null;
+            const isPaid = p.fastdepix_status === "paid" || p.fastdepix_status === "PAID";
+            const isError = isPaid && !isSuccess;
+            
+            return (
+              <div key={p.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-bold text-foreground">{p.customer_name}</div>
+                    <div className="text-[10px] text-muted-foreground font-mono">
+                      ID: {p.customer_id} • {format(new Date(p.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </div>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                    isPaid ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-muted text-muted-foreground border border-border"
+                  }`}>
+                    {p.fastdepix_status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Plano</div>
+                    <div className="font-bold text-foreground truncate">{p.plan_name}</div>
+                  </div>
+                  <div className="bg-muted/30 p-2 rounded-lg">
+                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Valor</div>
+                    <div className="font-bold text-primary">R$ {p.amount.toFixed(2)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+                  <div className="flex-1 min-w-0">
+                    {isSuccess ? (
+                      <span className="inline-flex items-center gap-1 text-green-500 text-[11px] font-bold uppercase">
+                        <CheckCircle2 className="h-3 w-3" /> Renovado
+                      </span>
+                    ) : isError ? (
+                      <span className="inline-flex items-center gap-1 text-red-500 text-[11px] font-bold uppercase">
+                        <AlertCircle className="h-3 w-3" /> Falha na Renovação
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-[11px] italic">Aguardando PIX</span>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => alert(JSON.stringify(p.renewal_response || "Sem detalhes", null, 2))}
+                    className={`p-2 rounded-lg transition-colors ${
+                      isError ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <Info className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
