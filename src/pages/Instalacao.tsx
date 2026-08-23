@@ -394,6 +394,7 @@ const Instalacao = () => {
                                   onClick={() => copyCode(app.downloaderCode!)}
                                   className="flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg bg-background/40 border border-border/30"
                                 >
+                                  <img src={iconDownloader.url} alt="Downloader" className="h-4 w-4 rounded shrink-0" />
                                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Código:</span>
                                   <span 
                                     className="text-sm font-bold font-mono"
