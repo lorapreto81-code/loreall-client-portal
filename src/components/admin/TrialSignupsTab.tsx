@@ -134,52 +134,11 @@ const TrialSignupsTab = () => {
             {signups.map((s) => (
               <SignupRow key={s.id} signup={s} onApprove={() => setApproving(s)} onReject={() => setRejecting(s)} />
             ))}
-          </div>
-          
-          <div className="md:hidden divide-y divide-border">
-            {signups.map((s) => (
-              <div key={s.id} className="p-4 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-foreground truncate">{s.name}</div>
-                    <div className="text-[11px] text-muted-foreground">📱 {formatPhone(s.whatsapp)}</div>
-                  </div>
-                  <div className="shrink-0">
-                    <StatusBadge status={s.status} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-muted/30 p-2 rounded-lg">
-                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Indicado por</div>
-                    <div className="font-bold text-foreground truncate">{s.referrer_customer_name || `#${s.referrer_customer_id}`}</div>
-                  </div>
-                  <div className="bg-muted/30 p-2 rounded-lg">
-                    <div className="text-muted-foreground mb-0.5 font-bold uppercase tracking-tighter">Data</div>
-                    <div className="font-bold text-foreground">{new Date(s.created_at).toLocaleDateString("pt-BR")}</div>
-                  </div>
-                </div>
-
-                {s.status === "pending" && (
-                  <div className="pt-2 flex gap-2">
-                    <button
-                      onClick={() => setRejecting(s)}
-                      className="flex-1 py-2 rounded-lg border border-destructive/40 text-destructive font-bold text-xs flex items-center justify-center gap-2"
-                    >
-                      <XCircle className="h-3.5 w-3.5" /> Rejeitar
-                    </button>
-                    <button
-                      onClick={() => setApproving(s)}
-                      className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
+      </form>
+    </ModalShell>
+  );
+};
       )}
 
       {approving && (
