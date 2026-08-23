@@ -7,6 +7,7 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 import imgSmartTv from "@/assets/dev-smarttv.png.asset.json";
+import imgAndroidTv from "@/assets/dev-androidtv.png.asset.json";
 import imgTvBox from "@/assets/dev-tvbox.png.asset.json";
 import imgFireStick from "@/assets/dev-firestick.png.asset.json";
 import imgCelular from "@/assets/dev-celular.png.asset.json";
