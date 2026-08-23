@@ -173,11 +173,10 @@ export default function ReferralTrialConfigTab() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {saving ? "Salvando..." : "Salvar configurações"}
         </button>
-            </div>
-          </div>
-        </div>
       </div>
+    </div>
   );
+}
 }
 
 function Field({ label, hint, value, onChange, placeholder }: { label: string; hint?: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
