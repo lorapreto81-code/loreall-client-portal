@@ -243,11 +243,10 @@ Deno.serve(async (req) => {
       return jsonRes({ referrals: combined }, 200, req);
     }
 
-    // ----- get-site-notice (requer auth básica para evitar bots, mas aberto a qualquer cliente) -----
+    // ----- get-site-notice (público — apenas aviso não sensível do site) -----
     if (action === "get-site-notice") {
-      const session = await getCustomerSession(req);
-      if (!session) return jsonRes({ error: "Unauthorized" }, 401, req);
       const cfg = await getConfigMap(supabase);
+
 
       return jsonRes({
         ativo: cfg.site_notice_ativo === "true",
