@@ -7,6 +7,7 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 import imgSmartTv from "@/assets/dev-smarttv.png.asset.json";
+import imgAndroidTv from "@/assets/dev-androidtv.png.asset.json";
 import imgTvBox from "@/assets/dev-tvbox.png.asset.json";
 import imgFireStick from "@/assets/dev-firestick.png.asset.json";
 import imgCelular from "@/assets/dev-celular.png.asset.json";
@@ -38,14 +39,14 @@ type Section = {
 const SECTIONS: Section[] = [
   {
     id: "smarttv",
-    title: "Smart TVs",
-    subtitle: "Samsung (Tizen) · LG (webOS) · TCL · Philips",
+    title: "Smart TVs Samsung, LG e Roku",
+    subtitle: "Samsung (Tizen) · LG (webOS) · Roku TV",
     image: imgSmartTv.url,
     icon: <Tv className="h-4 w-4" />,
     accent: "from-sky-500/25 to-indigo-500/10 border-sky-500/25 text-sky-400",
     steps: [
       "Ligue a TV e conecte na sua internet (Wi-Fi ou cabo).",
-      "Abra a loja de aplicativos da TV (Samsung Apps, LG Content Store ou Google Play).",
+      "Abra a loja de aplicativos da TV (Samsung Apps, LG Content Store ou Roku Channel Store).",
       "Busque pelo aplicativo recomendado abaixo e instale.",
       "Abra o app e escolha entre entrar com usuário e senha ou lista M3U.",
       "Digite seu usuário e senha da Loreall Play e confirme.",
@@ -56,7 +57,30 @@ const SECTIONS: Section[] = [
       { name: "Blessed Player", recommended: true, hrefLabel: "Em breve" },
       { name: "Brasil IPTV", note: "Indicado para TVs LG webOS.", hrefLabel: "Em breve" },
     ],
+    warning: "TVs Samsung, LG e Roku não aceitam apps de Android. Use apenas os players desta seção.",
   },
+  {
+    id: "androidtv",
+    title: "Smart TVs Android / Google TV",
+    subtitle: "TCL · Philips · Sony · Xiaomi · AOC (Android TV)",
+    image: imgAndroidTv.url,
+    icon: <Tv className="h-4 w-4" />,
+    accent: "from-teal-500/25 to-emerald-500/10 border-teal-500/25 text-teal-400",
+    steps: [
+      "Ligue a TV, conecte na internet e finalize o login da conta Google.",
+      "Abra a Google Play Store na tela inicial da TV.",
+      "Busque pelo aplicativo recomendado abaixo e instale.",
+      "Se o app não aparecer na loja, instale pelo Downloader usando o link do APK.",
+      "Abra o player e selecione login por usuário e senha (Xtream Codes).",
+      "Informe seu usuário e senha da Loreall Play e aguarde a lista carregar.",
+    ],
+    apps: [
+      { name: "Wplay P2P", recommended: true, singleScreen: true, hrefLabel: "Em breve" },
+      { name: "Blessed Player", recommended: true, hrefLabel: "Em breve" },
+    ],
+    warning: "Se a sua TV tem Google Play Store, ela é Android TV — use os apps desta seção, não os de Samsung/LG.",
+  },
+
   {
     id: "tvbox",
     title: "TV Box",
