@@ -31,7 +31,7 @@ export function useActiveSubscription(customerId?: number) {
         return null;
       }
 
-      if (!data || data.error || !data.status || data.status === "cancelled") {
+      if (!data || data.error || !data.status || data.status === "cancelled" || data.status === "none") {
         return null;
       }
       return {
