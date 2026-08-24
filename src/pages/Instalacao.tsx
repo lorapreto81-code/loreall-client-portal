@@ -69,13 +69,13 @@ const SECTIONS: Section[] = [
   },
   {
     id: "androidtv",
+    needsDownloader: true,
     title: "Smart TVs Android / Google TV",
     subtitle: "TCL · Philips · Sony · Xiaomi · AOC (Android TV)",
     image: imgAndroidTv.url,
     icon: <Tv className="h-4 w-4" />,
     accent: "from-teal-500/25 to-emerald-500/10 border-teal-500/25 text-teal-400",
     steps: [
-      "Instale o app Downloader (gratuito, na Play Store da sua TV) — ele instala outros apps a partir de um código, sem precisar baixar arquivo nenhum.",
       "Abra o Downloader, digite o código do app escolhido abaixo e toque em Ir.",
       "Se aparecer um aviso pedindo permissão, toque em Configurações, ative a instalação e volte pra tocar em Instalar.",
       "Abra o app instalado e informe seu usuário e senha da Loreall Play.",
