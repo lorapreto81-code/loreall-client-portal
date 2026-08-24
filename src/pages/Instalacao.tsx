@@ -105,13 +105,13 @@ const SECTIONS: Section[] = [
 
   {
     id: "tvbox",
+    needsDownloader: true,
     title: "TV Box",
     subtitle: "Android · BTV · MXQ · H96",
     image: imgTvBox.url,
     icon: <MonitorPlay className="h-4 w-4" />,
     accent: "from-violet-500/25 to-fuchsia-500/10 border-violet-500/25 text-violet-400",
     steps: [
-      "Instale o app Downloader (gratuito, na Play Store do seu aparelho) — ele instala outros apps a partir de um código, sem precisar baixar arquivo nenhum.",
       "Abra o Downloader, digite o código do app escolhido abaixo e toque em Ir.",
       "Se aparecer um aviso pedindo permissão, toque em Configurações, ative a instalação e volte pra tocar em Instalar.",
       "Abra o app instalado e informe seu usuário e senha da Loreall Play.",
