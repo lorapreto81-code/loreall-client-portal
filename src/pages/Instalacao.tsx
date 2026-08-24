@@ -41,6 +41,7 @@ type Section = {
   steps: string[];
   apps: App[];
   warning?: string;
+  needsDownloader?: boolean;
 };
 
 const SECTIONS: Section[] = [
