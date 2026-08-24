@@ -74,11 +74,10 @@ const SECTIONS: Section[] = [
     icon: <Tv className="h-4 w-4" />,
     accent: "from-teal-500/25 to-emerald-500/10 border-teal-500/25 text-teal-400",
     steps: [
-      "Conecte a TV na internet e finalize o login da conta Google.",
-      "Na Play Store da TV, busque e instale o app Downloader (é gratuito — ele serve só pra instalar outros apps usando um código, sem precisar baixar arquivo nenhum).",
-      "Abra o Downloader, digite o código do app escolhido abaixo em \"URL\" e toque em Ir.",
-      "Aguarde instalar, abra o app e escolha login por usuário e senha.",
-      "Informe seu usuário e senha da Loreall Play e aguarde a lista carregar.",
+      "Instale o app Downloader (gratuito, na Play Store da sua TV) — ele instala outros apps a partir de um código, sem precisar baixar arquivo nenhum.",
+      "Abra o Downloader, digite o código do app escolhido abaixo e toque em Ir.",
+      "Se aparecer um aviso pedindo permissão, toque em Configurações, ative a instalação e volte pra tocar em Instalar.",
+      "Abra o app instalado e informe seu usuário e senha da Loreall Play.",
     ],
     apps: [
       {
@@ -111,11 +110,10 @@ const SECTIONS: Section[] = [
     icon: <MonitorPlay className="h-4 w-4" />,
     accent: "from-violet-500/25 to-fuchsia-500/10 border-violet-500/25 text-violet-400",
     steps: [
-      "Conecte o TV Box na TV pelo cabo HDMI, ligue na tomada e conecte na internet.",
-      "Na Play Store do aparelho, busque e instale o app Downloader (é gratuito — ele serve só pra instalar outros apps usando um código, sem precisar baixar arquivo nenhum).",
-      "Abra o Downloader, digite o código do app escolhido abaixo em \"URL\" e toque em Ir.",
-      "Aguarde instalar, abra o app e escolha login por usuário e senha.",
-      "Informe seu usuário e senha da Loreall Play e aguarde a lista carregar.",
+      "Instale o app Downloader (gratuito, na Play Store do seu aparelho) — ele instala outros apps a partir de um código, sem precisar baixar arquivo nenhum.",
+      "Abra o Downloader, digite o código do app escolhido abaixo e toque em Ir.",
+      "Se aparecer um aviso pedindo permissão, toque em Configurações, ative a instalação e volte pra tocar em Instalar.",
+      "Abra o app instalado e informe seu usuário e senha da Loreall Play.",
     ],
     apps: [
       {
