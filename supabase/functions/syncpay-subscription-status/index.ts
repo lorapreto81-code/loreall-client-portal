@@ -67,7 +67,13 @@ Deno.serve(async (req) => {
       planIdHint = latest?.syncpay_plan_id || null;
     }
 
-    if (!subId) return json({ error: "subscription_id ou customer_id não encontrado" }, 400, {}, req);
+    if (!subId) {
+      return json({ 
+        subscription_id: null, 
+        status: "none", 
+        message: "Nenhuma assinatura encontrada para este identificador" 
+      }, 200, {}, req);
+    }
 
     // Se passou apenas subId, valida se o cliente é dono dessa sub específica
     if (isCustomer && !customer_id) {
