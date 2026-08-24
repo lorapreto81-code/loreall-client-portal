@@ -140,6 +140,7 @@ const SECTIONS: Section[] = [
   },
   {
     id: "firestick",
+    needsDownloader: true,
     title: "Fire Stick",
     subtitle: "Amazon Fire TV Stick",
     image: imgFireStick.url,
@@ -149,7 +150,6 @@ const SECTIONS: Section[] = [
       "Encaixe o Fire Stick na entrada HDMI da TV e ligue a fonte de energia.",
       "Conecte o aparelho ao Wi-Fi e finalize o login da conta Amazon.",
       "Vá em Configurações › Meu Fire TV › Opções de desenvolvedor e ative “Apps de fontes desconhecidas”.",
-      "Instale o app Downloader pela loja da Amazon e abra.",
       "Digite o link do APK do player recomendado e confirme a instalação.",
       "Abra o player, entre com usuário e senha e aguarde a lista carregar.",
     ],
