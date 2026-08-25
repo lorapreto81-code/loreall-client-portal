@@ -18,6 +18,7 @@ import { maskDoc, isValidDoc, onlyDigits as onlyDigitsDoc, detectDoc } from "@/l
 import { useAuthStore, Customer } from "@/store/authStore";
 import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
+  mapProviderToServidor, buildCardsFromAreaPricing, AreaPricingPlan,
 } from "@/lib/planUtils";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 const logo = "/logo.png";
@@ -129,14 +130,36 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     ? plansQuery.data
     : plansQuery.data?.data || [];
 
+  const servidor = mapProviderToServidor((customer as any)?.iptv_provider);
+
+  const areaPricingQuery = useQuery({
+    queryKey: ["area-pricing", servidor, currentTelas],
+    queryFn: async (): Promise<AreaPricingPlan[]> => {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/area-pricing?servidor=${servidor}&telas=${currentTelas}`,
+        {
+          headers: {
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      if (!res.ok) return [];
+      const data = await res.json().catch(() => ({}));
+      return Array.isArray(data?.plans) ? data.plans : [];
+    },
+    staleTime: 120_000,
+    enabled: !!customer && open && !!servidor,
+  });
+
   const currentPlanId =
     (customer?.plan?.id as number | undefined) ??
     (customer?.plan_id as number | undefined);
 
-  const periodCards = useMemo(
-    () => computeRenewalCards(allPlans, currentPlanId, currentTelas),
-    [allPlans, currentPlanId, currentTelas],
-  );
+  const periodCards = useMemo(() => {
+    const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
+    if (areaCards.length > 0) return areaCards;
+    return computeRenewalCards(allPlans, currentPlanId, currentTelas);
+  }, [areaPricingQuery.data, allPlans, currentPlanId, currentTelas]);
 
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;

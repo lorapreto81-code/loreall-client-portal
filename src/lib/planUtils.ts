@@ -16,6 +16,38 @@ export const getPlanValue = (p: Plan) => {
   return num;
 };
 
+export const mapProviderToServidor = (iptvProvider?: string | null): string | null => {
+  const v = String(iptvProvider || "").toLowerCase().trim();
+  if (v === "wplay_main") return "warez";
+  if (v === "uniplay_main") return "uniplay_iptv"; // cobre P2P e IPTV — preço igual pra 1 tela
+  return null; // desconhecido: quem chama deve cair no sistema antigo
+};
+
+export interface AreaPricingPlan {
+  periodicidade: string;
+  topgestor_plan_id: number;
+  display_name: string;
+  base_amount: number;
+  final_amount: number;
+}
+
+export const buildCardsFromAreaPricing = (areaPlans: AreaPricingPlan[]): PeriodCard[] => {
+  return PERIOD_MAP
+    .map((period) => {
+      const found = areaPlans.find((p) => p.periodicidade === period.keyword);
+      if (!found) return null;
+      return {
+        ...period,
+        plan: {
+          id: found.topgestor_plan_id,
+          plan_name: found.display_name,
+          plan_value: found.final_amount,
+        },
+      };
+    })
+    .filter((c): c is PeriodCard => c != null);
+};
+
 const PERIOD_MAP: { months: number; label: string; keyword: string }[] = [
   { months: 1, label: "1 mês", keyword: "mensal" },
   { months: 3, label: "3 meses", keyword: "trimestral" },
