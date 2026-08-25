@@ -4,8 +4,8 @@ import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
 import { AccountSelection } from "@/features/auth/components/AccountSelection";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { logo } from "@/utils/constants";
-import indiqueBanner from "@/assets/indique-ganhe-banner-v2.png.asset.json";
-import renoveBanner from "@/assets/renove-assinatura-banner.png.asset.json";
+import indiqueBanner from "@/assets/indique-ganhe-banner.webp.asset.json";
+import renoveBanner from "@/assets/renove-assinatura-banner.webp.asset.json";
 
 const Login = () => {
   const {
