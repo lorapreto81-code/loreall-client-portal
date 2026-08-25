@@ -42,10 +42,10 @@ export const buildCardsFromAreaPricing = (areaPlans: AreaPricingPlan[]): PeriodC
           id: found.topgestor_plan_id,
           plan_name: found.display_name,
           plan_value: found.final_amount,
-        },
+        } as Plan,
       };
     })
-    .filter((c): c is PeriodCard => c != null);
+    .filter((c): c is PeriodCard & { plan: Plan } => c != null);
 };
 
 const PERIOD_MAP: { months: number; label: string; keyword: string }[] = [
