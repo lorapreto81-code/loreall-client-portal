@@ -22,6 +22,13 @@ export const extractTelasFromPlanName = (name?: string | null): number | null =>
   return match ? Number(match[1]) : null;
 };
 
+export const mapProviderToServidor = (iptvProvider?: string | null): string | null => {
+  const v = String(iptvProvider || "").toLowerCase().trim();
+  if (v === "wplay_main") return "warez";
+  if (v === "uniplay_main") return "uniplay_iptv"; // cobre P2P e IPTV — preço igual pra 1 tela
+  return null; // desconhecido: quem chama deve cair no sistema antigo
+};
+
 
 export interface AreaPricingPlan {
   periodicidade: string;
