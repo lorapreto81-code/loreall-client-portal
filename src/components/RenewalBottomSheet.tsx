@@ -19,6 +19,7 @@ import { useAuthStore, Customer } from "@/store/authStore";
 import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
   mapProviderToServidor, buildCardsFromAreaPricing, AreaPricingPlan,
+  extractTelasFromPlanName,
 } from "@/lib/planUtils";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 const logo = "/logo.png";
@@ -56,8 +57,8 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const { customer, login } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // Telas é regra fixa do sistema: sempre 1. Não usamos mais o valor do TopGestor.
-  const currentTelas = 1;
+  // Telas derivada do nome do plano atual — evita depender do campo bruto do TopGestor.
+  const currentTelas = extractTelasFromPlanName(customer?.plan?.name) || 1;
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [generating, setGenerating] = useState(false);
