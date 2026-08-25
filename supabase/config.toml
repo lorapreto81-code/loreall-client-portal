@@ -46,3 +46,6 @@ verify_jwt = false
 
 [functions.syncpay-subscription-status]
 verify_jwt = false
+
+[functions.area-pricing]
+verify_jwt = false
