@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, ChevronDown, LifeBuoy, RefreshCw, Power, Wifi, MessageCircle } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
-import suporteTravando from "@/assets/suporte-travando.png.asset.json";
+import suporteTravando from "@/assets/suporte-travando.webp.asset.json";
 
 interface Props {
   open: boolean;
