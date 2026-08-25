@@ -24,7 +24,7 @@ interface Notice {
 }
 
 type TabGroup = "revendedores" | "clientes" | "indicacao" | "assinaturas" | "auditoria" | "config";
-type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-signups" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-signups" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config" | "revendedores-dashboard" | "clientes-dashboard" | "clientes-topgestor";
 
 const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: { id: Tab; label: string; icon: typeof Megaphone }[] }[] = [
   {
@@ -34,6 +34,7 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
     tabs: [
       { id: "links", label: "Links de Revenda", icon: Link2 },
       { id: "recargas", label: "Histórico de Recargas", icon: ListChecks },
+      { id: "revendedores-dashboard", label: "Dashboard de Lucro", icon: LineChart },
     ]
   },
   {
@@ -43,6 +44,8 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
     tabs: [
       { id: "clientes", label: "Pagamentos Diretos", icon: Users },
       { id: "assinaturas-ativas", label: "Assinantes Ativos", icon: ShieldCheck },
+      { id: "clientes-dashboard", label: "Faturamento", icon: BarChart3 },
+      { id: "clientes-topgestor", label: "Clientes TopGestor", icon: Database },
     ]
   },
   {
@@ -328,6 +331,9 @@ const Admin = () => {
           {tab === "indicacao-config" && <ReferralTrialConfigTab />}
           {tab === "assinaturas" && <SyncpaySubscriptionsTab />}
           {tab === "assinaturas-ativas" && <SyncpayActiveSubscribersTab />}
+          {tab === "revendedores-dashboard" && <ResellerDashboardTab />}
+          {tab === "clientes-dashboard" && <CustomersDashboardTab />}
+          {tab === "clientes-topgestor" && <TopGestorCustomersTab />}
           {tab === "auditoria-acesso" && <OtpAuditTab />}
           {tab === "auditoria-pagamento" && <PaymentAuditTab />}
           {tab === "pix-provider" && <PixProviderTab />}
