@@ -46,11 +46,7 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Seu plano</p>
           <div className="flex items-center gap-2">
             <p className="text-xl font-bold text-foreground leading-tight truncate">
-              {(() => {
-                const raw = customer.plan?.name || "—";
-                const cleaned = raw.replace(/\s*[·-]?\s*\d+\s*telas?\s*/gi, "").trim().replace(/\s*[·-]\s*$/, "").trim();
-                return cleaned || raw;
-              })()}
+              {getDisplayPlanLabel(customer.plan?.name)}
             </p>
             {points > 0 && (
               <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-500">
