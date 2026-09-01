@@ -149,7 +149,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
       return Array.isArray(data?.plans) ? data.plans : [];
     },
     staleTime: 120_000,
-    enabled: !!customer && open && !!servidor && !isLegacyPlanName(customer?.plan?.name),
+    enabled: !!customer && open && !!servidor,
   });
 
   const currentPlanId =
@@ -162,11 +162,21 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     plansQuery.isLoading || (!!servidor && areaPricingQuery.isLoading);
 
   const periodCards = useMemo(() => {
-    if (!isLegacyPlanName(customer?.plan?.name)) {
-      const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
-      if (areaCards.length > 0) return areaCards;
+    const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
+    if (areaCards.length === 0) {
+      return computeRenewalCards(allPlans, currentPlanId, currentTelas);
     }
-    return computeRenewalCards(allPlans, currentPlanId, currentTelas);
+    if (isLegacyPlanName(customer?.plan?.name)) {
+      const currentPlan = allPlans.find((p) => p.id === currentPlanId);
+      if (currentPlan) {
+        return areaCards.map((card) =>
+          card.keyword === "mensal"
+            ? { ...card, plan: currentPlan }
+            : card
+        );
+      }
+    }
+    return areaCards;
   }, [areaPricingQuery.data, allPlans, currentPlanId, currentTelas, customer?.plan?.name]);
 
   const activeCard = periodCards[selectedIdx] || periodCards[0];
