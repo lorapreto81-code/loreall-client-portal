@@ -85,6 +85,21 @@ export const detectCurrentPeriod = (planName: string): string | null => {
   return null;
 };
 
+export const isLegacyPlanName = (name?: string | null): boolean =>
+  /legado/i.test(name || "");
+
+const PERIOD_LABELS: Record<string, string> = {
+  mensal: "Mensal",
+  trimestral: "Trimestral",
+  semestral: "Semestral",
+  anual: "Anual",
+};
+
+export const getDisplayPlanLabel = (name?: string | null): string => {
+  const period = detectCurrentPeriod(name || "");
+  return period ? `Plano ${PERIOD_LABELS[period]}` : "Plano";
+};
+
 export const screenLabel = (n: number) => (n === 1 ? "1 Tela" : `${n} Telas`);
 
 // Nome "padrão" (tabela oficial): "Mensal 2 telas", "Anual 1 tela", etc.
