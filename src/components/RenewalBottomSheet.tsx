@@ -894,7 +894,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         </div>
         <p className="text-sm text-muted-foreground mb-4">Valores do seu plano atual</p>
 
-        {plansQuery.isLoading ? (
+        {pricingLoading ? (
           <div className="grid grid-cols-2 gap-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
