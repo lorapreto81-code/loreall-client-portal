@@ -156,6 +156,11 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     (customer?.plan?.id as number | undefined) ??
     (customer?.plan_id as number | undefined);
 
+  // Evita "flash" de preços antigos: enquanto a tabela por servidor está carregando,
+  // não mostramos os cards legados (que gerariam PIX com valor/plano errado).
+  const pricingLoading =
+    plansQuery.isLoading || (!!servidor && areaPricingQuery.isLoading);
+
   const periodCards = useMemo(() => {
     const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
     if (areaCards.length > 0) return areaCards;
@@ -889,7 +894,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         </div>
         <p className="text-sm text-muted-foreground mb-4">Valores do seu plano atual</p>
 
-        {plansQuery.isLoading ? (
+        {pricingLoading ? (
           <div className="grid grid-cols-2 gap-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
