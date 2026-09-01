@@ -27,6 +27,7 @@ interface PlanCardProps {
 export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
   const pill = getStatusPill(days);
   const points = (customer as any).pontos || (customer as any).meta?.pontos;
+  const telas = extractTelasFromPlanName(customer.plan?.name) || 1;
 
   const { data: subscription } = useActiveSubscription(customer.id);
   const mandateActive = subscription?.mandate_status?.toUpperCase() === "ACTIVE";
