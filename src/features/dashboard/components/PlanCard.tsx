@@ -74,7 +74,7 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
         </div>
         <div className="flex items-start gap-2">
           <div className="flex -space-x-1 mt-0.5 shrink-0">
-            {Array.from({ length: Math.min(Number(customer.telas) || 1, 4) }).map((_, i) => (
+            {Array.from({ length: Math.min(telas, 4) }).map((_, i) => (
               <Tv key={i} className="h-4 w-4 text-muted-foreground" style={{ zIndex: 4 - i }} />
             ))}
           </div>
