@@ -19,7 +19,7 @@ import { useAuthStore, Customer } from "@/store/authStore";
 import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
   mapProviderToServidor, buildCardsFromAreaPricing, AreaPricingPlan,
-  extractTelasFromPlanName,
+  extractTelasFromPlanName, isLegacyPlanName,
 } from "@/lib/planUtils";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 const logo = "/logo.png";
@@ -149,7 +149,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
       return Array.isArray(data?.plans) ? data.plans : [];
     },
     staleTime: 120_000,
-    enabled: !!customer && open && !!servidor,
+    enabled: !!customer && open && !!servidor && !isLegacyPlanName(customer?.plan?.name),
   });
 
   const currentPlanId =
@@ -162,10 +162,12 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     plansQuery.isLoading || (!!servidor && areaPricingQuery.isLoading);
 
   const periodCards = useMemo(() => {
-    const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
-    if (areaCards.length > 0) return areaCards;
+    if (!isLegacyPlanName(customer?.plan?.name)) {
+      const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
+      if (areaCards.length > 0) return areaCards;
+    }
     return computeRenewalCards(allPlans, currentPlanId, currentTelas);
-  }, [areaPricingQuery.data, allPlans, currentPlanId, currentTelas]);
+  }, [areaPricingQuery.data, allPlans, currentPlanId, currentTelas, customer?.plan?.name]);
 
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;

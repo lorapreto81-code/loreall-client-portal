@@ -2,6 +2,7 @@ import { CalendarDays, Monitor, Tv, Sparkles, Repeat, Clock, Settings, AlertTria
 import { Customer } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
 import { getStatusPill, telasLabel, WHATSAPP_NUMBER } from "@/utils/constants";
+import { extractTelasFromPlanName, getDisplayPlanLabel } from "@/lib/planUtils";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 import { 
   AlertDialog, 
@@ -26,6 +27,7 @@ interface PlanCardProps {
 export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
   const pill = getStatusPill(days);
   const points = (customer as any).pontos || (customer as any).meta?.pontos;
+  const telas = extractTelasFromPlanName(customer.plan?.name) || 1;
 
   const { data: subscription } = useActiveSubscription(customer.id);
   const mandateActive = subscription?.mandate_status?.toUpperCase() === "ACTIVE";
@@ -44,11 +46,7 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Seu plano</p>
           <div className="flex items-center gap-2">
             <p className="text-xl font-bold text-foreground leading-tight truncate">
-              {(() => {
-                const raw = customer.plan?.name || "—";
-                const cleaned = raw.replace(/\s*[·-]?\s*\d+\s*telas?\s*/gi, "").trim().replace(/\s*[·-]\s*$/, "").trim();
-                return cleaned || raw;
-              })()}
+              {getDisplayPlanLabel(customer.plan?.name)}
             </p>
             {points > 0 && (
               <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-500">
@@ -76,20 +74,20 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
         </div>
         <div className="flex items-start gap-2">
           <div className="flex -space-x-1 mt-0.5 shrink-0">
-            {Array.from({ length: Math.min(Number(customer.telas) || 1, 4) }).map((_, i) => (
+            {Array.from({ length: Math.min(telas, 4) }).map((_, i) => (
               <Tv key={i} className="h-4 w-4 text-muted-foreground" style={{ zIndex: 4 - i }} />
             ))}
           </div>
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground mb-0.5">Telas simultâneas</p>
-            <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
+            <p className="text-sm font-semibold text-foreground">{telasLabel(telas)}</p>
           </div>
         </div>
       </div>
 
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-          `Olá! Sou ${customer.name}, cliente do plano "${customer.plan?.name || ""}" (${telasLabel(customer.telas)}). Gostaria de adicionar mais telas ao meu plano.`
+          `Olá! Sou ${customer.name}, cliente do plano "${customer.plan?.name || ""}" (${telasLabel(telas)}). Gostaria de adicionar mais telas ao meu plano.`
         )}`}
         target="_blank"
         rel="noopener noreferrer"
