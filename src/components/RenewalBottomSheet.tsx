@@ -935,7 +935,14 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                         : { borderRadius: 16 }
                     }
                   >
-                    <p className="text-sm font-medium text-muted-foreground mb-1">{card.label}</p>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
+                      {isLegacyPlanName(customer?.plan?.name) && card.keyword !== "mensal" && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">
+                          3 TELAS COM DESCONTO
+                        </span>
+                      )}
+                    </div>
                     <p className="text-lg font-bold text-foreground">
                       {card.plan ? formatCurrency(getPlanValue(card.plan)) : "—"}
                     </p>
