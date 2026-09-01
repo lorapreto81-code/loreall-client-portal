@@ -2,6 +2,7 @@ import { CalendarDays, Monitor, Tv, Sparkles, Repeat, Clock, Settings, AlertTria
 import { Customer } from "@/store/authStore";
 import { formatDate, daysUntil } from "@/lib/format";
 import { getStatusPill, telasLabel, WHATSAPP_NUMBER } from "@/utils/constants";
+import { extractTelasFromPlanName, getDisplayPlanLabel } from "@/lib/planUtils";
 import { useActiveSubscription } from "@/features/dashboard/hooks/useActiveSubscription";
 import { 
   AlertDialog, 
