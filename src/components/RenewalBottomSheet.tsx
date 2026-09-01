@@ -162,10 +162,12 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     plansQuery.isLoading || (!!servidor && areaPricingQuery.isLoading);
 
   const periodCards = useMemo(() => {
-    const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
-    if (areaCards.length > 0) return areaCards;
+    if (!isLegacyPlanName(customer?.plan?.name)) {
+      const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
+      if (areaCards.length > 0) return areaCards;
+    }
     return computeRenewalCards(allPlans, currentPlanId, currentTelas);
-  }, [areaPricingQuery.data, allPlans, currentPlanId, currentTelas]);
+  }, [areaPricingQuery.data, allPlans, currentPlanId, currentTelas, customer?.plan?.name]);
 
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;
