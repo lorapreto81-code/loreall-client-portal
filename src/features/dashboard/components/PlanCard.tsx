@@ -87,7 +87,7 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
 
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-          `Olá! Sou ${customer.name}, cliente do plano "${customer.plan?.name || ""}" (${telasLabel(customer.telas)}). Gostaria de adicionar mais telas ao meu plano.`
+          `Olá! Sou ${customer.name}, cliente do plano "${customer.plan?.name || ""}" (${telasLabel(telas)}). Gostaria de adicionar mais telas ao meu plano.`
         )}`}
         target="_blank"
         rel="noopener noreferrer"
