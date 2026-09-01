@@ -149,7 +149,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
       return Array.isArray(data?.plans) ? data.plans : [];
     },
     staleTime: 120_000,
-    enabled: !!customer && open && !!servidor,
+    enabled: !!customer && open && !!servidor && !isLegacyPlanName(customer?.plan?.name),
   });
 
   const currentPlanId =
