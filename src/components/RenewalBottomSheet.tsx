@@ -156,6 +156,11 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
     (customer?.plan?.id as number | undefined) ??
     (customer?.plan_id as number | undefined);
 
+  // Evita "flash" de preços antigos: enquanto a tabela por servidor está carregando,
+  // não mostramos os cards legados (que gerariam PIX com valor/plano errado).
+  const pricingLoading =
+    plansQuery.isLoading || (!!servidor && areaPricingQuery.isLoading);
+
   const periodCards = useMemo(() => {
     const areaCards = buildCardsFromAreaPricing(areaPricingQuery.data || []);
     if (areaCards.length > 0) return areaCards;
