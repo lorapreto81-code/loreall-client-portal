@@ -80,7 +80,7 @@ export const PlanCard = ({ customer, days, onRenewClick }: PlanCardProps) => {
           </div>
           <div className="min-w-0">
             <p className="text-[11px] text-muted-foreground mb-0.5">Telas simultâneas</p>
-            <p className="text-sm font-semibold text-foreground">{telasLabel(customer.telas)}</p>
+            <p className="text-sm font-semibold text-foreground">{telasLabel(telas)}</p>
           </div>
         </div>
       </div>
