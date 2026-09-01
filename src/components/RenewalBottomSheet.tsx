@@ -19,7 +19,7 @@ import { useAuthStore, Customer } from "@/store/authStore";
 import {
   Plan, getPlanName, getPlanValue, computeRenewalCards,
   mapProviderToServidor, buildCardsFromAreaPricing, AreaPricingPlan,
-  extractTelasFromPlanName,
+  extractTelasFromPlanName, isLegacyPlanName,
 } from "@/lib/planUtils";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 const logo = "/logo.png";
