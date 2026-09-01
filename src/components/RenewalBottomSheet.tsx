@@ -487,6 +487,16 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   };
 
   const handleClose = () => {
+    if (pix?.payment_id && customer?.id) {
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-status`, {
+        method: "POST",
+        headers: {
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "cancel", payment_id: pix.payment_id, customer_id: customer.id }),
+      }).catch(() => {});
+    }
     setSubResult(null); // Limpa polling da assinatura
     resetState();
     onClose();
@@ -729,7 +739,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         >
           <button
             onClick={() => (isPaid ? handleClose() : setShowExitConfirm(true))}
-            className="absolute top-4 right-4 bg-muted/60 hover:bg-muted text-foreground rounded-full p-2 z-10"
+            className="absolute top-4 right-4 bg-muted/60 hover:bg-muted text-foreground rounded-full p-2 z-10 flex items-center justify-center"
             style={{ minHeight: 44, minWidth: 44 }}
           >
             <X className="h-5 w-5" />
@@ -810,7 +820,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
           <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
             <AlertDialogContent className="w-[90%] max-w-[380px] rounded-2xl">
-              <AlertDialogHeader>
+              <AlertDialogHeader className="text-left">
                 <AlertDialogTitle>Falta pouco pra renovar!</AlertDialogTitle>
                 <AlertDialogDescription>
                   Você já gerou o Pix. O que prefere fazer?
@@ -825,7 +835,20 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                   Continuar pagamento
                 </button>
                 <button
-                  onClick={() => { setShowExitConfirm(false); resetState(); }}
+                  onClick={() => {
+                    setShowExitConfirm(false);
+                    if (pix?.payment_id && customer?.id) {
+                      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-status`, {
+                        method: "POST",
+                        headers: {
+                          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ action: "cancel", payment_id: pix.payment_id, customer_id: customer.id }),
+                      }).catch(() => {});
+                    }
+                    resetState();
+                  }}
                   className="w-full py-2.5 rounded-xl font-semibold text-sm border border-border text-foreground"
                 >
                   Trocar de plano

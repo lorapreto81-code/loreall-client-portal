@@ -7,7 +7,7 @@ import { signWebhookPayload, corsHeadersFor } from "../_shared/security.ts";
 
 
 interface Body {
-  action: "pending" | "status" | "history";
+  action: "pending" | "status" | "history" | "cancel";
   customer_id?: number;
   payment_id?: string;
   limit?: number;
@@ -161,6 +161,30 @@ Deno.serve(async (req) => {
         .limit(limit);
       if (error) throw error;
       return new Response(JSON.stringify({ payments: data || [] }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (body.action === "cancel") {
+      const paymentId = String(body.payment_id || "");
+      const customerId = Number(body.customer_id);
+      if (!paymentId || !customerId) {
+        return new Response(JSON.stringify({ error: "payment_id and customer_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data, error } = await supabase
+        .from("payments")
+        .update({ fastdepix_status: "cancelled_by_user" })
+        .eq("id", paymentId)
+        .eq("customer_id", customerId)
+        .eq("fastdepix_status", "pending")
+        .select()
+        .maybeSingle();
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, cancelled: !!data }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
