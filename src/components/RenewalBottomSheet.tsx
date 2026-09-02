@@ -488,14 +488,13 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
   const handleClose = () => {
     if (pix?.payment_id && customer?.id) {
-      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-status`, {
-        method: "POST",
-        headers: {
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ action: "cancel", payment_id: pix.payment_id, customer_id: customer.id }),
-      }).catch(() => {});
+      supabase.functions
+        .invoke("payment-status", {
+          body: { action: "cancel", payment_id: pix.payment_id, customer_id: customer.id },
+          headers: authHeaders(),
+        })
+        .catch(() => {});
+
     }
     setSubResult(null); // Limpa polling da assinatura
     resetState();
