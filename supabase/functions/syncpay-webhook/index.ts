@@ -52,6 +52,20 @@ async function tgAddBonusDays(tgToken: string, customerId: number, currentDueDat
   return { ok: res.ok, status: res.status, data, newDate };
 }
 
+/** Notifies the admin via WhatsApp when an automatic TopGestor renewal fails
+ *  after a payment was already confirmed — so the failure is never silent. */
+async function alertAdminRenewalFailure(paymentId: string, customerName: string, customerId: number, reason: string) {
+  const adminPhone = Deno.env.get("ADMIN_WHATSAPP_NUMBER");
+  if (!adminPhone) return;
+  const msg = `⚠️ *Loreall Play* — Renovação automática falhou\n\n` +
+    `Cliente: ${customerName} (ID ${customerId})\n` +
+    `Payment ID: ${paymentId}\n` +
+    `Motivo: ${reason}\n\n` +
+    `O pagamento já está confirmado, mas o acesso NÃO foi renovado no TopGestor. Confirme na aba Pagamentos (filtro Pendente) > "Confirmar Pagamento e Renovar".`;
+  try { await sendWhatsappText(String(adminPhone), msg); }
+  catch (e) { console.error("[syncpay-webhook] admin alert failed", e); }
+}
+
 async function processReferralOnPayment(
   supabase: ReturnType<typeof createClient>,
   tgToken: string,
