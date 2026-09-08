@@ -569,9 +569,11 @@ Deno.serve(async (req) => {
         } else {
           console.error("[syncpay-webhook] TG renew failed", tgRes.status, rr);
           await supabase.from("payments").update({ renewal_response: rr }).eq("id", payment.id);
+          await alertAdminRenewalFailure(payment.id, payment.customer_name, payment.customer_id, `TopGestor retornou ${tgRes.status}`);
         }
       } catch (e) {
         console.error("[syncpay-webhook] TG renew exception", e);
+        await alertAdminRenewalFailure(payment.id, payment.customer_name, payment.customer_id, e instanceof Error ? e.message : "erro desconhecido");
       }
 
       const refCode: string | null = payment?.metadata?.referral_code || null;
