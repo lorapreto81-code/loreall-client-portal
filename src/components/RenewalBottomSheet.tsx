@@ -959,34 +959,24 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     >
                       {isBest && (
                         <span className="absolute -top-2.5 left-3 text-[9px] font-black tracking-wider px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
-                          MELHOR OFERTA
+                          ⭐ MELHOR OFERTA
                         </span>
                       )}
-                      {savePct > 0 && (
-                        <span className="absolute -top-2.5 right-3 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500 text-background">
-                          -{savePct}%
-                        </span>
-                      )}
-                      <p className={`text-xs font-bold uppercase tracking-wide ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                      <p className={`text-xs font-semibold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
                         {card.label}
                       </p>
                       <p className="text-xl font-black text-foreground mt-1 tabular-nums">
                         {card.plan ? formatCurrency(value) : "—"}
                       </p>
-                      {card.months > 1 && perMonth > 0 ? (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {formatCurrency(perMonth)}/mês
-                          {savePct > 0 && full > value && (
-                            <span className="block text-emerald-500 font-semibold">Economize {formatCurrency(full - value)}</span>
-                          )}
-                        </p>
+                      {savePct > 0 && full > value ? (
+                        <p className="text-[11px] text-emerald-500 font-semibold mt-0.5">Economize {formatCurrency(full - value)}</p>
                       ) : (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Cobrança única</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{card.months > 1 && perMonth > 0 ? `${formatCurrency(perMonth)}/mês` : "Cobrança única"}</p>
                       )}
                       {isLegacyPlanName(customer?.plan?.name) && card.keyword !== "mensal" && (
-                        <span className="inline-block mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">
+                        <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
                           MANTÉM 3 TELAS
-                        </span>
+                        </p>
                       )}
                     </button>
                   );
@@ -1005,11 +995,11 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                   <button
                     onClick={handleGeneratePix}
                     disabled={generating}
-                    className="btn-primary-gradient w-full py-3.5 font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ minHeight: 48 }}
+                    className="btn-primary-gradient w-full py-4 font-bold text-base rounded-xl inline-flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-primary/25"
+                    style={{ minHeight: 54 }}
                   >
-                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
-                    Pagar com PIX
+                    {generating ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}
+                    {generating ? "Gerando pagamento..." : `Pagar ${formatCurrency(planValue)} via PIX`}
                   </button>
                 ) : (
                   <>
@@ -1032,37 +1022,21 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
             {/* PIX Automático — card único destacado */}
             {recommendedSubPlan && (
-              <div className="mt-5 pt-5 border-t border-border">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                  Pagamento automático
-                </p>
+              <div className="mt-5 pt-4 border-t border-border">
                 <button
                   onClick={() => openSubscribeForm(recommendedSubPlan)}
-                  className="w-full text-left block p-4 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden"
-                  style={{
-                    border: "2px solid transparent",
-                    background:
-                      "linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, linear-gradient(135deg, #00C8FF, #7B2FD4) border-box",
-                    borderRadius: 16,
-                  }}
+                  className="w-full text-left block p-3 rounded-xl border border-border bg-card/50 transition-colors hover:border-primary/40"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-full p-2 bg-primary/10 shrink-0">
-                      <Zap className="h-4 w-4 text-primary" />
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <Zap className="h-4 w-4 text-muted-foreground shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                        <span className="text-sm font-bold text-foreground">
-                          {recommendedSubPlan.billing_method === "pix_automatico"
-                            ? "PIX Automático"
-                            : "Assinatura recorrente"}
-                        </span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">
-                          RECOMENDADO
-                        </span>
-                      </div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {recommendedSubPlan.billing_method === "pix_automatico"
+                          ? "Prefere PIX Automático?"
+                          : "Prefere assinatura recorrente?"}
+                      </p>
                       <p className="text-[11px] text-muted-foreground leading-snug">
-                        Nunca mais se preocupe com renovação. Autorize uma vez no app do banco e pronto.
+                        Autorize uma vez no app do banco e renove sem se preocupar.
                       </p>
                     </div>
                   </div>
