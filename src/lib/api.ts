@@ -50,7 +50,11 @@ async function callProxy(action: string, params: Record<string, string> = {}, op
   
   const res = await fetch(url, {
     method: options?.method || "GET",
-    headers: authHeaders(),
+    headers: {
+      ...authHeaders(),
+      // Admin panel calls (list/search customers) authenticate with the admin password.
+      ...(sessionStorage.getItem("admin_password") ? { "x-admin-password": sessionStorage.getItem("admin_password")! } : {}),
+    },
     ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
   });
 
