@@ -26,7 +26,9 @@ interface AuthState {
   customer: Customer | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (customer: Customer, token?: string) => void;
+  /** "checkout" = renewal-only session opened from a personal renewal link. */
+  scope: "full" | "checkout";
+  login: (customer: Customer, token?: string, scope?: "full" | "checkout") => void;
   logout: () => void;
 }
 
@@ -36,16 +38,18 @@ export const useAuthStore = create<AuthState>()(
       customer: null,
       token: null,
       isAuthenticated: false,
-      login: (customer, token) => {
+      scope: "full",
+      login: (customer, token, scope = "full") => {
         // Remove password if present before storing in state/localStorage
         const { password, ...safeCustomer } = customer as any;
         set((state) => ({
           customer: safeCustomer as Customer,
           token: token ?? state.token,
           isAuthenticated: true,
+          scope,
         }));
       },
-      logout: () => set({ customer: null, token: null, isAuthenticated: false }),
+      logout: () => set({ customer: null, token: null, isAuthenticated: false, scope: "full" }),
     }),
     { 
       name: "loreall-auth",

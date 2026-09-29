@@ -4,14 +4,20 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 export const useAuthGuard = () => {
-  const { customer, isAuthenticated, logout } = useAuthStore();
+  const { customer, isAuthenticated, logout, scope } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Renewal-link sessions never grant access to the full customer area.
+    if (scope === "checkout") {
+      logout();
+      navigate("/login", { replace: true });
+      return;
+    }
     if (!isAuthenticated || !customer) {
       navigate("/login", { replace: true });
     }
-  }, [isAuthenticated, customer, navigate]);
+  }, [isAuthenticated, customer, navigate, scope, logout]);
 
   useEffect(() => {
     const handler = () => {

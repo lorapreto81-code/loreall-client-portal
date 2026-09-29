@@ -27,6 +27,16 @@ function makeCaller(fnName: string) {
 
 const call = makeCaller("reseller-admin");
 const callSub = makeCaller("syncpay-subscriptions");
+const callCheckout = makeCaller("checkout-link");
+
+export const checkoutLinks = {
+  get: (customer_id: number, customer_name?: string) =>
+    callCheckout("get", { method: "POST", body: { customer_id, customer_name } }) as Promise<{ url: string }>,
+  regenerate: (customer_id: number, customer_name?: string) =>
+    callCheckout("regenerate", { method: "POST", body: { customer_id, customer_name } }) as Promise<{ url: string }>,
+  send: (customer_id: number, customer_name?: string) =>
+    callCheckout("send", { method: "POST", body: { customer_id, customer_name } }) as Promise<{ ok: boolean; url: string }>,
+};
 
 export const resellerAdmin = {
   listLinks: () => call("list-links"),

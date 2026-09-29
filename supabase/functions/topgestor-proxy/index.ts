@@ -29,6 +29,11 @@ Deno.serve(async (req) => {
 
     if (!admin && !session && action !== "get-plans") return json({ error: "unauthorized" }, 401, {}, req);
 
+    // Checkout-link sessions may only read their own data and plans (renewal only).
+    if (session?.role === "checkout" && !["get-customer", "get-plans", "update-customer"].includes(action || "")) {
+      return json({ error: "forbidden" }, 403, {}, req);
+    }
+    // Reseller sessions are not customer sessions.
     // Actions restricted to the admin panel.
     const adminOnly = new Set(["search-customer", "list-customers"]);
     if (adminOnly.has(action || "") && !admin) return json({ error: "forbidden" }, 403, {}, req);

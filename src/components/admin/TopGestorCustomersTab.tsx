@@ -1,7 +1,44 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, RefreshCw, Search, Users, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Loader2, RefreshCw, Search, Users, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, Download, Link2, Send, RotateCcw } from "lucide-react";
 import { listCustomers } from "@/lib/api";
 import { toast } from "sonner";
+import { checkoutLinks } from "@/lib/resellerAdmin";
+
+function CheckoutLinkActions({ c }: { c: { id: number; name: string; whatsapp?: string } }) {
+  const [busy, setBusy] = useState<null | "copy" | "send" | "reset">(null);
+  const run = async (kind: "copy" | "send" | "reset") => {
+    if (kind === "reset" && !confirm(`Gerar novo link para ${c.name}? O link anterior deixará de funcionar.`)) return;
+    setBusy(kind);
+    try {
+      if (kind === "send") {
+        await checkoutLinks.send(c.id, c.name);
+        toast.success("Link enviado no WhatsApp do cliente.");
+      } else {
+        const { url } = kind === "reset" ? await checkoutLinks.regenerate(c.id, c.name) : await checkoutLinks.get(c.id, c.name);
+        await navigator.clipboard.writeText(url).catch(() => {});
+        toast.success(kind === "reset" ? "Novo link gerado e copiado." : "Link copiado!", { description: url });
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao gerar link");
+    } finally {
+      setBusy(null);
+    }
+  };
+  const btn = "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-input hover:bg-muted disabled:opacity-50";
+  return (
+    <div className="flex items-center justify-end gap-1.5">
+      <button title="Copiar link de renovação" className={btn} disabled={!!busy} onClick={() => run("copy")}>
+        {busy === "copy" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
+      </button>
+      <button title="Enviar link no WhatsApp" className={btn} disabled={!!busy || !c.whatsapp} onClick={() => run("send")}>
+        {busy === "send" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+      </button>
+      <button title="Gerar novo link (revoga o anterior)" className={btn} disabled={!!busy} onClick={() => run("reset")}>
+        {busy === "reset" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+      </button>
+    </div>
+  );
+}
 
 interface TGCustomer {
   id: number;
@@ -256,6 +293,7 @@ export default function TopGestorCustomersTab() {
                   <th className="text-center px-3 py-2">Telas</th>
                   <th className="text-left px-3 py-2">Vencimento</th>
                   <th className="text-left px-3 py-2">Status</th>
+                  <th className="text-right px-3 py-2">Link de renovação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -278,6 +316,7 @@ export default function TopGestorCustomersTab() {
                     <td className="px-3 py-2 text-center text-foreground">{c.telas ?? "—"}</td>
                     <td className="px-3 py-2 text-foreground">{formatDate(c.data_de_vencimento)}</td>
                     <td className="px-3 py-2">{statusBadge(c.status)}</td>
+                    <td className="px-3 py-2"><CheckoutLinkActions c={c} /></td>
                   </tr>
                 ))}
               </tbody>

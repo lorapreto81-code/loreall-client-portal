@@ -14,6 +14,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Revendedor = lazy(() => import("./pages/Revendedor"));
 const IndicacaoTeste = lazy(() => import("./pages/IndicacaoTeste"));
 const Instalacao = lazy(() => import("./pages/Instalacao"));
+const Renovar = lazy(() => import("./pages/Renovar"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/revendedor" element={<Revendedor />} />
             <Route path="/revendedor/:slug" element={<Revendedor />} />
             <Route path="/indicacao/:code" element={<IndicacaoTeste />} />
+            <Route path="/renovar/:token" element={<Renovar />} />
             <Route path="/instalacao" element={<Instalacao />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
