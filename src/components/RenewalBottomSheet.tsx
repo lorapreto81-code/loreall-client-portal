@@ -936,40 +936,62 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         ) : periodCards.length > 0 ? (
           <>
             <div className="grid grid-cols-2 gap-3 mb-5">
-              {periodCards.map((card, idx) => {
-                const isSelected = idx === (selectedIdx < periodCards.length ? selectedIdx : 0);
-                return (
-                  <button
-                    key={card.months}
-                    onClick={() => setSelectedIdx(idx)}
-                    className={`p-4 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                      isSelected ? "" : "bg-card border border-border"
-                    }`}
-                    style={
-                      isSelected
-                        ? {
-                            border: "2px solid transparent",
-                            background: "linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box, linear-gradient(135deg, #00C8FF, #7B2FD4) border-box",
-                            borderRadius: 16,
-                            backgroundColor: "rgba(123, 47, 212, 0.04)",
-                          }
-                        : { borderRadius: 16 }
-                    }
-                  >
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
-                      {isLegacyPlanName(customer?.plan?.name) && card.keyword !== "mensal" && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">
-                          3 TELAS COM DESCONTO
+              {(() => {
+                const monthlyCard = periodCards.find((c) => c.months === 1);
+                const monthlyBase = monthlyCard?.plan ? getPlanValue(monthlyCard.plan) : 0;
+                const bestMonths = Math.max(...periodCards.map((c) => c.months));
+                return periodCards.map((card, idx) => {
+                  const isSelected = idx === (selectedIdx < periodCards.length ? selectedIdx : 0);
+                  const value = card.plan ? getPlanValue(card.plan) : 0;
+                  const perMonth = card.months > 0 && value ? value / card.months : 0;
+                  const full = monthlyBase * card.months;
+                  const savePct = card.months > 1 && full > 0 && value > 0 ? Math.round((1 - value / full) * 100) : 0;
+                  const isBest = card.months === bestMonths && card.months > 1;
+                  return (
+                    <button
+                      key={card.months}
+                      onClick={() => setSelectedIdx(idx)}
+                      className={`relative p-4 pt-5 rounded-2xl text-left transition-all hover:-translate-y-0.5 active:scale-[0.98] border-2 ${
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      {isBest && (
+                        <span className="absolute -top-2.5 left-3 text-[9px] font-black tracking-wider px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                          MELHOR OFERTA
                         </span>
                       )}
-                    </div>
-                    <p className="text-lg font-bold text-foreground">
-                      {card.plan ? formatCurrency(getPlanValue(card.plan)) : "—"}
-                    </p>
-                  </button>
-                );
-              })}
+                      {savePct > 0 && (
+                        <span className="absolute -top-2.5 right-3 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500 text-background">
+                          -{savePct}%
+                        </span>
+                      )}
+                      <p className={`text-xs font-bold uppercase tracking-wide ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                        {card.label}
+                      </p>
+                      <p className="text-xl font-black text-foreground mt-1 tabular-nums">
+                        {card.plan ? formatCurrency(value) : "—"}
+                      </p>
+                      {card.months > 1 && perMonth > 0 ? (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {formatCurrency(perMonth)}/mês
+                          {savePct > 0 && full > value && (
+                            <span className="block text-emerald-500 font-semibold">Economize {formatCurrency(full - value)}</span>
+                          )}
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Cobrança única</p>
+                      )}
+                      {isLegacyPlanName(customer?.plan?.name) && card.keyword !== "mensal" && (
+                        <span className="inline-block mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">
+                          MANTÉM 3 TELAS
+                        </span>
+                      )}
+                    </button>
+                  );
+                });
+              })()}
             </div>
 
             {selectedPlan && (
