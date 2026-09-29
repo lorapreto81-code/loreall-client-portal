@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, ShieldCheck, Tv, User, AlertCircle, Lock, QrCode, Check, Phone } from "lucide-react";
+import { Loader2, User, AlertCircle, Lock, QrCode, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import { useAuthStore, Customer } from "@/store/authStore";
