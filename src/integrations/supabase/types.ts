@@ -71,6 +71,45 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_checkout_links: {
+        Row: {
+          created_at: string
+          customer_id: number
+          customer_name: string | null
+          id: string
+          is_active: boolean
+          last_sent_at: string | null
+          last_used_at: string | null
+          token: string
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          created_at?: string
+          customer_id: number
+          customer_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          last_used_at?: string | null
+          token: string
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          created_at?: string
+          customer_id?: number
+          customer_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          last_used_at?: string | null
+          token?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Relationships: []
+      }
       customer_overrides: {
         Row: {
           customer_id: number
