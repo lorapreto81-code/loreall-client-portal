@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, ShieldCheck, CalendarClock, Tv, User, AlertCircle, Zap, Lock, BadgePercent } from "lucide-react";
+import { Loader2, ShieldCheck, Tv, User, AlertCircle, Lock, QrCode, Check, Phone } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import { useAuthStore, Customer } from "@/store/authStore";
 import { getDisplayPlanLabel } from "@/lib/planUtils";
@@ -52,7 +53,7 @@ const Renovar = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-4 py-8 md:py-14 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.12),transparent_60%)]">
-      <img src={logo} alt="Loreall Play" className="h-10 md:h-12 mb-8 md:mb-12" />
+      <img src={logo} alt="Loreall Play" className="h-8 md:h-11 w-auto object-contain mb-6 md:mb-10" />
 
       {state === "loading" && (
         <div className="flex flex-col items-center gap-3 text-muted-foreground mt-16">
@@ -69,86 +70,93 @@ const Renovar = () => {
         </div>
       )}
 
-      {state === "ready" && customer && (
-        <div className="w-full max-w-5xl grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Coluna esquerda: saudação + dados */}
-          <section className="space-y-5">
-            <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-primary/10 text-primary">
-                <ShieldCheck className="h-3.5 w-3.5" /> Link exclusivo de renovação
-              </span>
-              <h1 className="text-3xl md:text-4xl font-black text-foreground leading-tight">
-                Olá, {customer.name.split(" ")[0]}! <br className="hidden md:block" />
-                <span className="text-primary">Renove em menos de 1 minuto.</span>
-              </h1>
-              <p className="text-sm md:text-base text-muted-foreground">
-                {expired
-                  ? "Seu acesso está vencido. Renove agora e volte a assistir na hora."
-                  : "Garanta seu acesso sem interrupções — pague via Pix e a liberação é automática."}
-              </p>
-            </div>
-
-            <div className="card-elevated p-5 md:p-6 space-y-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sua assinatura</p>
-              <Row icon={User} label="Usuário" value={customer.usuario || "—"} />
-              <Row icon={Tv} label="Plano atual" value={getDisplayPlanLabel(customer.plan?.name) || customer.plan?.name || "—"} />
-              <Row icon={CalendarClock} label={expired ? "Venceu em" : "Vence em"} value={formatDate(customer.data_de_vencimento)} highlight={expired} />
-              <div className="pt-3 border-t border-border flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Status</span>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${expired ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-emerald-500"}`}>
-                  {expired ? "Vencido" : "Ativo"}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: Zap, t: "Liberação", d: "automática" },
-                { icon: Lock, t: "Pagamento", d: "100% seguro" },
-                { icon: BadgePercent, t: "Descontos", d: "em planos longos" },
-              ].map(({ icon: I, t, d }) => (
-                <div key={t} className="card-elevated p-3 text-center">
-                  <I className="h-5 w-5 text-primary mx-auto mb-1.5" />
-                  <p className="text-xs font-bold text-foreground">{t}</p>
-                  <p className="text-[11px] text-muted-foreground">{d}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Coluna direita: como funciona + CTA */}
-          <aside className="card-elevated p-5 md:p-7 space-y-5 lg:sticky lg:top-8 border border-primary/20">
-            <div>
-              <p className="text-lg font-black text-foreground">Como funciona</p>
-              <p className="text-xs text-muted-foreground">3 passos rápidos</p>
-            </div>
-            <ol className="space-y-4">
-              {[
-                ["Escolha o período", "Mensal, trimestral, semestral ou anual — quanto mais longo, maior o desconto."],
-                ["Pague com Pix", "Copie o código ou escaneie o QR Code no app do seu banco."],
-                ["Pronto!", "Seu acesso é renovado automaticamente e você recebe a confirmação no WhatsApp."],
-              ].map(([t, d], i) => (
-                <li key={t} className="flex gap-3">
-                  <span className="shrink-0 h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">{i + 1}</span>
-                  <div>
-                    <p className="text-sm font-bold text-foreground">{t}</p>
-                    <p className="text-xs text-muted-foreground">{d}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <button
-              onClick={() => setOpen(true)}
-              className="w-full py-4 btn-primary-gradient font-bold text-base rounded-xl inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-[0.99] transition-transform"
-            >
-              <Zap className="h-5 w-5" /> Ver planos e pagar
-            </button>
-            <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-              <Lock className="h-3 w-3" /> Link pessoal — não compartilhe
+      {state === "ready" && customer && (() => {
+        const planValue = Number(customer.plan?.value) || 0;
+        const telas = Number(customer.telas) || 1;
+        const maskedWhats = customer.whatsapp ? `•••• ${String(customer.whatsapp).replace(/\D/g, "").slice(-4)}` : null;
+        const payBtn = (
+          <button
+            onClick={() => setOpen(true)}
+            className="w-full min-h-[56px] py-4 btn-primary-gradient font-bold text-base rounded-xl inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/25 transition-transform duration-200 active:scale-[0.99]"
+          >
+            <QrCode className="h-5 w-5" />
+            {planValue > 0 ? `Pagar ${formatCurrency(planValue)} com PIX` : "Escolher plano e pagar com PIX"}
+          </button>
+        );
+        const trust = (
+          <div className="space-y-1.5 text-[11px] text-muted-foreground text-center">
+            <p className="flex items-center justify-center gap-1.5"><Lock className="h-3 w-3" /> Pagamento processado com segurança</p>
+            <p className="flex items-center justify-center gap-3">
+              <span className="inline-flex items-center gap-1"><Check className="h-3 w-3 text-primary" /> Confirmação automática</span>
+              <span className="inline-flex items-center gap-1"><Check className="h-3 w-3 text-primary" /> Ativação após o pagamento</span>
             </p>
-          </aside>
-        </div>
-      )}
+          </div>
+        );
+        return (
+          <div className="w-full max-w-[1100px] grid gap-5 lg:gap-6 lg:grid-cols-[1.2fr_0.8fr] items-start animate-in fade-in duration-200">
+            <section className="space-y-4 min-w-0">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight">Olá, {customer.name.split(" ")[0]} 👋</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {expired ? "Seu acesso está vencido. Renove agora e volte a assistir na hora." : "Renove seu acesso em menos de 1 minuto."}
+                </p>
+              </div>
+
+              {/* Resumo do pedido */}
+              <div className="card-elevated p-5 md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Resumo do pedido</p>
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${expired ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}>
+                    {expired ? "Vencido" : "Ativo"}
+                  </span>
+                </div>
+                <p className="text-xl font-black text-foreground">{getDisplayPlanLabel(customer.plan?.name)}</p>
+                <p className="text-sm text-muted-foreground">{telas} {telas === 1 ? "Tela" : "Telas"} • {expired ? "Venceu em" : "Vence em"} {formatDate(customer.data_de_vencimento)}</p>
+                {planValue > 0 && <p className="text-3xl font-black text-foreground mt-4">{formatCurrency(planValue)}</p>}
+                <p className="text-[11px] text-muted-foreground mt-1">Períodos mais longos têm desconto — escolha na próxima etapa.</p>
+              </div>
+
+              {/* Cliente */}
+              <div className="card-elevated p-5 md:p-6 space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cliente</p>
+                <Row icon={User} label="Nome" value={customer.name} />
+                <Row icon={Tv} label="Usuário" value={customer.usuario || "—"} />
+                {maskedWhats && <Row icon={Phone} label="WhatsApp" value={maskedWhats} />}
+              </div>
+
+              {/* Pagamento */}
+              <div className="card-elevated p-5 md:p-6">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Pagamento</p>
+                <div className="flex items-center gap-3 rounded-xl border-2 border-accent bg-accent/5 p-4">
+                  <span className="h-10 w-10 shrink-0 rounded-lg bg-accent/15 flex items-center justify-center"><QrCode className="h-5 w-5 text-accent" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-foreground">PIX</p>
+                    <p className="text-xs text-muted-foreground">Pagamento instantâneo • Aprovação automática</p>
+                  </div>
+                  <span className="h-5 w-5 rounded-full bg-accent flex items-center justify-center"><Check className="h-3 w-3 text-accent-foreground" /></span>
+                </div>
+              </div>
+
+              {/* Mobile CTA */}
+              <div className="lg:hidden space-y-3">{payBtn}{trust}</div>
+            </section>
+
+            {/* Desktop: resumo compacto + CTA */}
+            <aside className="hidden lg:block card-elevated p-6 space-y-5 sticky top-8 border border-primary/20">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total</p>
+              <div>
+                <p className="text-sm text-muted-foreground">{getDisplayPlanLabel(customer.plan?.name)} • {telas} {telas === 1 ? "Tela" : "Telas"}</p>
+                {planValue > 0 && <p className="text-4xl font-black text-foreground mt-1">{formatCurrency(planValue)}</p>}
+              </div>
+              {payBtn}
+              {trust}
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground border-t border-border pt-4">
+                <ShieldCheck className="h-3 w-3" /> Link pessoal — não compartilhe
+              </p>
+            </aside>
+          </div>
+        );
+      })()}
 
       {state === "ready" && <RenewalBottomSheet open={open} onClose={() => setOpen(false)} />}
     </div>
