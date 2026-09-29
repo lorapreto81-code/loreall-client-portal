@@ -6,7 +6,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { securityHeadersFor, jsonResponse as json } from "../_shared/security.ts";
-import { getCustomerSession, isCustomerSession } from "../_shared/auth.ts";
+import { getCustomerSession, isCustomerSession, isRenewalSession } from "../_shared/auth.ts";
 
 
 const SP_BASE = "https://api.syncpayments.com.br/api/partner/v1";
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
 
   try {
     const session = await getCustomerSession(req);
-    if (!isCustomerSession(session)) {
+    if (!isRenewalSession(session)) {
       return json({ error: "Unauthorized" }, 401, {}, req);
     }
 

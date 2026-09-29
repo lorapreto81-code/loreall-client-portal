@@ -26,17 +26,21 @@ async function key(): Promise<CryptoKey> {
 
 export interface CustomerSession {
   sub: number | string; // customer id (number for TG, string for reseller UUID)
-  role?: "customer" | "reseller";
+  role?: "customer" | "reseller" | "checkout";
   exp: number; // epoch seconds
 }
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-export async function signCustomerToken(id: number | string, role: "customer" | "reseller" = "customer"): Promise<string> {
+export async function signCustomerToken(
+  id: number | string,
+  role: "customer" | "reseller" | "checkout" = "customer",
+  ttlSeconds: number = SESSION_TTL_SECONDS,
+): Promise<string> {
   const payload: CustomerSession = {
     sub: id,
     role,
-    exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+    exp: Math.floor(Date.now() / 1000) + ttlSeconds,
   };
   const body = b64url(encoder.encode(JSON.stringify(payload)));
   const sig = new Uint8Array(await crypto.subtle.sign("HMAC", await key(), encoder.encode(body)));
@@ -70,6 +74,11 @@ export function isCustomerSession(session: CustomerSession | null): boolean {
   if (!session) return false;
   // Allow null/undefined role as 'customer' for backward compatibility
   return session.role === "customer" || !session.role;
+}
+
+/** Accepts full customer sessions AND renewal-only checkout-link sessions. */
+export function isRenewalSession(session: CustomerSession | null): boolean {
+  return isCustomerSession(session) || session?.role === "checkout";
 }
 
 /**
