@@ -1,0 +1,1 @@
+- Per-customer renewal links (`/renovar/:token`) resolve via `checkout-link` into a 2h `role: "checkout"` session accepted only by renewal functions (`isRenewalSession`); why: link grants renewal only, never full area access.
