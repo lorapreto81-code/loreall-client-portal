@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, ShieldCheck, CalendarClock, Tv, User, AlertCircle, Zap } from "lucide-react";
+import { Loader2, ShieldCheck, CalendarClock, Tv, User, AlertCircle, Zap, Lock, BadgePercent } from "lucide-react";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import { useAuthStore, Customer } from "@/store/authStore";
 import { getDisplayPlanLabel } from "@/lib/planUtils";
@@ -51,8 +51,8 @@ const Renovar = () => {
   const expired = customer?.data_de_vencimento ? new Date(customer.data_de_vencimento.replace(" ", "T")) < new Date() : false;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center px-4 py-10">
-      <img src={logo} alt="Loreall Play" className="h-10 mb-8" />
+    <div className="min-h-screen bg-background flex flex-col items-center px-4 py-8 md:py-14 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.12),transparent_60%)]">
+      <img src={logo} alt="Loreall Play" className="h-10 md:h-12 mb-8 md:mb-12" />
 
       {state === "loading" && (
         <div className="flex flex-col items-center gap-3 text-muted-foreground mt-16">
@@ -70,33 +70,83 @@ const Renovar = () => {
       )}
 
       {state === "ready" && customer && (
-        <div className="w-full max-w-md space-y-5">
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl font-black text-foreground">Olá, {customer.name.split(" ")[0]}!</h1>
-            <p className="text-sm text-muted-foreground">Renove seu acesso em poucos segundos via Pix.</p>
-          </div>
+        <div className="w-full max-w-5xl grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Coluna esquerda: saudação + dados */}
+          <section className="space-y-5">
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-primary/10 text-primary">
+                <ShieldCheck className="h-3.5 w-3.5" /> Link exclusivo de renovação
+              </span>
+              <h1 className="text-3xl md:text-4xl font-black text-foreground leading-tight">
+                Olá, {customer.name.split(" ")[0]}! <br className="hidden md:block" />
+                <span className="text-primary">Renove em menos de 1 minuto.</span>
+              </h1>
+              <p className="text-sm md:text-base text-muted-foreground">
+                {expired
+                  ? "Seu acesso está vencido. Renove agora e volte a assistir na hora."
+                  : "Garanta seu acesso sem interrupções — pague via Pix e a liberação é automática."}
+              </p>
+            </div>
 
-          <div className="card-elevated p-5 space-y-3">
-            <Row icon={User} label="Usuário" value={customer.usuario || "—"} />
-            <Row icon={Tv} label="Plano atual" value={getDisplayPlanLabel(customer.plan?.name) || customer.plan?.name || "—"} />
-            <Row
-              icon={CalendarClock}
-              label={expired ? "Venceu em" : "Vence em"}
-              value={formatDate(customer.data_de_vencimento)}
-              highlight={expired}
-            />
-          </div>
+            <div className="card-elevated p-5 md:p-6 space-y-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sua assinatura</p>
+              <Row icon={User} label="Usuário" value={customer.usuario || "—"} />
+              <Row icon={Tv} label="Plano atual" value={getDisplayPlanLabel(customer.plan?.name) || customer.plan?.name || "—"} />
+              <Row icon={CalendarClock} label={expired ? "Venceu em" : "Vence em"} value={formatDate(customer.data_de_vencimento)} highlight={expired} />
+              <div className="pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Status</span>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${expired ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-emerald-500"}`}>
+                  {expired ? "Vencido" : "Ativo"}
+                </span>
+              </div>
+            </div>
 
-          <button
-            onClick={() => setOpen(true)}
-            className="w-full py-4 btn-primary-gradient font-bold text-sm rounded-xl inline-flex items-center justify-center gap-2"
-          >
-            <Zap className="h-4 w-4" /> Escolher plano e pagar
-          </button>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Zap, t: "Liberação", d: "automática" },
+                { icon: Lock, t: "Pagamento", d: "100% seguro" },
+                { icon: BadgePercent, t: "Descontos", d: "em planos longos" },
+              ].map(({ icon: I, t, d }) => (
+                <div key={t} className="card-elevated p-3 text-center">
+                  <I className="h-5 w-5 text-primary mx-auto mb-1.5" />
+                  <p className="text-xs font-bold text-foreground">{t}</p>
+                  <p className="text-[11px] text-muted-foreground">{d}</p>
+                </div>
+              ))}
+            </div>
+          </section>
 
-          <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5" /> Liberação automática após a confirmação do Pix
-          </p>
+          {/* Coluna direita: como funciona + CTA */}
+          <aside className="card-elevated p-5 md:p-7 space-y-5 lg:sticky lg:top-8 border border-primary/20">
+            <div>
+              <p className="text-lg font-black text-foreground">Como funciona</p>
+              <p className="text-xs text-muted-foreground">3 passos rápidos</p>
+            </div>
+            <ol className="space-y-4">
+              {[
+                ["Escolha o período", "Mensal, trimestral, semestral ou anual — quanto mais longo, maior o desconto."],
+                ["Pague com Pix", "Copie o código ou escaneie o QR Code no app do seu banco."],
+                ["Pronto!", "Seu acesso é renovado automaticamente e você recebe a confirmação no WhatsApp."],
+              ].map(([t, d], i) => (
+                <li key={t} className="flex gap-3">
+                  <span className="shrink-0 h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">{i + 1}</span>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{t}</p>
+                    <p className="text-xs text-muted-foreground">{d}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <button
+              onClick={() => setOpen(true)}
+              className="w-full py-4 btn-primary-gradient font-bold text-base rounded-xl inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-[0.99] transition-transform"
+            >
+              <Zap className="h-5 w-5" /> Ver planos e pagar
+            </button>
+            <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+              <Lock className="h-3 w-3" /> Link pessoal — não compartilhe
+            </p>
+          </aside>
         </div>
       )}
 
