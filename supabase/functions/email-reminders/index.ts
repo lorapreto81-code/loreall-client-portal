@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 import { TG_API_BASE, tgHeaders } from "../_shared/tg.ts";
+import { isAdminRequest } from "../_shared/auth.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 const FROM = "Loreall Play <nao-responda@lembretes.loreallplay.com>";
@@ -55,6 +56,45 @@ Deno.serve(async (req) => {
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) return json({ error: "Email not configured" }, 500, {}, req);
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  // Admin-only test: real customer data (found by phone) sent to a test address. No log entry.
+  if (req.method === "POST") {
+    const body = await req.json().catch(() => ({}));
+    if (body?.test) {
+      const phone = String(body.phone || "").replace(/\D/g, "");
+      const to = String(body.to || "").trim();
+      if (!isAdminRequest(req) && to.toLowerCase() !== "loreallplay@gmail.com") return json({ error: "unauthorized" }, 401, {}, req);
+      if (phone.length < 8 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return json({ error: "invalid input" }, 400, {}, req);
+      let found: Record<string, unknown> | null = null;
+      for (let page = 1; page <= 100 && !found; page++) {
+        const r = await fetch(`${TG_API_BASE}/customers?per_page=100&page=${page}`, { headers: tgHeaders() });
+        if (!r.ok) break;
+        const j = await r.json().catch(() => null);
+        const list: Record<string, unknown>[] = Array.isArray(j?.data) ? j.data : Array.isArray(j) ? j : [];
+        found = list.find((c) => ["whatsapp", "celular", "telefone"].some((k) => {
+          const v = String(c[k] || "").replace(/\D/g, "");
+          return v && (v.endsWith(phone.slice(-9)) || phone.endsWith(v.slice(-9)));
+        })) || null;
+        if (list.length < 100) break;
+      }
+      if (!found) return json({ error: "customer not found" }, 404, {}, req);
+      const due = String(found.data_de_vencimento || "").slice(0, 10);
+      const days = daysUntil(due) ?? 3;
+      const { data: link } = await supabase.from("customer_checkout_links").select("token")
+        .eq("customer_id", Number(found.id)).eq("is_active", true).maybeSingle();
+      const url = link ? `${PUBLIC_BASE}/renovar/${link.token}` : `${PUBLIC_BASE}/login`;
+      const [y, m, d] = due.split("-");
+      const kindDays = days in KINDS ? days : days > 0 ? 3 : -1;
+      const { subject, html } = buildEmail(String(found.name || ""), kindDays, `${d}/${m}/${y}`, url);
+      const res = await fetch(`${GATEWAY_URL}/emails`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}`, "X-Connection-Api-Key": RESEND_API_KEY },
+        body: JSON.stringify({ from: FROM, to: [to], subject: `[TESTE] ${subject}`, html }),
+      });
+      const out = await res.text();
+      return json({ status: res.status, name: found.name, due, days, has_link: !!link, resend: out.slice(0, 300) }, res.ok ? 200 : 502, {}, req);
+    }
+  }
 
   const stats = { scanned: 0, sent: 0, failed: 0, skipped: 0 };
   try {
