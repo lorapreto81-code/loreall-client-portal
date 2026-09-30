@@ -1,5 +1,5 @@
 // Daily expiration reminders by e-mail (Resend via connector gateway).
-// Sends at D-3, D-1, D0 and D+1 with the customer's personal renewal link.
+// Sends at D-3, D-1, D0 and daily while expired (up to 30 days) with the customer's personal renewal link.
 // Idempotent: email_reminder_log (customer_id, due_date, kind) prevents duplicates.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
@@ -9,7 +9,9 @@ import { isAdminRequest } from "../_shared/auth.ts";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 const FROM = "Loreall Play <nao-responda@lembretes.loreallplay.com>";
 const PUBLIC_BASE = "https://cliente.loreallplay.com";
-const KINDS: Record<number, string> = { 3: "d-3", 1: "d-1", 0: "d0", [-1]: "d+1" };
+const KINDS: Record<number, string> = { 3: "d-3", 1: "d-1", 0: "d0" };
+const MAX_OVERDUE_DAYS = 30; // daily "vencido" reminder while expired, capped
+const kindFor = (days: number) => KINDS[days] ?? (days < 0 && days >= -MAX_OVERDUE_DAYS ? `d+${-days}` : null);
 
 function newToken(): string {
   const b = crypto.getRandomValues(new Uint8Array(24));
@@ -36,36 +38,34 @@ interface EmailExtra { usuario?: string; plan?: string; telas?: number }
 function buildEmail(name: string, days: number, dueBr: string, url: string, extra: EmailExtra = {}) {
   const firstRaw = name.split(" ")[0] || "cliente";
   const first = esc(firstRaw);
+  const common = { cta: "Renovar meu acesso" };
   const copy =
-    days === 3 ? {
-      subject: `${firstRaw}, seu Loreall Play vence em 3 dias ⏳`,
-      preheader: "Renove agora em 1 minuto e não perca nenhum jogo, filme ou episódio.",
-      badge: "VENCE EM 3 DIAS", badgeBg: "#0ea5e9",
-      title: "Faltam só 3 dias para o seu acesso vencer",
-      body: `Seus canais, filmes e séries continuam liberados até <b>${dueBr}</b>. Renove agora com calma, pelo PIX, e garanta que nada será interrompido — nem aquele jogo decisivo, nem o próximo episódio da sua série.`,
-      cta: "Renovar agora e ficar tranquilo",
-    } : days === 1 ? {
-      subject: `⚠️ ${firstRaw}, seu acesso Loreall Play vence amanhã`,
-      preheader: "Amanhã seu sinal pode ser cortado. Renove hoje em menos de 1 minuto.",
-      badge: "VENCE AMANHÃ", badgeBg: "#f59e0b",
-      title: "Amanhã seu acesso vence",
-      body: `Seu plano vence em <b>${dueBr}</b>. Para não ficar sem canais, filmes e séries no meio da programação, renove hoje — leva menos de 1 minuto e a liberação é automática.`,
-      cta: "Renovar hoje via PIX",
-    } : days === 0 ? {
-      subject: `🔴 ${firstRaw}, seu Loreall Play vence HOJE`,
-      preheader: "Último dia! Renove agora e continue assistindo sem interrupção.",
-      badge: "VENCE HOJE", badgeBg: "#ef4444",
-      title: "Hoje é o último dia do seu acesso",
-      body: `Seu acesso vence <b>hoje (${dueBr})</b>. Renove agora para manter sua conexão ativa e continuar assistindo tudo normalmente. É rápido: escolha o plano, pague no PIX e pronto.`,
-      cta: "Renovar agora — não fique sem sinal",
-    } : {
-      subject: `${firstRaw}, seu acesso Loreall Play venceu — volte a assistir agora`,
-      preheader: "Seu acesso venceu ontem. Renove e volte a assistir em segundos.",
-      badge: "ACESSO VENCIDO", badgeBg: "#ef4444",
-      title: "Sentimos sua falta! Seu acesso venceu",
-      body: `Seu plano venceu em <b>${dueBr}</b> e seus canais, filmes e séries foram pausados. A boa notícia: basta renovar pelo PIX que tudo volta a funcionar automaticamente, em segundos.`,
-      cta: "Reativar meu acesso agora",
+    days === 3 ? { ...common,
+      subject: "Seu acesso Loreall Play vence em 3 dias",
+      preheader: "Seu acesso continua ativo. Renove quando quiser pelo seu link pessoal.",
+      badge: "VENCE EM 3 DIAS", badgeBg: "#0891b2",
+      title: `${firstRaw}, faltam só 3 dias para o seu acesso vencer`,
+      body: `Seu acesso à Loreall Play continua ativo até <b>${dueBr}</b>. Se quiser continuar assistindo normalmente, você pode renovar pelo seu link pessoal de forma rápida e segura.`,
+    } : days === 1 ? { ...common,
+      subject: "Amanhã vence seu acesso Loreall Play",
+      preheader: "Seu acesso está ativo até amanhã. Renove pelo seu link pessoal.",
+      badge: "VENCE AMANHÃ", badgeBg: "#2563eb",
+      title: `${firstRaw}, amanhã é o último dia do seu acesso`,
+      body: `Seu acesso à Loreall Play continua disponível até <b>${dueBr}</b>. Se quiser manter tudo funcionando normalmente, você já pode fazer sua renovação.`,
+    } : days === 0 ? { ...common,
+      subject: "Seu acesso Loreall Play vence hoje",
+      preheader: "Se quiser continuar assistindo, você pode renovar agora.",
+      badge: "VENCE HOJE", badgeBg: "#4f46e5",
+      title: `${firstRaw}, seu acesso vence hoje`,
+      body: "Hoje é o último dia do seu acesso atual à Loreall Play. Se quiser continuar usando normalmente, é só acessar seu link pessoal e fazer a renovação.",
+    } : { ...common,
+      subject: "Seu acesso Loreall Play está vencido",
+      preheader: "Quando quiser voltar, sua renovação está disponível pelo seu link pessoal.",
+      badge: "ACESSO VENCIDO", badgeBg: "#7c3aed",
+      title: `${firstRaw}, seu acesso está vencido`,
+      body: `Seu acesso à Loreall Play venceu em <b>${dueBr}</b>. Quando quiser continuar, você pode renovar diretamente pelo seu link pessoal.`,
     };
+  void first;
 
   const row = (k: string, v: string) => `<tr><td style="padding:5px 0;color:#64748b;font-size:13px">${k}</td><td align="right" style="padding:5px 0;color:#0f172a;font-size:13px;font-weight:bold">${v}</td></tr>`;
   const rows: string[] = [];
@@ -81,18 +81,17 @@ function buildEmail(name: string, days: number, dueBr: string, url: string, extr
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(copy.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f1f5f9"><tr><td align="center" style="padding:16px 10px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
-  <tr><td height="5" bgcolor="#2563eb" style="height:5px;line-height:5px;font-size:0;background:#2563eb;background-image:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed)">&nbsp;</td></tr>
-  <tr><td align="center" style="padding:22px 24px 6px">
-    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-      <td style="padding-right:10px"><img src="${LOGO_URL}" width="44" height="44" alt="Loreall Play" style="display:block;border:0;width:44px;height:44px"></td>
-      <td align="left"><p style="margin:0;color:#0f172a;font-size:18px;font-weight:bold">Loreall Play</p><p style="margin:2px 0 0;color:#64748b;font-size:12px">Canais, filmes e séries</p></td>
-    </tr></table>
+  <tr><td align="center" style="padding:26px 24px 0">
+    <img src="${LOGO_URL}" width="52" height="52" alt="Loreall Play" style="display:block;border:0;width:52px;height:52px;margin:0 auto">
+    <p style="margin:8px 0 0;color:#0f172a;font-size:17px;font-weight:bold">Loreall Play</p>
+    <p style="margin:2px 0 0;color:#64748b;font-size:12px">Canais, filmes e séries</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:14px auto 0"><tr><td width="64" height="3" bgcolor="#2563eb" style="width:64px;height:3px;line-height:3px;font-size:0;border-radius:3px;background:#2563eb;background-image:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed)">&nbsp;</td></tr></table>
   </td></tr>
   <tr><td align="center" style="padding:14px 24px 0">
     <span style="display:inline-block;background:${copy.badgeBg};color:#ffffff;font-size:11px;font-weight:bold;letter-spacing:1px;padding:6px 14px;border-radius:999px">${copy.badge}</span>
   </td></tr>
   <tr><td align="center" style="padding:14px 24px 0">
-    <h1 style="margin:0 0 8px;color:#0f172a;font-size:21px;line-height:1.3">${first}, ${copy.title.charAt(0).toLowerCase() + copy.title.slice(1)}</h1>
+    <h1 style="margin:0 0 8px;color:#0f172a;font-size:21px;line-height:1.3">${esc(copy.title)}</h1>
     <p style="margin:0;color:#475569;font-size:14px;line-height:1.55">${copy.body}</p>
   </td></tr>
   <tr><td style="padding:18px 24px 0">
@@ -102,13 +101,13 @@ function buildEmail(name: string, days: number, dueBr: string, url: string, extr
   </td></tr>
   <tr><td align="center" style="padding:20px 24px 0">
     <a href="${url}" style="display:block;background:#2563eb;background-image:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed);color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:15px 18px;border-radius:12px;text-align:center">${copy.cta}</a>
-    <p style="margin:10px 0 0;color:#64748b;font-size:12px">🔒 Pagamento seguro via PIX · Liberação automática</p>
+    <p style="margin:10px 0 0;color:#64748b;font-size:12px">Pagamento via PIX • Liberação automática</p>
   </td></tr>
   <tr><td align="center" style="padding:18px 24px 22px">
-    <p style="margin:0;color:#64748b;font-size:13px">Dúvidas? <a href="${waUrl}" style="color:#16a34a;font-weight:bold;text-decoration:none">Suporte no WhatsApp (83) 99855-1952</a></p>
+    <p style="margin:0;color:#64748b;font-size:13px">Dúvidas? Fale com nosso suporte no WhatsApp<br><a href="${waUrl}" style="color:#16a34a;font-weight:bold;text-decoration:none">(83) 99855-1952</a></p>
   </td></tr>
 </table>
-<p style="max-width:520px;margin:12px auto 0;color:#94a3b8;font-size:11px;line-height:1.5;text-align:center">Link de renovação pessoal — não compartilhe.<br>Loreall Play · cliente.loreallplay.com</p>
+<p style="max-width:520px;margin:12px auto 0;color:#94a3b8;font-size:11px;line-height:1.5;text-align:center">Loreall Play · Link pessoal de renovação — não compartilhe.</p>
 </td></tr></table>
 </body></html>`;
   return { subject: copy.subject, html };
@@ -191,9 +190,11 @@ Deno.serve(async (req) => {
         const email = String(c.email || "").trim().toLowerCase();
         const due = String(c.data_de_vencimento || "");
         const days = daysUntil(due);
-        if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || days === null || !(days in KINDS)) continue;
+        if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || days === null || !kindFor(days)) continue;
+        // Only active/expired customers; renewal moves the due date so reminders stop automatically.
+        if (/cancel|delet|inativ|bloq/i.test(String(c.status ?? ""))) continue;
         const customerId = Number(c.id);
-        const kind = KINDS[days];
+        const kind = kindFor(days)!;
         const dueDate = due.slice(0, 10);
 
         // Reserve the slot first (unique constraint = no duplicate sends).
