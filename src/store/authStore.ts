@@ -28,28 +28,49 @@ interface AuthState {
   isAuthenticated: boolean;
   /** "checkout" = renewal-only session opened from a personal renewal link. */
   scope: "full" | "checkout";
+  /** Full session saved while a renewal-link session is active, restored afterwards. */
+  previousFull: { customer: Customer; token: string | null } | null;
   login: (customer: Customer, token?: string, scope?: "full" | "checkout") => void;
   logout: () => void;
+  /** Leaves a checkout session, restoring the prior full session if any. Returns true if restored. */
+  exitCheckout: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       customer: null,
       token: null,
       isAuthenticated: false,
       scope: "full",
+      previousFull: null,
       login: (customer, token, scope = "full") => {
         // Remove password if present before storing in state/localStorage
         const { password, ...safeCustomer } = customer as any;
-        set((state) => ({
-          customer: safeCustomer as Customer,
-          token: token ?? state.token,
-          isAuthenticated: true,
-          scope,
-        }));
+        set((state) => {
+          let previousFull = scope === "full" ? null : state.previousFull;
+          if (scope === "checkout" && state.scope === "full" && state.isAuthenticated && state.customer) {
+            previousFull = { customer: state.customer, token: state.token };
+          }
+          return {
+            customer: safeCustomer as Customer,
+            token: token ?? state.token,
+            isAuthenticated: true,
+            scope,
+            previousFull,
+          };
+        });
       },
-      logout: () => set({ customer: null, token: null, isAuthenticated: false, scope: "full" }),
+      logout: () => set({ customer: null, token: null, isAuthenticated: false, scope: "full", previousFull: null }),
+      exitCheckout: () => {
+        const prev = get().previousFull;
+        if (prev) {
+          set({ customer: prev.customer, token: prev.token, isAuthenticated: true, scope: "full", previousFull: null });
+          return true;
+        }
+        set({ customer: null, token: null, isAuthenticated: false, scope: "full", previousFull: null });
+        return false;
+      },
     }),
     { 
       name: "loreall-auth",
