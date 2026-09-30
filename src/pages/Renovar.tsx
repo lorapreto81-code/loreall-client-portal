@@ -100,7 +100,7 @@ const Renovar = () => {
           : days <= 3 ? { label: `Vence em ${days} ${days === 1 ? "dia" : "dias"}`, cls: "bg-amber-500/15 text-amber-500" }
           : { label: `Ativo · ${days} dias restantes`, cls: "bg-emerald-500/15 text-emerald-500" };
         return (
-          <main className="w-full max-w-[460px] space-y-4 animate-in fade-in duration-200">
+          <main className="relative w-full max-w-[460px] space-y-4 animate-in fade-in duration-200">
             <div className="text-center">
               <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight">Olá, {firstName} 👋</h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -108,16 +108,21 @@ const Renovar = () => {
               </p>
             </div>
 
-            <section className="card-elevated overflow-hidden">
+            <section className="relative card-elevated overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-accent via-primary to-secondary" />
               <div className="p-5 pb-4 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Seu plano</p>
-                  <p className="text-lg font-black text-foreground break-words">{getDisplayPlanLabel(customer.plan?.name)}</p>
-                  {status && <span className={`inline-block mt-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${status.cls}`}>{status.label}</span>}
+                  <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-primary">Seu plano</p>
+                  <p className="text-xl font-black text-foreground break-words leading-tight mt-0.5">{getDisplayPlanLabel(customer.plan?.name)}</p>
+                  {status && (
+                    <span className={`inline-flex items-center gap-1.5 mt-2 text-[11px] font-bold px-2.5 py-1 rounded-full ${status.cls}`}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" /> {status.label}
+                    </span>
+                  )}
                 </div>
                 {planValue > 0 && (
                   <div className="text-right shrink-0">
-                    <p className="text-3xl font-black text-foreground tabular-nums leading-none">{formatCurrency(planValue)}</p>
+                    <p className="text-[28px] sm:text-3xl font-black tabular-nums leading-none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{formatCurrency(planValue)}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">por mês</p>
                   </div>
                 )}
@@ -129,44 +134,46 @@ const Renovar = () => {
                 <Info icon={CalendarDays} label={expired ? "Venceu em" : "Vencimento"} value={due ? due.toLocaleDateString("pt-BR") : "—"} />
               </dl>
               {last4 && (
-                <p className="px-5 py-2.5 text-[11px] text-muted-foreground border-t border-border flex items-center gap-1.5">
+                <p className="px-5 py-2.5 text-[11px] text-muted-foreground border-t border-border flex items-center gap-1.5 bg-muted/30">
                   <BadgeCheck className="h-3.5 w-3.5 text-primary" /> Cadastro confirmado · WhatsApp final •••• {last4}
                 </p>
               )}
             </section>
 
-            <section className="card-elevated p-5 space-y-4">
-              <div className="flex items-center gap-3 rounded-xl border-2 border-accent bg-accent/5 p-3">
-                <span className="h-9 w-9 shrink-0 rounded-lg bg-accent/15 flex items-center justify-center"><QrCode className="h-5 w-5 text-accent" /></span>
+            <section className="card-elevated p-4 sm:p-5 space-y-3">
+              <div className="flex items-center gap-3 rounded-xl border-2 border-accent bg-accent/5 px-4 py-3.5 ring-4 ring-accent/10">
+                <span className="h-10 w-10 shrink-0 rounded-lg bg-accent/15 flex items-center justify-center"><QrCode className="h-5 w-5 text-accent" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-foreground text-sm">PIX</p>
                   <p className="text-[11px] text-muted-foreground">Pagamento instantâneo • Liberação automática</p>
                 </div>
-                <span className="h-5 w-5 shrink-0 rounded-full bg-accent flex items-center justify-center"><Check className="h-3 w-3 text-accent-foreground" /></span>
+                <span className="h-6 w-6 shrink-0 rounded-full bg-accent flex items-center justify-center"><Check className="h-3.5 w-3.5 text-accent-foreground" /></span>
               </div>
 
               <button
                 onClick={() => setOpen(true)}
-                className="w-full min-h-[56px] py-4 btn-primary-gradient font-bold text-base rounded-xl inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/25 transition-transform duration-200 active:scale-[0.99]"
+                className="w-full min-h-[58px] py-4 px-4 rounded-2xl font-bold text-base text-primary-foreground bg-gradient-to-r from-primary to-secondary inline-flex items-center justify-center gap-2 shadow-[0_10px_24px_-10px_hsl(var(--primary)/0.6)] ring-1 ring-inset ring-primary-foreground/15 transition-all duration-200 hover:brightness-110 hover:shadow-[0_14px_30px_-10px_hsl(var(--secondary)/0.6)] active:scale-[0.99]"
               >
                 <QrCode className="h-5 w-5" />
                 {planValue > 0 ? `Renovar por ${formatCurrency(planValue)} via PIX` : "Escolher plano e pagar via PIX"}
               </button>
-              <p className="text-[11px] text-muted-foreground text-center">Na próxima etapa: planos de 3, 6 e 12 meses com desconto e campo para cupom.</p>
+              <p className="text-[10px] text-muted-foreground/80 text-center">Na próxima etapa: planos de 3, 6 e 12 meses com desconto e campo para cupom.</p>
             </section>
 
-            <section className="grid grid-cols-3 gap-2 text-center">
-              <Trust icon={ShieldCheck} title="Pagamento seguro" text="PIX pelo seu banco" />
-              <Trust icon={Zap} title="Liberação automática" text="Logo após pagar" />
-              <Trust icon={Lock} title="Dados protegidos" text="Link só seu" />
+            <section className="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap text-[10px] text-muted-foreground">
+              <Trust icon={ShieldCheck} title="Pagamento seguro" />
+              <Trust icon={Zap} title="Liberação automática" />
+              <Trust icon={Lock} title="Dados protegidos" />
             </section>
 
-            <a href={supportUrl(`Olá! Sou ${customer.name}${customer.usuario ? ` (usuário ${customer.usuario})` : ""} e preciso de ajuda com a renovação da Loreall Play.`)}
-              target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground py-2">
-              <MessageCircle className="h-4 w-4 text-emerald-500" /> Dúvidas? Suporte no WhatsApp (83) 99855-1952
-            </a>
-            <p className="text-center text-[10px] text-muted-foreground/70">Loreall Play · Link pessoal de renovação — não compartilhe.</p>
+            <div className="border-t border-border pt-3 space-y-1">
+              <a href={supportUrl(`Olá! Sou ${customer.name}${customer.usuario ? ` (usuário ${customer.usuario})` : ""} e preciso de ajuda com a renovação da Loreall Play.`)}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1">
+                <MessageCircle className="h-3.5 w-3.5 text-emerald-500" /> Dúvidas? Suporte no WhatsApp <span className="font-semibold">(83) 99855-1952</span>
+              </a>
+              <p className="text-center text-[10px] text-muted-foreground/50">Loreall Play · Link pessoal de renovação — não compartilhe.</p>
+            </div>
           </main>
         );
       })()}
