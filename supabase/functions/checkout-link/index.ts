@@ -2,7 +2,7 @@
 // Admin: get (or create), regenerate, send via WhatsApp. Public: resolve token -> renewal-only session.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isAdminRequest, signCustomerToken } from "../_shared/auth.ts";
-import { jsonResponse as json, securityHeadersFor, checkRateLimit } from "../_shared/security.ts";
+import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
 import { TG_API_BASE, tgHeaders, sanitizeCustomerForClient, applyTelasOverride } from "../_shared/tg.ts";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
 
@@ -36,10 +36,6 @@ Deno.serve(async (req) => {
     // ---------- Public: resolve ----------
     if (action === "resolve") {
       const token = String(body.token || "");
-      const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
-      if (!(await checkRateLimit(supabase, ip, "checkout-resolve", 20, 15))) {
-        return json({ error: "Muitas tentativas. Aguarde alguns minutos." }, 429, {}, req);
-      }
       if (!TOKEN_RE.test(token)) return json({ error: "Link inválido." }, 404, {}, req);
       const { data: link } = await supabase
         .from("customer_checkout_links").select("*").eq("token", token).eq("is_active", true).maybeSingle();
