@@ -56,6 +56,7 @@ export const resellerAdmin = {
   confirmPayment: (id: string) => makeCaller("admin-confirm-payment")("", { method: "POST", body: { payment_id: id } }),
   customersDashboard: () => call("customers-dashboard"),
   listOtpLogs: () => call("list-otp-logs"),
+  listEmailLogs: () => call("list-email-logs"),
 };
 
 export interface SyncpayPlan {

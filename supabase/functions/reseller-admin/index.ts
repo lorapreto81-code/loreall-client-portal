@@ -425,6 +425,17 @@ Deno.serve(async (req) => {
         if (error) throw error;
         return ok(req, { logs: data || [] });
       }
+
+      case "list-email-logs": {
+        const { data, error } = await supabase
+          .from("email_reminder_log")
+          .select("id, customer_id, due_date, kind, email, status, error, created_at")
+          .order("created_at", { ascending: false })
+          .limit(1000);
+        if (error) throw error;
+        return ok(req, { logs: data || [] });
+      }
+      
       
       default:
         return ok(req, { error: "ação inválida" }, 400);
