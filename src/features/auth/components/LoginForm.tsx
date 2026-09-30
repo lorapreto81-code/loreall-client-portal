@@ -93,7 +93,7 @@ export const LoginForm = ({
                     setDial(next);
                     onPhoneChange(toE164Digits(next, digits));
                   }}
-                  className="shrink-0 w-[88px] px-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="shrink-0 w-[88px] px-2 rounded-xl border border-border bg-background/70 text-foreground text-sm focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
                 >
                   {COUNTRIES.map((c) => (
                     <option key={c.code} value={c.dial}>
@@ -137,11 +137,11 @@ export const LoginForm = ({
                     }
 
                   }}
-                  className="w-full h-12 pl-10 pr-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-sm"
+                  className="w-full h-[52px] pl-11 pr-3 rounded-xl border border-border bg-background/70 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 text-sm"
                   placeholder="WhatsApp, e-mail ou usuário"
                   autoComplete="username"
                 />
-                <User className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <User className="h-[18px] w-[18px] text-primary/80 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
             {isTextMode && (
@@ -159,12 +159,12 @@ export const LoginForm = ({
                 inputMode="numeric"
                 value={code}
                 onChange={(e) => onCodeChange(onlyDigits(e.target.value).slice(0, 6))}
-                className="w-full pl-10 pr-3 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-center text-lg font-bold tracking-[0.5em]"
+                className="w-full h-[52px] pl-11 pr-3 rounded-xl border border-border bg-background/70 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 text-center text-lg font-bold tracking-[0.5em]"
                 placeholder="000000"
                 autoComplete="one-time-code"
                 autoFocus
               />
-              <Lock className="h-4 w-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Lock className="h-[18px] w-[18px] text-primary/80 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <button
@@ -189,7 +189,7 @@ export const LoginForm = ({
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 btn-primary-gradient font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full min-h-[56px] rounded-2xl bg-gradient-to-r from-primary to-secondary text-primary-foreground font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait uppercase tracking-widest ring-1 ring-inset ring-primary-foreground/15 shadow-[0_10px_24px_-10px_hsl(var(--primary)/0.6)] hover:brightness-110 transition-all duration-200 active:scale-[0.99]"
         >
           {loading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -213,7 +213,7 @@ export const LoginForm = ({
         )}
       </form>
 
-      <div className="mt-3 pt-3 border-t border-border/20">
+      <div className="mt-4 pt-4 border-t border-border/30">
         <a
           href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
           target="_blank"
@@ -221,7 +221,7 @@ export const LoginForm = ({
           className="w-full text-[11px] font-medium text-muted-foreground transition-colors flex items-center justify-center gap-1 group"
         >
           <span>Novo por aqui?</span>
-          <span className="text-primary font-bold hover:underline decoration-2 underline-offset-2">Experimente grátis</span>
+          <span className="text-accent font-semibold hover:underline decoration-2 underline-offset-2">Experimente grátis</span>
         </a>
       </div>
     </>
