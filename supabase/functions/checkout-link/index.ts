@@ -8,11 +8,12 @@ import { sendWhatsappText } from "../_shared/uazapi.ts";
 
 const PUBLIC_BASE = "https://cliente.loreallplay.com";
 const CHECKOUT_TTL = 60 * 60 * 2; // renewal session: 2h
-const TOKEN_RE = /^[A-Za-z0-9_-]{20,64}$/;
+const TOKEN_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
 function newToken(): string {
-  const b = crypto.getRandomValues(new Uint8Array(24));
-  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const b = crypto.getRandomValues(new Uint8Array(10));
+  return Array.from(b, (x) => A[x % A.length]).join("");
 }
 
 const linkUrl = (token: string) => `${PUBLIC_BASE}/renovar/${token}`;
