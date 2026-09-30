@@ -17,6 +17,8 @@ import SyncpayActiveSubscribersTab from "@/components/admin/SyncpayActiveSubscri
 import OtpAuditTab from "@/components/admin/OtpAuditTab";
 import PaymentAuditTab from "@/components/admin/PaymentAuditTab";
 import DiscountCodesTab from "@/components/admin/DiscountCodesTab";
+import EmailLogsTab from "@/components/admin/EmailLogsTab";
+import { Mail } from "lucide-react";
 
 interface Notice {
   ativo: boolean;
@@ -25,7 +27,7 @@ interface Notice {
 }
 
 type TabGroup = "revendedores" | "clientes" | "indicacao" | "assinaturas" | "auditoria" | "config";
-type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-signups" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config" | "revendedores-dashboard" | "clientes-dashboard" | "clientes-topgestor" | "cupons";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-signups" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config" | "revendedores-dashboard" | "clientes-dashboard" | "clientes-topgestor" | "cupons" | "emails-enviados";
 
 const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: { id: Tab; label: string; icon: typeof Megaphone }[] }[] = [
   {
@@ -75,6 +77,7 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
     tabs: [
       { id: "auditoria-acesso", label: "Logs de Acesso OTP", icon: History },
       { id: "auditoria-pagamento", label: "Logs de Renovação", icon: RefreshCcw },
+      { id: "emails-enviados", label: "E-mails Enviados", icon: Mail },
     ]
   },
   {
@@ -339,6 +342,7 @@ const Admin = () => {
           {tab === "cupons" && <DiscountCodesTab />}
           {tab === "auditoria-acesso" && <OtpAuditTab />}
           {tab === "auditoria-pagamento" && <PaymentAuditTab />}
+          {tab === "emails-enviados" && <EmailLogsTab />}
           {tab === "pix-provider" && <PixProviderTab />}
           {tab === "config" && <ResellerConfigTab />}
         </div>
