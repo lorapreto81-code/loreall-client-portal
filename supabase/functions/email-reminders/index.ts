@@ -67,60 +67,68 @@ function buildEmail(name: string, days: number, dueBr: string, url: string, extr
       cta: "Reativar meu acesso agora",
     };
 
+  const row = (k: string, v: string) => `<tr><td style="padding:5px 0;color:#64748b;font-size:13px">${k}</td><td align="right" style="padding:5px 0;color:#0f172a;font-size:13px;font-weight:bold">${v}</td></tr>`;
   const rows: string[] = [];
-  if (extra.usuario) rows.push(`<tr><td style="padding:6px 0;color:#94a3b8;font-size:13px">Usuário</td><td align="right" style="padding:6px 0;color:#f8fafc;font-size:13px;font-weight:bold">${esc(extra.usuario)}</td></tr>`);
-  if (extra.plan) rows.push(`<tr><td style="padding:6px 0;color:#94a3b8;font-size:13px">Plano</td><td align="right" style="padding:6px 0;color:#f8fafc;font-size:13px;font-weight:bold">${esc(extra.plan)}</td></tr>`);
-  if (extra.telas) rows.push(`<tr><td style="padding:6px 0;color:#94a3b8;font-size:13px">Telas</td><td align="right" style="padding:6px 0;color:#f8fafc;font-size:13px;font-weight:bold">${extra.telas}</td></tr>`);
-  rows.push(`<tr><td style="padding:6px 0;color:#94a3b8;font-size:13px">${days < 0 ? "Venceu em" : "Vencimento"}</td><td align="right" style="padding:6px 0;color:#f8fafc;font-size:13px;font-weight:bold">${dueBr}</td></tr>`);
+  if (extra.usuario) rows.push(row("Usuário", esc(extra.usuario)));
+  if (extra.plan) rows.push(row("Plano", esc(extra.plan) + (extra.telas ? ` · ${extra.telas} ${extra.telas > 1 ? "telas" : "tela"}` : "")));
+  rows.push(row(days < 0 ? "Venceu em" : "Vencimento", dueBr));
 
   const waMsg = `Olá! Sou ${firstRaw}${extra.usuario ? ` (usuário ${extra.usuario})` : ""}, recebi o lembrete de vencimento da Loreall Play e preciso de ajuda.`;
   const waUrl = `https://wa.me/${SUPPORT_WA}?text=${encodeURIComponent(waMsg)}`;
 
-  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${esc(copy.subject)}</title></head>
-<body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif">
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>${esc(copy.subject)}</title></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(copy.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="background:#ffffff"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border-radius:18px;overflow:hidden" bgcolor="#0b1020">
-  <tr><td bgcolor="#0b1020" style="background:#0b1020;background-image:linear-gradient(135deg,#0b1020 0%,#1e1b4b 100%);padding:28px 28px 20px" align="center">
-    <img src="${LOGO_URL}" width="64" height="64" alt="Loreall Play" style="display:block;border:0;width:64px;height:64px">
-    <p style="margin:12px 0 0;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:.5px">Loreall Play</p>
-    <p style="margin:4px 0 0;color:#7dd3fc;font-size:12px">Seu app de canais, filmes e séries</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f1f5f9"><tr><td align="center" style="padding:16px 10px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+  <tr><td height="5" bgcolor="#2563eb" style="height:5px;line-height:5px;font-size:0;background:#2563eb;background-image:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed)">&nbsp;</td></tr>
+  <tr><td align="center" style="padding:22px 24px 6px">
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+      <td style="padding-right:10px"><img src="${LOGO_URL}" width="44" height="44" alt="Loreall Play" style="display:block;border:0;width:44px;height:44px"></td>
+      <td align="left"><p style="margin:0;color:#0f172a;font-size:18px;font-weight:bold">Loreall Play</p><p style="margin:2px 0 0;color:#64748b;font-size:12px">Canais, filmes e séries</p></td>
+    </tr></table>
   </td></tr>
-  <tr><td bgcolor="#0b1020" style="padding:8px 28px 0" align="center">
-    <span style="display:inline-block;background:${copy.badgeBg};color:#ffffff;font-size:11px;font-weight:bold;letter-spacing:1px;padding:6px 12px;border-radius:999px">${copy.badge}</span>
+  <tr><td align="center" style="padding:14px 24px 0">
+    <span style="display:inline-block;background:${copy.badgeBg};color:#ffffff;font-size:11px;font-weight:bold;letter-spacing:1px;padding:6px 14px;border-radius:999px">${copy.badge}</span>
   </td></tr>
-  <tr><td bgcolor="#0b1020" style="padding:20px 28px 0">
-    <p style="margin:0 0 6px;color:#cbd5e1;font-size:15px">Olá, ${first}!</p>
-    <h1 style="margin:0 0 12px;color:#ffffff;font-size:22px;line-height:1.3">${copy.title}</h1>
-    <p style="margin:0;color:#cbd5e1;font-size:15px;line-height:1.6">${copy.body}</p>
+  <tr><td align="center" style="padding:14px 24px 0">
+    <h1 style="margin:0 0 8px;color:#0f172a;font-size:21px;line-height:1.3">${first}, ${copy.title.charAt(0).toLowerCase() + copy.title.slice(1)}</h1>
+    <p style="margin:0;color:#475569;font-size:14px;line-height:1.55">${copy.body}</p>
   </td></tr>
-  <tr><td bgcolor="#0b1020" style="padding:20px 28px 0">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#131a33" style="background:#131a33;border:1px solid #1f2a4d;border-radius:12px"><tr><td style="padding:12px 16px">
-      <p style="margin:0 0 4px;color:#7dd3fc;font-size:11px;font-weight:bold;letter-spacing:1px">SEUS DADOS</p>
+  <tr><td style="padding:18px 24px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px"><tr><td style="padding:10px 16px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows.join("")}</table>
     </td></tr></table>
   </td></tr>
-  <tr><td bgcolor="#0b1020" style="padding:24px 28px 8px" align="center">
-    <a href="${url}" style="display:block;background:#2563eb;background-image:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed);color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:16px 20px;border-radius:12px;text-align:center">${copy.cta} →</a>
-    <p style="margin:10px 0 0;color:#94a3b8;font-size:12px">✅ Pagamento seguro via PIX &nbsp;·&nbsp; ⚡ Liberação automática &nbsp;·&nbsp; 🔒 Link pessoal</p>
+  <tr><td align="center" style="padding:20px 24px 0">
+    <a href="${url}" style="display:block;background:#2563eb;background-image:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed);color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:15px 18px;border-radius:12px;text-align:center">${copy.cta}</a>
+    <p style="margin:10px 0 0;color:#64748b;font-size:12px">🔒 Pagamento seguro via PIX · Liberação automática</p>
   </td></tr>
-  <tr><td bgcolor="#0b1020" style="padding:16px 28px 24px">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #1f2a4d"><tr><td style="padding-top:16px" align="center">
-      <p style="margin:0 0 8px;color:#cbd5e1;font-size:13px">Precisa de ajuda? Fale com nosso suporte:</p>
-      <a href="${waUrl}" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:10px 18px;border-radius:999px">💬 WhatsApp (83) 99855-1952</a>
-    </td></tr></table>
+  <tr><td align="center" style="padding:18px 24px 22px">
+    <p style="margin:0;color:#64748b;font-size:13px">Dúvidas? <a href="${waUrl}" style="color:#16a34a;font-weight:bold;text-decoration:none">Suporte no WhatsApp (83) 99855-1952</a></p>
   </td></tr>
 </table>
-<p style="max-width:560px;margin:14px auto 0;color:#64748b;font-size:11px;line-height:1.5;text-align:center">Você recebeu este e-mail porque é cliente Loreall Play e seu acesso está perto do vencimento.<br>Este link de renovação é pessoal — não compartilhe. Loreall Play · cliente.loreallplay.com</p>
+<p style="max-width:520px;margin:12px auto 0;color:#94a3b8;font-size:11px;line-height:1.5;text-align:center">Link de renovação pessoal — não compartilhe.<br>Loreall Play · cliente.loreallplay.com</p>
 </td></tr></table>
 </body></html>`;
   return { subject: copy.subject, html };
 }
 
+function cleanPlan(raw: string): { plan: string; telas?: number } {
+  const m = raw.match(/(\d+)\s*telas?/i);
+  const telas = m ? Number(m[1]) : undefined;
+  const parts = raw.replace(/\(.*?\)/g, "").split("·").map((s) => s.trim()).filter(Boolean)
+    .filter((p) => !/telas?$/i.test(p) && !/^warez$/i.test(p));
+  const period = parts.find((p) => /mensal|trimestral|semestral|anual/i.test(p)) ?? parts[0] ?? "Plano";
+  return { plan: /^plano/i.test(period) ? period : `Plano ${period}`, telas };
+}
+
 function extraFrom(c: Record<string, unknown>): EmailExtra {
   const plan = (c.plan as Record<string, unknown> | undefined)?.name ?? c.plan_name ?? c.plano;
-  const telas = Number(c.telas ?? c.connections ?? 0) || undefined;
-  return { usuario: c.usuario ? String(c.usuario) : undefined, plan: plan ? String(plan) : undefined, telas };
+  let telas = Number(c.telas ?? c.connections ?? 0) || undefined;
+  let planLabel: string | undefined;
+  if (plan) { const cp = cleanPlan(String(plan)); planLabel = cp.plan; telas = cp.telas ?? telas; }
+  return { usuario: c.usuario ? String(c.usuario) : undefined, plan: planLabel, telas };
 }
 
 Deno.serve(async (req) => {
