@@ -41,7 +41,7 @@ const Renovar = () => {
         setState("ready");
       } catch (e) {
         if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Link inválido.");
+        setError(e instanceof Error && !/fetch/i.test(e.message) ? e.message : "Não foi possível abrir o link.");
         setState("error");
       }
     })();
