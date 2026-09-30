@@ -12,6 +12,7 @@ interface LoginFormProps {
   refCode: string | null;
   targetHint: string | null;
   customerName: string | null;
+  channel?: "whatsapp" | "email";
   onPhoneChange: (val: string) => void;
   onCodeChange: (val: string) => void;
   onSendCode: () => void;
@@ -28,6 +29,7 @@ export const LoginForm = ({
   refCode,
   targetHint,
   customerName,
+  channel = "whatsapp",
   onPhoneChange,
   onCodeChange,
   onSendCode,
@@ -64,7 +66,7 @@ export const LoginForm = ({
               Verificação de Segurança {customerName ? `• ${customerName}` : ""}
             </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              O seu código exclusivo de 6 dígitos foi enviado para o WhatsApp de final <span className="text-primary font-bold">{targetHint || "..."}</span> vinculado ao seu acesso.
+              {channel === "email" ? "O seu código exclusivo de 6 dígitos foi enviado para o e-mail " : "O seu código exclusivo de 6 dígitos foi enviado para o WhatsApp de final "}<span className="text-primary font-bold">{targetHint || "..."}</span> vinculado ao seu acesso.
             </p>
           </>
         )}
@@ -208,7 +210,7 @@ export const LoginForm = ({
 
         {step === "code" && (
           <p className="text-[10px] text-muted-foreground text-center pt-2 font-medium">
-            Ainda não recebeu? Verifique seu WhatsApp.
+            {channel === "email" ? "Ainda não recebeu? Verifique também a caixa de spam." : "Ainda não recebeu? Verifique seu WhatsApp."}
           </p>
         )}
       </form>
