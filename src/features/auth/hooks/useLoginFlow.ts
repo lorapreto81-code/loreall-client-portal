@@ -16,6 +16,8 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
   const [matches, setMatches] = useState<LoginAccount[]>([]);
   const [targetHint, setTargetHint] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState<string | null>(null);
+  const [channel, setChannel] = useState<"whatsapp" | "email">("whatsapp");
+  const [channelOptions, setChannelOptions] = useState<{ whatsapp: string; email: string; preferred: "whatsapp" | "email" } | null>(null);
   
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
@@ -53,7 +55,8 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     navigate("/welcome");
   };
 
-  const sendCode = async () => {
+  const sendCode = async (chosen?: "whatsapp" | "email") => {
+    const useChannel = chosen ?? (step === "code" ? channel : undefined);
     const isEmail = EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone) || (phone.length > 3 && !/^\d+$/.test(phone));
     const digits = onlyDigits(phone).slice(0, 13);
     
@@ -65,12 +68,20 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     const identifier = isEmail ? phone.toLowerCase().trim() : digits;
     setLoading(true);
     try {
-      const res = await requestOtp(identifier, mode, slug);
+      const res = await requestOtp(identifier, mode, slug, useChannel);
+      if (res.choose && res.options) {
+        setCustomerName(res.customer_name || null);
+        setChannelOptions({ ...res.options, preferred: res.preferred || "whatsapp" });
+        return;
+      }
+      setChannelOptions(null);
+      const sentBy = res.channel === "email" ? "email" : "whatsapp";
+      setChannel(sentBy);
       if (res.target_hint) {
         setTargetHint(res.target_hint);
         setCustomerName(res.customer_name || null);
         const welcome = res.customer_name ? `Olá, ${res.customer_name}! ` : "";
-        toast.success(`${welcome}Código enviado no WhatsApp de final ${res.target_hint}`);
+        toast.success(sentBy === "email" ? `${welcome}Código enviado para ${res.target_hint}` : `${welcome}Código enviado no WhatsApp de final ${res.target_hint}`);
       } else {
         toast.success(res.message || "Código enviado no seu WhatsApp.");
       }
@@ -129,6 +140,9 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     setMatches,
     targetHint,
     customerName,
+    channel,
+    channelOptions,
+    setChannelOptions,
     pickAccount,
     sendCode,
     handleSubmit
