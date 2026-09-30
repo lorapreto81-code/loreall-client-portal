@@ -131,6 +131,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_reminder_log: {
+        Row: {
+          created_at: string
+          customer_id: number
+          due_date: string
+          email: string | null
+          error: string | null
+          id: string
+          kind: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: number
+          due_date: string
+          email?: string | null
+          error?: string | null
+          id?: string
+          kind: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: number
+          due_date?: string
+          email?: string | null
+          error?: string | null
+          id?: string
+          kind?: string
+          status?: string
+        }
+        Relationships: []
+      }
       otp_codes: {
         Row: {
           attempts: number
