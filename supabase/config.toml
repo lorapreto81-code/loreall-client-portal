@@ -49,3 +49,6 @@ verify_jwt = false
 
 [functions.area-pricing]
 verify_jwt = false
+
+[functions.email-reminders]
+verify_jwt = false

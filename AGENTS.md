@@ -1,1 +1,2 @@
 - Per-customer renewal links (`/renovar/:token`) resolve via `checkout-link` into a 2h `role: "checkout"` session accepted only by renewal functions (`isRenewalSession`); why: link grants renewal only, never full area access.
+- E-mail reminders: `email-reminders` edge function (daily pg_cron 12:00 UTC) sends D-3/D-1/D0/D+1 via Resend gateway from lembretes.loreallplay.com, deduped by `email_reminder_log`; why: idempotent, no double sends.
