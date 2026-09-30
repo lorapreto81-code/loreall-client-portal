@@ -104,6 +104,8 @@ Deno.serve(async (req) => {
     if (!isRenewalSession(session)) {
       return json({ error: "Unauthorized" }, 401, {}, req);
     }
+    // PIX Automático is disabled for renewal-link sessions (not ready for direct links).
+    if (session?.role === "checkout") return json({ error: "Indisponível neste link." }, 403, {}, req);
 
     const body = await req.json().catch(() => ({}));
     const {
