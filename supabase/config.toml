@@ -52,3 +52,6 @@ verify_jwt = false
 
 [functions.email-reminders]
 verify_jwt = false
+
+[functions.discount-codes]
+verify_jwt = false
