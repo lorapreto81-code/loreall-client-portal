@@ -28,26 +28,31 @@ const Login = () => {
   } = useLoginFlow();
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-background px-4 py-8 sm:pt-16 sm:pb-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-start justify-center bg-background px-4 py-6 sm:pt-14 sm:pb-8 relative overflow-hidden">
       {/* Ambient gradient glow */}
-      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full bg-primary/15 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[380px] h-[380px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[min(560px,140vw)] h-[420px] rounded-full bg-[radial-gradient(closest-side,hsl(var(--primary)/0.22),hsl(var(--accent)/0.08)_60%,transparent)] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-24 w-[420px] h-[420px] rounded-full bg-[radial-gradient(closest-side,hsl(var(--secondary)/0.12),transparent)] pointer-events-none" />
 
-      <div className="w-full max-w-sm relative z-10 flex flex-col gap-4">
+      <div className="w-full max-w-sm relative z-10 flex flex-col gap-5">
         {/* Logo compacta + Headline Persuasiva */}
-        <div className="flex flex-col items-center gap-2 pt-1 text-center">
-          <img src={logo} alt="Loreall Play TV" style={{ width: 70, height: "auto" }} />
-          <div className="space-y-0.5">
-            <h1 className="text-xl font-semibold text-foreground leading-tight">
+        <div className="flex flex-col items-center gap-3 pt-1 text-center">
+          <div className="relative">
+            <div className="absolute inset-0 -m-4 rounded-full bg-[radial-gradient(closest-side,hsl(var(--accent)/0.25),hsl(var(--secondary)/0.12)_60%,transparent)] pointer-events-none" />
+            <img src={logo} alt="Loreall Play TV" className="relative" style={{ width: 84, height: "auto" }} />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-foreground leading-tight tracking-tight">
               Acesse sua conta
             </h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-xs font-medium text-muted-foreground">
               Loreall Play
             </p>
           </div>
         </div>
 
-        <div className="rounded-2xl p-5 border border-white/5 bg-card/60 backdrop-blur-2xl premium-shadow">
+        <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-card/70 backdrop-blur-xl shadow-[0_20px_40px_-24px_hsl(var(--primary)/0.35)]">
+          <div className="h-[3px] bg-gradient-to-r from-accent via-primary to-secondary" />
+          <div className="p-5 sm:p-6">
           {matches.length > 1 ? (
             <AccountSelection 
               matches={matches} 
@@ -71,15 +76,16 @@ const Login = () => {
               onSubmit={handleSubmit}
             />
           )}
+          </div>
         </div>
 
         {/* Banner rotativo: Renove → Indique e Ganhe */}
-        <div className="relative h-auto">
+        <div className="relative h-auto w-[92%] mx-auto mt-2">
           <BannerRotativo />
         </div>
 
-        <p className="text-[10px] text-muted-foreground/60 text-center font-medium flex flex-col gap-1">
-          <span>🔒 Acesso 100% seguro e protegido</span>
+        <p className="text-[10px] text-muted-foreground/50 text-center flex flex-col items-center gap-1 pb-2">
+          <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Acesso 100% seguro e protegido</span>
           <span>© Loreall Play TV — Entretenimento Premium Sem Limites.</span>
         </p>
       </div>
@@ -119,7 +125,7 @@ const BannerRotativo = () => {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative w-full aspect-[1200/680] rounded-2xl overflow-hidden border border-white/5 bg-transparent p-0">
+      <div className="relative w-full aspect-[1200/680] rounded-2xl overflow-hidden border border-border/50 shadow-[0_12px_28px_-18px_hsl(var(--background))] bg-transparent p-0">
         <div className="w-full h-full relative">
           {banners.map((banner, index) => (
             <a
@@ -151,8 +157,8 @@ const BannerRotativo = () => {
             key={banner.id}
             type="button"
             onClick={() => setActive(index)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              index === active ? "w-8 bg-primary shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              index === active ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
             }`}
             aria-label={`Ver ${banner.label}`}
             aria-pressed={index === active}
