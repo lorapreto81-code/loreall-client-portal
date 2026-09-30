@@ -51,7 +51,7 @@ const Renovar = () => {
   const supportUrl = (msg: string) => `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center px-4 pt-6 pb-10 md:pt-12 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.14),transparent_60%)]">
+    <div className="min-h-screen bg-background flex flex-col items-center px-4 pt-6 pb-10 md:pt-12 bg-[radial-gradient(40rem_22rem_at_20%_0%,hsl(var(--accent)/0.10),transparent_70%),radial-gradient(40rem_24rem_at_85%_10%,hsl(var(--secondary)/0.10),transparent_70%),radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]">
       <header className="w-full max-w-[460px] flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <img src="/brand-logo.png" alt="Loreall Play" className="h-9 w-9 object-contain" />
@@ -190,12 +190,8 @@ const Info = ({ icon: Icon, label, value }: { icon: typeof User; label: string; 
   </div>
 );
 
-const Trust = ({ icon: Icon, title, text }: { icon: typeof User; title: string; text: string }) => (
-  <div className="card-elevated px-2 py-3 flex flex-col items-center justify-start min-w-0">
-    <Icon className="h-4 w-4 text-primary" />
-    <p className="text-[11px] font-bold text-foreground mt-1.5 leading-snug break-words">{title}</p>
-    <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 break-words">{text}</p>
-  </div>
+const Trust = ({ icon: Icon, title }: { icon: typeof User; title: string }) => (
+  <span className="inline-flex items-center gap-1"><Icon className="h-3 w-3 text-muted-foreground" /> {title}</span>
 );
 
 export default Renovar;
