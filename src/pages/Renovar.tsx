@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, User, AlertCircle, Lock, QrCode, Check } from "lucide-react";
+import { Loader2, AlertCircle, Lock, QrCode, Check, ShieldCheck, Zap, Tv, CalendarDays, User, MonitorSmartphone, MessageCircle, BadgeCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import { useAuthStore, Customer } from "@/store/authStore";
 import { getDisplayPlanLabel } from "@/lib/planUtils";
-import logo from "@/assets/loreall-play-logo.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPPORT_WHATSAPP = "5583998551952";
 
-function formatDate(raw?: string) {
-  if (!raw) return "—";
+function parseDate(raw?: string) {
+  if (!raw) return null;
   const d = new Date(raw.includes("T") ? raw : raw.replace(" ", "T"));
-  return isNaN(d.getTime()) ? raw : d.toLocaleDateString("pt-BR");
+  return isNaN(d.getTime()) ? null : d;
 }
 
 const Renovar = () => {
@@ -39,7 +39,6 @@ const Renovar = () => {
         if (cancelled) return;
         login(data.customer as Customer, data.token, "checkout");
         setState("ready");
-        setOpen(true);
       } catch (e) {
         if (cancelled) return;
         setError(e instanceof Error ? e.message : "Link inválido.");
@@ -49,11 +48,22 @@ const Renovar = () => {
     return () => { cancelled = true; };
   }, [token, login]);
 
-  const expired = customer?.data_de_vencimento ? new Date(customer.data_de_vencimento.replace(" ", "T")) < new Date() : false;
+  const supportUrl = (msg: string) => `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center px-4 py-8 md:py-14 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.12),transparent_60%)]">
-      <img src={logo} alt="Loreall Play" className="h-10 md:h-14 w-auto object-contain mb-6 md:mb-8" />
+    <div className="min-h-screen bg-background flex flex-col items-center px-4 pt-6 pb-10 md:pt-12 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.14),transparent_60%)]">
+      <header className="w-full max-w-[460px] flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <img src="/brand-logo.png" alt="Loreall Play" className="h-9 w-9 object-contain" />
+          <div className="leading-tight">
+            <p className="text-sm font-black text-foreground">Loreall Play</p>
+            <p className="text-[10px] text-muted-foreground">Canais, filmes e séries</p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">
+          <Lock className="h-3 w-3" /> Conexão segura
+        </span>
+      </header>
 
       {state === "loading" && (
         <div className="flex flex-col items-center gap-3 text-muted-foreground mt-16">
@@ -63,10 +73,14 @@ const Renovar = () => {
       )}
 
       {state === "error" && (
-        <div className="card-elevated p-8 max-w-sm w-full text-center space-y-3">
+        <div className="card-elevated p-8 max-w-sm w-full text-center space-y-4">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
           <h1 className="text-lg font-bold text-foreground">Link indisponível</h1>
           <p className="text-sm text-muted-foreground">{error} Fale com o suporte para receber um novo link.</p>
+          <a href={supportUrl("Olá! Meu link de renovação da Loreall Play não abriu. Pode me enviar um novo?")} target="_blank" rel="noopener noreferrer"
+            className="btn-primary-gradient w-full h-12 rounded-xl font-bold text-sm inline-flex items-center justify-center gap-2">
+            <MessageCircle className="h-4 w-4" /> Falar com o suporte
+          </a>
         </div>
       )}
 
@@ -75,35 +89,57 @@ const Renovar = () => {
         const telas = Number(customer.telas) || 1;
         const last4 = customer.whatsapp ? String(customer.whatsapp).replace(/\D/g, "").slice(-4) : "";
         const firstName = customer.name.split(" ")[0];
+        const due = parseDate(customer.data_de_vencimento);
+        const days = due ? Math.ceil((due.getTime() - Date.now()) / 86400000) : null;
+        const expired = days !== null && days < 0;
+        const status =
+          days === null ? null
+          : expired ? { label: `Venceu há ${Math.abs(days)} ${Math.abs(days) === 1 ? "dia" : "dias"}`, cls: "bg-destructive/15 text-destructive" }
+          : days === 0 ? { label: "Vence hoje", cls: "bg-destructive/15 text-destructive" }
+          : days <= 3 ? { label: `Vence em ${days} ${days === 1 ? "dia" : "dias"}`, cls: "bg-amber-500/15 text-amber-500" }
+          : { label: `Ativo · ${days} dias restantes`, cls: "bg-emerald-500/15 text-emerald-500" };
         return (
-          <div className="w-full max-w-[440px] space-y-4 animate-in fade-in duration-200">
+          <main className="w-full max-w-[460px] space-y-4 animate-in fade-in duration-200">
             <div className="text-center">
               <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight">Olá, {firstName} 👋</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {expired ? "Seu acesso venceu. Renove e volte a assistir na hora." : "Renove seu acesso em menos de 1 minuto."}
-              </p>
-              <p className="text-xs text-muted-foreground/80 mt-2">
-                {customer.usuario || firstName}{last4 && ` · WhatsApp •••• ${last4}`}
+                {expired ? "Seu acesso venceu. Renove agora e volte a assistir na hora." : "Confira seus dados e renove em menos de 1 minuto."}
               </p>
             </div>
 
-            <div className="card-elevated p-5 space-y-4">
-              <div className="flex items-start justify-between gap-3">
+            <section className="card-elevated overflow-hidden">
+              <div className="p-5 pb-4 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Seu plano</p>
-                  <p className="text-lg font-bold text-foreground break-words">{getDisplayPlanLabel(customer.plan?.name)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {telas} {telas === 1 ? "Tela" : "Telas"} · {expired ? "Venceu em" : "Vence em"} {formatDate(customer.data_de_vencimento)}
-                  </p>
+                  <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Seu plano</p>
+                  <p className="text-lg font-black text-foreground break-words">{getDisplayPlanLabel(customer.plan?.name)}</p>
+                  {status && <span className={`inline-block mt-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${status.cls}`}>{status.label}</span>}
                 </div>
-                {planValue > 0 && <p className="text-3xl font-black text-foreground tabular-nums shrink-0">{formatCurrency(planValue)}</p>}
+                {planValue > 0 && (
+                  <div className="text-right shrink-0">
+                    <p className="text-3xl font-black text-foreground tabular-nums leading-none">{formatCurrency(planValue)}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">por mês</p>
+                  </div>
+                )}
               </div>
+              <dl className="grid grid-cols-2 gap-px bg-border border-t border-border text-sm">
+                <Info icon={User} label="Titular" value={customer.name.split(" ").slice(0, 2).join(" ")} />
+                <Info icon={Tv} label="Usuário" value={customer.usuario || "—"} />
+                <Info icon={MonitorSmartphone} label="Telas" value={`${telas} ${telas === 1 ? "tela" : "telas"}`} />
+                <Info icon={CalendarDays} label={expired ? "Venceu em" : "Vencimento"} value={due ? due.toLocaleDateString("pt-BR") : "—"} />
+              </dl>
+              {last4 && (
+                <p className="px-5 py-2.5 text-[11px] text-muted-foreground border-t border-border flex items-center gap-1.5">
+                  <BadgeCheck className="h-3.5 w-3.5 text-primary" /> Cadastro confirmado · WhatsApp final •••• {last4}
+                </p>
+              )}
+            </section>
 
+            <section className="card-elevated p-5 space-y-4">
               <div className="flex items-center gap-3 rounded-xl border-2 border-accent bg-accent/5 p-3">
                 <span className="h-9 w-9 shrink-0 rounded-lg bg-accent/15 flex items-center justify-center"><QrCode className="h-5 w-5 text-accent" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-foreground text-sm">PIX</p>
-                  <p className="text-[11px] text-muted-foreground">Pagamento instantâneo • Aprovação automática</p>
+                  <p className="text-[11px] text-muted-foreground">Pagamento instantâneo • Liberação automática</p>
                 </div>
                 <span className="h-5 w-5 shrink-0 rounded-full bg-accent flex items-center justify-center"><Check className="h-3 w-3 text-accent-foreground" /></span>
               </div>
@@ -113,15 +149,24 @@ const Renovar = () => {
                 className="w-full min-h-[56px] py-4 btn-primary-gradient font-bold text-base rounded-xl inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/25 transition-transform duration-200 active:scale-[0.99]"
               >
                 <QrCode className="h-5 w-5" />
-                {planValue > 0 ? `Pagar ${formatCurrency(planValue)} via PIX` : "Escolher plano e pagar via PIX"}
+                {planValue > 0 ? `Renovar por ${formatCurrency(planValue)} via PIX` : "Escolher plano e pagar via PIX"}
               </button>
-              <p className="text-[11px] text-muted-foreground text-center">Períodos mais longos têm desconto na próxima etapa.</p>
-            </div>
+              <p className="text-[11px] text-muted-foreground text-center">Na próxima etapa: planos de 3, 6 e 12 meses com desconto e campo para cupom.</p>
+            </section>
 
-            <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-              <Lock className="h-3 w-3" /> Pagamento seguro · Link pessoal, não compartilhe
-            </p>
-          </div>
+            <section className="grid grid-cols-3 gap-2 text-center">
+              <Trust icon={ShieldCheck} title="Pagamento seguro" text="PIX pelo seu banco" />
+              <Trust icon={Zap} title="Liberação automática" text="Logo após pagar" />
+              <Trust icon={Lock} title="Dados protegidos" text="Link só seu" />
+            </section>
+
+            <a href={supportUrl(`Olá! Sou ${customer.name}${customer.usuario ? ` (usuário ${customer.usuario})` : ""} e preciso de ajuda com a renovação da Loreall Play.`)}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground py-2">
+              <MessageCircle className="h-4 w-4 text-emerald-500" /> Dúvidas? Suporte no WhatsApp (83) 99855-1952
+            </a>
+            <p className="text-center text-[10px] text-muted-foreground/70">Loreall Play · Link pessoal de renovação — não compartilhe.</p>
+          </main>
         );
       })()}
 
@@ -130,10 +175,18 @@ const Renovar = () => {
   );
 };
 
-const Row = ({ icon: Icon, label, value, highlight }: { icon: typeof User; label: string; value: string; highlight?: boolean }) => (
-  <div className="flex items-center justify-between gap-3">
-    <span className="flex items-center gap-2 text-sm text-muted-foreground"><Icon className="h-4 w-4" /> {label}</span>
-    <span className={`text-sm font-semibold ${highlight ? "text-destructive" : "text-foreground"}`}>{value}</span>
+const Info = ({ icon: Icon, label, value }: { icon: typeof User; label: string; value: string }) => (
+  <div className="bg-card px-4 py-3 min-w-0">
+    <dt className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground"><Icon className="h-3 w-3" /> {label}</dt>
+    <dd className="font-semibold text-foreground truncate mt-0.5">{value}</dd>
+  </div>
+);
+
+const Trust = ({ icon: Icon, title, text }: { icon: typeof User; title: string; text: string }) => (
+  <div className="card-elevated p-3">
+    <Icon className="h-4 w-4 text-primary mx-auto" />
+    <p className="text-[11px] font-bold text-foreground mt-1 leading-tight">{title}</p>
+    <p className="text-[10px] text-muted-foreground leading-tight">{text}</p>
   </div>
 );
 

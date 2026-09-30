@@ -131,6 +131,96 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_codes: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          notes: string | null
+          one_per_customer: boolean
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          notes?: string | null
+          one_per_customer?: boolean
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          notes?: string | null
+          one_per_customer?: boolean
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      discount_redemptions: {
+        Row: {
+          created_at: string
+          customer_id: number
+          discount_amount: number
+          discount_code_id: string
+          final_amount: number
+          id: string
+          original_amount: number
+          payment_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: number
+          discount_amount: number
+          discount_code_id: string
+          final_amount: number
+          id?: string
+          original_amount: number
+          payment_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: number
+          discount_amount?: number
+          discount_code_id?: string
+          final_amount?: number
+          id?: string
+          original_amount?: number
+          payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_redemptions_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_redemptions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_reminder_log: {
         Row: {
           created_at: string

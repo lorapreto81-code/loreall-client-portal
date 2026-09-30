@@ -2,6 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createPixSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor, checkRateLimit } from "../_shared/security.ts";
+import { evaluateDiscount } from "../_shared/discount.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
@@ -153,6 +154,16 @@ Deno.serve(async (req) => {
       return json({ error: "Valor não corresponde ao plano." }, 422, {}, req);
     }
 
+    // Cupom de desconto (revalidado no servidor; nunca confia no valor do cliente).
+    let chargeAmount = realAmount;
+    let discountInfo: { id: string; code: string; discount: number } | null = null;
+    if (body.discount_code) {
+      const d = await evaluateDiscount(supabase, body.discount_code, body.customer_id, realAmount);
+      if (!d.ok) return json({ error: d.error }, 422, {}, req);
+      chargeAmount = d.final;
+      discountInfo = { id: d.code.id, code: d.code.code, discount: d.discount };
+    }
+
     // Reaproveita um Pix já pendente e ainda válido pro mesmo cliente + mesmo plano,
     // em vez de gerar um novo a cada clique.
     const { data: existingPending } = await supabase
@@ -161,6 +172,7 @@ Deno.serve(async (req) => {
       .eq("customer_id", body.customer_id)
       .eq("plan_id", body.plan_id)
       .eq("fastdepix_status", "pending")
+      .eq("amount", chargeAmount)
       .gt("qr_code_expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(1)
@@ -193,7 +205,7 @@ Deno.serve(async (req) => {
         Accept: "application/json",
       },
       body: JSON.stringify({
-        amount: Number(realAmount.toFixed(2)),
+        amount: Number(chargeAmount.toFixed(2)),
         description: `Renovação ${body.plan_name}`,
         webhook_url: webhookUrl,
         client: { name: body.customer_name, cpf, email, phone },
@@ -220,7 +232,7 @@ Deno.serve(async (req) => {
         customer_whatsapp: body.customer_whatsapp ?? null,
         plan_id: body.plan_id,
         plan_name: body.plan_name,
-        amount: body.amount,
+        amount: chargeAmount,
         provider: "syncpay",
         provider_transaction_id: String(txId),
         fastdepix_status: "pending",
@@ -230,11 +242,19 @@ Deno.serve(async (req) => {
         metadata: {
           syncpay_raw: tx,
           referral_code: body.referral_code ? String(body.referral_code).trim().toUpperCase() : null,
+          discount: discountInfo ? { code: discountInfo.code, amount: discountInfo.discount, original_amount: realAmount } : null,
         },
       })
       .select()
       .single();
     if (insertErr) throw insertErr;
+
+    if (discountInfo) {
+      await supabase.from("discount_redemptions").insert({
+        discount_code_id: discountInfo.id, customer_id: body.customer_id, payment_id: inserted.id,
+        original_amount: realAmount, discount_amount: discountInfo.discount, final_amount: chargeAmount,
+      });
+    }
 
     return new Response(JSON.stringify({
       payment_id: inserted.id,

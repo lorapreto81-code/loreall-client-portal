@@ -17,6 +17,7 @@ export class PaymentService extends BaseApi {
     plan_name: string;
     amount: number;
     referral_code?: string;
+    discount_code?: string;
   }): Promise<CreatePixResponse> {
     return this.request<CreatePixResponse>("create-pix", {
       method: "POST",

@@ -43,6 +43,7 @@ export const createPixSchema = z.object({
   plan_name: z.string().min(1).max(200),
   amount: z.number().min(10, "Valor mínimo R$ 10,00"),
   referral_code: z.string().optional(),
+  discount_code: z.string().max(30).optional(),
 });
 
 export const resellerCreatePixSchema = z.object({

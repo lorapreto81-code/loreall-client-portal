@@ -55,6 +55,11 @@ const PIX_MAX_AMOUNT = 500; // Limite máximo por transação PIX
 
 const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const { customer, login } = useAuthStore();
+  const authScope = useAuthStore((st) => st.scope);
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discount: number; final: number; forValue: number } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
   const queryClient = useQueryClient();
 
   // Telas derivada do nome do plano atual — evita depender do campo bruto do TopGestor.
@@ -182,6 +187,32 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;
   const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
+  const activeCoupon = coupon && coupon.forValue === planValue ? coupon : null;
+  const payValue = activeCoupon ? activeCoupon.final : planValue;
+
+  const applyCoupon = async (codeArg?: string) => {
+    const code = (codeArg ?? couponInput).trim().toUpperCase();
+    if (!code || !customer || !planValue) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const { data, error } = await supabase.functions.invoke("discount-codes?action=validate", {
+        body: { code, customer_id: customer.id, amount: planValue },
+      });
+      if (error) {
+        let msg = "Cupom inválido.";
+        try { msg = JSON.parse(await (error as any).context.text()).error || msg; } catch { /* ignore */ }
+        throw new Error(msg);
+      }
+      setCoupon({ code: data.code, discount: Number(data.discount), final: Number(data.final), forValue: planValue });
+      toast.success(`Cupom ${data.code} aplicado!`);
+    } catch (e: any) {
+      setCoupon(null);
+      setCouponError(e.message || "Cupom inválido.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
   // Sincroniza o valor exibido com o valor real do plano na API
   const canUsePix = planValue > 0 && planValue < PIX_MAX_AMOUNT;
 
@@ -514,6 +545,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         plan_name: getPlanName(selectedPlan),
         amount: getPlanValue(selectedPlan),
         referral_code: refCode,
+        ...(activeCoupon ? { discount_code: activeCoupon.code } : {}),
       });
       setPix(data);
       setPixStatus("pending");
@@ -986,9 +1018,38 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
             {selectedPlan && (
               <>
+                {canUsePix && (
+                  <div className="mb-4">
+                    <div className="flex gap-2">
+                      <input
+                        value={couponInput}
+                        onChange={(e) => { setCouponInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 30)); setCouponError(""); }}
+                        onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                        placeholder="Tem um cupom de desconto?"
+                        className="flex-1 min-w-0 h-11 px-3 rounded-xl border border-border bg-background text-sm font-semibold tracking-wide text-foreground placeholder:font-normal placeholder:tracking-normal placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                      />
+                      {activeCoupon ? (
+                        <button onClick={() => { setCoupon(null); setCouponInput(""); }} className="h-11 px-4 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-foreground">Remover</button>
+                      ) : (
+                        <button onClick={() => applyCoupon()} disabled={!couponInput || couponLoading} className="h-11 px-4 rounded-xl bg-primary/10 text-primary text-sm font-bold disabled:opacity-50 inline-flex items-center gap-1.5">
+                          {couponLoading && <Loader2 className="h-4 w-4 animate-spin" />} Aplicar
+                        </button>
+                      )}
+                    </div>
+                    {couponError && <p className="text-[11px] text-destructive mt-1.5">{couponError}</p>}
+                    {coupon && !activeCoupon && <p className="text-[11px] text-muted-foreground mt-1.5">O cupom foi removido porque você trocou de plano. Aplique de novo.</p>}
+                  </div>
+                )}
+
+                {activeCoupon && (
+                  <div className="space-y-1 mb-2 text-sm">
+                    <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(planValue)}</span></div>
+                    <div className="flex justify-between text-emerald-500 font-semibold"><span>Cupom {activeCoupon.code}</span><span className="tabular-nums">− {formatCurrency(activeCoupon.discount)}</span></div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-muted-foreground">Total</span>
-                  <span className="text-xl font-bold text-foreground">{formatCurrency(planValue)}</span>
+                  <span className="text-xl font-bold text-foreground">{formatCurrency(payValue)}</span>
                 </div>
 
                 {canUsePix ? (
@@ -999,7 +1060,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     style={{ minHeight: 54 }}
                   >
                     {generating ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}
-                    {generating ? "Gerando pagamento..." : `Pagar ${formatCurrency(planValue)} via PIX`}
+                    {generating ? "Gerando pagamento..." : `Pagar ${formatCurrency(payValue)} via PIX`}
                   </button>
                 ) : (
                   <>
@@ -1021,7 +1082,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
             )}
 
             {/* PIX Automático — card único destacado */}
-            {recommendedSubPlan && (
+            {recommendedSubPlan && authScope !== "checkout" && (
               <div className="mt-5 pt-4 border-t border-border">
                 <button
                   onClick={() => openSubscribeForm(recommendedSubPlan)}
