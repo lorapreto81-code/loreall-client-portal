@@ -30,7 +30,7 @@ export const DashboardBanners = ({
           <p className="text-[11px] text-muted-foreground leading-snug">
             {!hasValidPhone
               ? "Adicione seu WhatsApp com DDD para receber lembretes de renovação."
-              : "Verifique se seu nome está completo."}
+              : "Confira seu nome completo e cadastre seu e-mail para receber lembretes de vencimento."}
           </p>
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
