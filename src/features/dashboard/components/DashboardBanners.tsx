@@ -46,9 +46,9 @@ export const DashboardBanners = ({
           <Mail className="h-4 w-4 text-primary" />
         </div>
         <button onClick={() => onOpenAccount("dados")} className="min-w-0 flex-1 text-left">
-          <p className="text-sm font-semibold text-foreground">Cadastre seu e-mail oficial</p>
+          <p className="text-sm font-semibold text-foreground">Receba lembretes por e-mail</p>
           <p className="text-[11px] text-muted-foreground leading-snug">
-            Em breve o login será por e-mail. Adicione agora e não perca o acesso.
+            Cadastre seu e-mail e avisamos antes do vencimento, com link para renovar em 1 clique.
           </p>
         </button>
         <button
