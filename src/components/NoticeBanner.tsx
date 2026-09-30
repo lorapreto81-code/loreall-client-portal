@@ -39,17 +39,25 @@ const NoticeBanner = () => {
   };
 
   return (
-    <div className="w-full border-b notice-banner">
-      <div className="flex items-center gap-2.5 px-4 py-2.5 w-full max-w-[480px] md:max-w-4xl mx-auto">
-        <Megaphone className="h-5 w-5 shrink-0" />
-        <p className="text-[12px] sm:text-sm font-medium flex-1">{notice.mensagem}</p>
-        <button
-          onClick={handleDismiss}
-          className="p-1.5 rounded-lg hover:opacity-80 transition-opacity shrink-0"
-          style={{ minHeight: 40, minWidth: 40, display: "flex", alignItems: "center", justifyContent: "center" }}
-        >
-          <X className="h-4 w-4" />
-        </button>
+    <div className="w-full max-w-[480px] md:max-w-4xl mx-auto px-4 pt-4">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg animate-in fade-in slide-in-from-top-2">
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500" />
+        <div className="flex items-start gap-3 p-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <Megaphone className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Aviso importante</p>
+            <p className="mt-1 text-sm text-card-foreground whitespace-pre-line break-words">{notice.mensagem}</p>
+          </div>
+          <button
+            onClick={handleDismiss}
+            aria-label="Fechar aviso"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

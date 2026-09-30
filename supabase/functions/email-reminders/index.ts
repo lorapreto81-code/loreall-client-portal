@@ -14,8 +14,9 @@ const MAX_OVERDUE_DAYS = 30; // daily "vencido" reminder while expired, capped
 const kindFor = (days: number) => KINDS[days] ?? (days < 0 && days >= -MAX_OVERDUE_DAYS ? `d+${-days}` : null);
 
 function newToken(): string {
-  const b = crypto.getRandomValues(new Uint8Array(24));
-  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const b = crypto.getRandomValues(new Uint8Array(10));
+  return Array.from(b, (x) => A[x % A.length]).join("");
 }
 
 // Days until due date, computed in Fortaleza time (UTC-3).
