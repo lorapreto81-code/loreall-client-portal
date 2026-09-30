@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { createPixSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor, checkRateLimit } from "../_shared/security.ts";
 import { evaluateDiscount } from "../_shared/discount.ts";
+import { getCustomerSession, isRenewalSession } from "../_shared/auth.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
@@ -130,6 +131,11 @@ Deno.serve(async (req) => {
     }
     
     const body = parse.data;
+
+    // Only the logged-in customer (or their renewal link) may create a PIX for their own id.
+    const session = await getCustomerSession(req);
+    if (!isRenewalSession(session)) return json({ error: "Sessão expirada. Entre novamente." }, 401, {}, req);
+    if (Number(body.customer_id) !== Number(session!.sub)) return json({ error: "forbidden" }, 403, {}, req);
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
