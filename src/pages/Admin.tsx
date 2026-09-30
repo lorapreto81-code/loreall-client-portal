@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { resellerAdmin } from "@/lib/resellerAdmin";
-import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat, Inbox, ShieldCheck, History, RefreshCcw } from "lucide-react";
+import { Megaphone, Save, Lock, Link2, ListChecks, BarChart3, Settings, Users, LineChart, Gift, ArrowLeftRight, Database, Repeat, Inbox, ShieldCheck, History, RefreshCcw, TicketPercent } from "lucide-react";
 import ResellerLinksTab from "@/components/admin/ResellerLinksTab";
 import ResellerPurchasesTab from "@/components/admin/ResellerPurchasesTab";
 import ResellerDashboardTab from "@/components/admin/ResellerDashboardTab";
@@ -16,6 +16,7 @@ import SyncpaySubscriptionsTab from "@/components/admin/SyncpaySubscriptionsTab"
 import SyncpayActiveSubscribersTab from "@/components/admin/SyncpayActiveSubscribersTab";
 import OtpAuditTab from "@/components/admin/OtpAuditTab";
 import PaymentAuditTab from "@/components/admin/PaymentAuditTab";
+import DiscountCodesTab from "@/components/admin/DiscountCodesTab";
 
 interface Notice {
   ativo: boolean;
@@ -24,7 +25,7 @@ interface Notice {
 }
 
 type TabGroup = "revendedores" | "clientes" | "indicacao" | "assinaturas" | "auditoria" | "config";
-type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-signups" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config" | "revendedores-dashboard" | "clientes-dashboard" | "clientes-topgestor";
+type Tab = "avisos" | "links" | "recargas" | "clientes" | "assinaturas" | "assinaturas-ativas" | "indicacao-signups" | "indicacao-stats" | "indicacao-config" | "auditoria-acesso" | "auditoria-pagamento" | "pix-provider" | "config" | "revendedores-dashboard" | "clientes-dashboard" | "clientes-topgestor" | "cupons";
 
 const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: { id: Tab; label: string; icon: typeof Megaphone }[] }[] = [
   {
@@ -46,6 +47,7 @@ const GROUPED_TABS: { group: TabGroup; label: string; icon: typeof Users; tabs: 
       { id: "assinaturas-ativas", label: "Assinantes Ativos", icon: ShieldCheck },
       { id: "clientes-dashboard", label: "Faturamento", icon: BarChart3 },
       { id: "clientes-topgestor", label: "Clientes TopGestor", icon: Database },
+      { id: "cupons", label: "Cupons de Desconto", icon: TicketPercent },
     ]
   },
   {
@@ -334,6 +336,7 @@ const Admin = () => {
           {tab === "revendedores-dashboard" && <ResellerDashboardTab />}
           {tab === "clientes-dashboard" && <CustomersDashboardTab />}
           {tab === "clientes-topgestor" && <TopGestorCustomersTab />}
+          {tab === "cupons" && <DiscountCodesTab />}
           {tab === "auditoria-acesso" && <OtpAuditTab />}
           {tab === "auditoria-pagamento" && <PaymentAuditTab />}
           {tab === "pix-provider" && <PixProviderTab />}
