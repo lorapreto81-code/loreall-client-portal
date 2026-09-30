@@ -7,6 +7,8 @@ const CookieConsent = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Never show on the renewal checkout — nothing may cover the payment CTA.
+    if (window.location.pathname.startsWith('/renovar')) return;
     const consent = localStorage.getItem('lgpd_consent');
     if (!consent) {
       const timer = setTimeout(() => setIsVisible(true), 1500);
