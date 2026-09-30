@@ -86,7 +86,8 @@ const Renovar = () => {
 
       {state === "ready" && customer && (() => {
         const planValue = Number(customer.plan?.value) || 0;
-        const telas = Number(customer.telas) || 1;
+        const telasFromName = String(customer.plan?.name ?? "").match(/(\d+)\s*telas?/i);
+        const telas = (telasFromName ? Number(telasFromName[1]) : 0) || Number(customer.telas) || 1;
         const last4 = customer.whatsapp ? String(customer.whatsapp).replace(/\D/g, "").slice(-4) : "";
         const firstName = customer.name.split(" ")[0];
         const due = parseDate(customer.data_de_vencimento);
@@ -183,10 +184,10 @@ const Info = ({ icon: Icon, label, value }: { icon: typeof User; label: string; 
 );
 
 const Trust = ({ icon: Icon, title, text }: { icon: typeof User; title: string; text: string }) => (
-  <div className="card-elevated p-3">
-    <Icon className="h-4 w-4 text-primary mx-auto" />
-    <p className="text-[11px] font-bold text-foreground mt-1 leading-tight">{title}</p>
-    <p className="text-[10px] text-muted-foreground leading-tight">{text}</p>
+  <div className="card-elevated px-2 py-3 flex flex-col items-center justify-start min-w-0">
+    <Icon className="h-4 w-4 text-primary" />
+    <p className="text-[11px] font-bold text-foreground mt-1.5 leading-snug break-words">{title}</p>
+    <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 break-words">{text}</p>
   </div>
 );
 
