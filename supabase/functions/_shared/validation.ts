@@ -25,6 +25,7 @@ export const otpRequestSchema = z.object({
   phone: z.string().min(1).max(120),
   context: z.enum(["customer", "reseller"]).optional().default("customer"),
   slug: z.string().optional(), // required if context=reseller
+  channel: z.enum(["whatsapp", "email"]).optional(),
 });
 
 export const otpVerifySchema = z.object({

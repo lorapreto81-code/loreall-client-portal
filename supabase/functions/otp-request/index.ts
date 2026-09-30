@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { tgSearchCustomers } from "../_shared/tg.ts";
 import { sendWhatsappText } from "../_shared/uazapi.ts";
+import { sendOtpEmail, maskEmail } from "./email.ts";
 import { generateOtpCode, hashOtp, onlyDigits, phoneMatches, classifyIdentifier, customerMatchesIdentifier } from "../_shared/otp.ts";
 import { otpRequestSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor } from "../_shared/security.ts";
@@ -27,6 +28,7 @@ Deno.serve(async (req) => {
     const input = parse.data.phone.trim();
     const context = parse.data.context || "customer";
     const slug = parse.data.slug;
+    const requestedChannel = parse.data.channel;
     
     const { isEmail, digits, isTextual, key } = classifyIdentifier(input);
     const isFictitiousEmail = isTextual && !isEmail;
@@ -93,6 +95,7 @@ Deno.serve(async (req) => {
     let targetPhoneDigits = "";
     let firstName = "";
     let customerId: string | number = 0;
+    let targetEmail = "";
 
     if (context === "reseller") {
 
@@ -210,7 +213,27 @@ Deno.serve(async (req) => {
       targetPhoneDigits = onlyDigits(targetPhoneRaw);
       firstName = String(matches[0].name ?? "").trim().split(/\s+/)[0] || "";
       customerId = Number(matches[0].id);
+      const em = String(matches[0].email || "").trim().toLowerCase();
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) targetEmail = em;
     }
+
+    // Channel selection (customer area): WhatsApp and/or e-mail.
+    const hasPhone = targetPhoneDigits.length >= 10;
+    const hasEmail = !!targetEmail;
+    if (context === "customer" && !requestedChannel && hasPhone && hasEmail) {
+      return json({
+        choose: true,
+        options: { whatsapp: `****-${targetPhoneDigits.slice(-4)}`, email: maskEmail(targetEmail) },
+        preferred: isEmail ? "email" : "whatsapp",
+        customer_name: firstName,
+      }, 200, {}, req);
+    }
+    let channel: "whatsapp" | "email" =
+      requestedChannel === "email" && hasEmail ? "email"
+      : requestedChannel === "whatsapp" && hasPhone ? "whatsapp"
+      : !hasPhone && hasEmail ? "email"
+      : "whatsapp";
+    if (context !== "customer") channel = "whatsapp";
 
     const targetHint = targetPhoneDigits.length >= 4 
       ? `****-${targetPhoneDigits.slice(-4)}` 
@@ -242,11 +265,23 @@ Deno.serve(async (req) => {
       `🚀 *${code}*\n\n` +
       `⏱️ Válido por ${CODE_TTL_MINUTES} minutos.`;
 
+    if (channel === "email") {
+      const ok = await sendOtpEmail(targetEmail, code, firstName, CODE_TTL_MINUTES);
+      if (!ok) return json({ error: "Não foi possível enviar o código por e-mail agora." }, 502, {}, req);
+      return json({
+        ok: true, channel: "email",
+        expires_in: CODE_TTL_MINUTES * 60,
+        message: "Código enviado por e-mail.",
+        target_hint: maskEmail(targetEmail),
+        customer_name: firstName,
+      }, 200, {}, req);
+    }
+
     const sent = await sendWhatsappText(targetPhoneDigits || digits, text);
     if (!sent) return json({ error: "Não foi possível enviar o código agora." }, 502, {}, req);
 
     return json({
-      ok: true,
+      ok: true, channel: "whatsapp",
       expires_in: CODE_TTL_MINUTES * 60,
       message: "Código enviado no WhatsApp.",
       target_hint: targetHint,
