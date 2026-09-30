@@ -334,7 +334,7 @@ export default function Revendedor() {
                 customerName={customerName}
                 onPhoneChange={setPhone}
                 onCodeChange={setCode}
-                onSendCode={sendCode}
+                onSendCode={() => sendCode()}
                 onBackToPhone={() => { setStep("phone"); setCode(""); }}
                 onSubmit={handleSubmit}
               />

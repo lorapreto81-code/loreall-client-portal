@@ -12,15 +12,19 @@ export interface OtpResponse {
   message: string;
   target_hint?: string;
   customer_name?: string;
+  channel?: "whatsapp" | "email";
+  choose?: boolean;
+  options?: { whatsapp: string; email: string };
+  preferred?: "whatsapp" | "email";
 }
 
 export class AuthService extends BaseApi {
-  static async requestOtp(identifier: string, context: "customer" | "reseller" = "customer", slug?: string): Promise<OtpResponse> {
+  static async requestOtp(identifier: string, context: "customer" | "reseller" = "customer", slug?: string, channel?: "whatsapp" | "email"): Promise<OtpResponse> {
     const sanitized = identifier.trim().slice(0, 100);
     return this.request<OtpResponse>("otp-request", {
       method: "POST",
       headers: this.getHeaders(),
-      body: JSON.stringify({ phone: sanitized, context, slug }),
+      body: JSON.stringify({ phone: sanitized, context, slug, channel }),
     });
   }
 

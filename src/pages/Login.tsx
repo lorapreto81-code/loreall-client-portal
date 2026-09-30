@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, Mail, MessageCircle, Loader2 } from "lucide-react";
 import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
 import { AccountSelection } from "@/features/auth/components/AccountSelection";
 import { LoginForm } from "@/features/auth/components/LoginForm";
@@ -22,6 +22,9 @@ const Login = () => {
     setMatches,
     targetHint,
     customerName,
+    channel,
+    channelOptions,
+    setChannelOptions,
     pickAccount,
     sendCode,
     handleSubmit
@@ -59,6 +62,14 @@ const Login = () => {
               onPick={pickAccount} 
               onBack={() => setMatches([])} 
             />
+          ) : channelOptions ? (
+            <ChannelChoice
+              name={customerName}
+              options={channelOptions}
+              loading={loading}
+              onPick={(c) => sendCode(c)}
+              onBack={() => setChannelOptions(null)}
+            />
           ) : (
             <LoginForm 
               step={step}
@@ -69,9 +80,10 @@ const Login = () => {
               refCode={refCode}
               targetHint={targetHint}
               customerName={customerName}
+              channel={channel}
               onPhoneChange={setPhone}
               onCodeChange={setCode}
-              onSendCode={sendCode}
+              onSendCode={() => sendCode()}
               onBackToPhone={() => { setStep("phone"); setCode(""); }}
               onSubmit={handleSubmit}
             />
@@ -89,6 +101,41 @@ const Login = () => {
           <span>© Loreall Play TV — Entretenimento Premium Sem Limites.</span>
         </p>
       </div>
+    </div>
+  );
+};
+
+const ChannelChoice = ({ name, options, loading, onPick, onBack }: {
+  name: string | null;
+  options: { whatsapp: string; email: string; preferred: "whatsapp" | "email" };
+  loading: boolean;
+  onPick: (c: "whatsapp" | "email") => void;
+  onBack: () => void;
+}) => {
+  const items = [
+    { id: "whatsapp" as const, icon: MessageCircle, title: "WhatsApp", hint: `Final ${options.whatsapp.replace(/\D/g, "")}`, color: "text-emerald-500 bg-emerald-500/10" },
+    { id: "email" as const, icon: Mail, title: "E-mail", hint: options.email, color: "text-accent bg-accent/10" },
+  ].sort((a) => (a.id === options.preferred ? -1 : 1));
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-medium text-foreground mb-1">{name ? `Olá, ${name}!` : "Quase lá!"}</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">Onde você quer receber seu código de acesso?</p>
+      </div>
+      <div className="space-y-2">
+        {items.map(({ id, icon: Icon, title, hint, color }) => (
+          <button key={id} type="button" disabled={loading} onClick={() => onPick(id)}
+            className="w-full flex items-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3.5 text-left transition-all duration-200 hover:border-accent hover:ring-4 hover:ring-accent/10 disabled:opacity-60">
+            <span className={`h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${color}`}><Icon className="h-5 w-5" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold text-foreground">{title}</span>
+              <span className="block text-[11px] text-muted-foreground truncate">{hint}</span>
+            </span>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          </button>
+        ))}
+      </div>
+      <button type="button" onClick={onBack} className="text-[11px] text-muted-foreground hover:text-foreground">← Voltar</button>
     </div>
   );
 };
