@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
 
   try {
     const session = await getCustomerSession(req);
-    const { subscription_id, customer_id } = await req.json().catch(() => ({}));
+    const { subscription_id, customer_id, syncpay_plan_id } = await req.json().catch(() => ({}));
 
 
     const supabase = createClient(
@@ -56,10 +56,12 @@ Deno.serve(async (req) => {
         return json({ error: "Forbidden" }, 403, {}, req);
       }
 
-      const { data: latest } = await supabase
+      let q = supabase
         .from("syncpay_subscriptions")
         .select("syncpay_subscription_id, syncpay_plan_id")
-        .eq("customer_id", customer_id)
+        .eq("customer_id", customer_id);
+      if (typeof syncpay_plan_id === "string" && syncpay_plan_id) q = q.eq("syncpay_plan_id", syncpay_plan_id);
+      const { data: latest } = await q
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
