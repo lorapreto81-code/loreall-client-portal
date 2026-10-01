@@ -52,7 +52,7 @@ const Renovar = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-4 pt-6 pb-10 md:pt-12 bg-[radial-gradient(40rem_22rem_at_20%_0%,hsl(var(--accent)/0.10),transparent_70%),radial-gradient(40rem_24rem_at_85%_10%,hsl(var(--secondary)/0.10),transparent_70%),radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]">
-      <header className="w-full max-w-[460px] flex items-center justify-between mb-6">
+      <header className="w-full max-w-[460px] lg:max-w-5xl flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <img src="/brand-logo.png" alt="Loreall Play" className="h-9 w-9 object-contain" />
           <div className="leading-tight">
@@ -100,8 +100,9 @@ const Renovar = () => {
           : days <= 3 ? { label: `Vence em ${days} ${days === 1 ? "dia" : "dias"}`, cls: "bg-amber-500/15 text-amber-500" }
           : { label: `Ativo · ${days} dias restantes`, cls: "bg-emerald-500/15 text-emerald-500" };
         return (
-          <main className="relative w-full max-w-[460px] space-y-4 animate-in fade-in duration-200">
-            <div className="text-center">
+          <main className="relative w-full max-w-[460px] lg:max-w-5xl space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[1fr_380px] lg:gap-6 lg:items-start animate-in fade-in duration-200">
+            <div className="space-y-4 min-w-0">
+            <div className="text-center lg:text-left">
               <h1 className="text-2xl md:text-3xl font-black text-foreground leading-tight">Olá, {firstName} 👋</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {expired ? "Seu acesso venceu. Renove agora e volte a assistir na hora." : "Confira seus dados e renove em menos de 1 minuto."}
@@ -139,8 +140,23 @@ const Renovar = () => {
                 </p>
               )}
             </section>
+            </div>
 
+            <aside className="space-y-4 lg:sticky lg:top-6">
             <section className="card-elevated p-4 sm:p-5 space-y-3">
+              <div className="hidden lg:block pb-3 border-b border-border">
+                <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-muted-foreground">Resumo do pedido</p>
+                <div className="flex items-start justify-between gap-3 mt-2">
+                  <p className="text-sm font-semibold text-foreground">{getDisplayPlanLabel(customer.plan?.name)}</p>
+                  {planValue > 0 && <p className="text-sm font-bold tabular-nums">{formatCurrency(planValue)}</p>}
+                </div>
+                {planValue > 0 && (
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="text-sm text-muted-foreground">Total</p>
+                    <p className="text-2xl font-black tabular-nums bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{formatCurrency(planValue)}</p>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-3 rounded-xl border-2 border-accent bg-accent/5 px-4 py-3.5 ring-4 ring-accent/10">
                 <span className="h-10 w-10 shrink-0 rounded-lg bg-accent/15 flex items-center justify-center"><QrCode className="h-5 w-5 text-accent" /></span>
                 <div className="min-w-0 flex-1">
@@ -174,6 +190,7 @@ const Renovar = () => {
               </a>
               <p className="text-center text-[10px] text-muted-foreground/50">Loreall Play · Link pessoal de renovação — não compartilhe.</p>
             </div>
+            </aside>
           </main>
         );
       })()}
