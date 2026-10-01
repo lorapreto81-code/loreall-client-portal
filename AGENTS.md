@@ -2,3 +2,5 @@
 - E-mail reminders: `email-reminders` edge function (daily pg_cron 12:00 UTC) sends D-3/D-1/D0/D+1 via Resend gateway from lembretes.loreallplay.com, deduped by `email_reminder_log`; why: idempotent, no double sends.
 - Discount codes: `discount_codes`/`discount_redemptions`, validated in `_shared/discount.ts` and re-validated in `create-pix` (never trust client amount); uses count only PAID payments; why: abandoned PIX never burns a code.
 - Renewal link (`scope: checkout`) hides PIX Automático; why: recurring flow not ready for direct links yet.
+- First-renewal discount: `_shared/firstRenewal.ts` (config in `system_config`), applied in `create-pix` only for full sessions, never stacked with coupons (largest wins), consumed when a payment with `metadata.first_renewal=true` is paid; why: server-authoritative one-time benefit.
+- Client area highlights: `useCustomerJourney` picks ONE primary highlight (expired > expiring > profile > promo); why: avoid competing alerts.
