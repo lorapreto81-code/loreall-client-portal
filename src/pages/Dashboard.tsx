@@ -45,29 +45,26 @@ const Dashboard = () => {
     setMenuOpen(false);
   };
 
-  const hasEmail = !!String((customer as any)?.email || "").trim();
-  const emailBannerKey = customer ? `loreall_email_banner_dismissed_${customer.id}` : "";
-  const [emailBannerDismissed, setEmailBannerDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined" || !emailBannerKey) return false;
-    return localStorage.getItem(emailBannerKey) === "1";
+  const firstRenewal = useFirstRenewal();
+  const promoPercent = firstRenewal.data?.eligible ? firstRenewal.data.percent : 0;
+  const { step, profileSnoozed, snoozeProfile } = useCustomerJourney({
+    customerId: customer?.id,
+    days,
+    profileIncomplete,
+    promoEligible: promoPercent > 0,
   });
 
-  const showEmailBanner = !!customer && !hasEmail && !emailBannerDismissed && !profileIncomplete;
-
-  const dismissEmailBanner = () => {
-    if (emailBannerKey) localStorage.setItem(emailBannerKey, "1");
-    setEmailBannerDismissed(true);
-  };
-
+  // No máximo 1 abertura automática por visita, e só quando a etapa atual é "dados".
   useEffect(() => {
-    if (!customer || !profileIncomplete) return;
+    if (!customer || step !== "profile" || profileSnoozed) return;
     const key = `loreall_profile_prompted_${customer.id}`;
     if (sessionStorage.getItem(key)) return;
     const expirationType = shouldShow(days);
-    if (expirationType && canShow(expirationType)) return; // deixa o pop-up de vencimento aparecer sozinho primeiro
+    if (expirationType && canShow(expirationType)) return;
     sessionStorage.setItem(key, "1");
-    setTimeout(() => openAccount("dados"), 600);
-  }, [profileIncomplete, customer, days]);
+    const t = setTimeout(() => openAccount("dados"), 600);
+    return () => clearTimeout(t);
+  }, [step, customer, days, profileSnoozed]);
 
   if (!customer) return null;
 
