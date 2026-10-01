@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { COUNTRIES, formatNational, splitPhone, toE164Digits } from "@/utils/countries";
 
 interface LoginFormProps {
-  step: "phone" | "code";
+  step: "phone" | "code" | "password";
+  password?: string;
+  onPasswordChange?: (val: string) => void;
+  onUseCode?: () => void;
   phone: string;
   code: string;
   loading: boolean;
@@ -30,6 +33,9 @@ export const LoginForm = ({
   targetHint,
   customerName,
   channel = "whatsapp",
+  password = "",
+  onPasswordChange,
+  onUseCode,
   onPhoneChange,
   onCodeChange,
   onSendCode,
@@ -59,6 +65,13 @@ export const LoginForm = ({
               Informe seu <span className="text-foreground font-semibold">WhatsApp</span>, <span className="text-foreground font-semibold">E-mail</span> ou <span className="text-foreground font-semibold">Usuário</span>. 
               Você receberá um <span className="text-primary font-bold">Código de Acesso Seguro</span> instantaneamente.
             </p>
+          </>
+        ) : step === "password" ? (
+          <>
+            <p className="text-sm font-medium text-foreground mb-1">
+              {customerName ? `Olá, ${customerName}!` : "Bem-vindo de volta!"}
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">Digite a senha da sua área do cliente para entrar.</p>
           </>
         ) : (
           <>
@@ -153,6 +166,29 @@ export const LoginForm = ({
             )}
           </div>
 
+        ) : step === "password" ? (
+          <>
+            <div className="relative">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => onPasswordChange?.(e.target.value.slice(0, 128))}
+                className="w-full h-[52px] pl-11 pr-3 rounded-xl border border-border bg-background/70 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 text-sm"
+                placeholder="Sua senha"
+                autoComplete="current-password"
+                autoFocus
+              />
+              <Lock className="h-[18px] w-[18px] text-primary/80 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <button type="button" onClick={onBackToPhone} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-3 w-3" /> Voltar
+              </button>
+              <button type="button" disabled={loading} onClick={onUseCode} className="text-accent font-semibold hover:underline disabled:opacity-50">
+                Esqueci a senha / receber código
+              </button>
+            </div>
+          </>
         ) : (
           <>
             <div className="relative">
@@ -199,6 +235,11 @@ export const LoginForm = ({
           <>
               <MessageCircle className="h-5 w-5" />
               Receber código de acesso
+            </>
+          ) : step === "password" ? (
+            <>
+              <Lock className="h-5 w-5" />
+              Entrar
             </>
           ) : (
             <>

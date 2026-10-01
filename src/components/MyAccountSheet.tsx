@@ -1,3 +1,4 @@
+import { PasswordSettings } from "@/components/PasswordSettings";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -423,6 +424,8 @@ export default function MyAccountSheet({ open, onClose, customerId, initialTab =
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Salvar Alterações"}
                 </button>
+
+                <PasswordSettings />
               </div>
 
               {/* Seção: Servidor / App Info */}

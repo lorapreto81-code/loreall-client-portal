@@ -189,6 +189,15 @@ Deno.serve(async (req) => {
       if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) targetEmail = em;
     }
 
+    // Customers with a password set: offer password as the main option first.
+    if (context === "customer" && !requestedChannel && !parse.data.prefer_code) {
+      const ids = matches.map((c) => Number(c.id)).filter(Boolean);
+      if (ids.length) {
+        const { data: pw } = await supabase.from("customer_passwords").select("customer_id").in("customer_id", ids).limit(1);
+        if (pw && pw.length) return json({ password: true, customer_name: firstName }, 200, {}, req);
+      }
+    }
+
     // Channel selection (customer area): WhatsApp and/or e-mail.
     const hasPhone = targetPhoneDigits.length >= 10;
     const hasEmail = !!targetEmail;
