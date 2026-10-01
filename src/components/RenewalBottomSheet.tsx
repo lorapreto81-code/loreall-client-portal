@@ -253,22 +253,16 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
     try {
       // 1. Verificar se o cliente já tem uma assinatura deste plano ativa no nosso banco
-      const { data: existingSub, error } = await supabase
-        .from("syncpay_subscriptions")
-        .select("*")
-        .eq("customer_id", customer.id)
-        .eq("syncpay_plan_id", sp.syncpay_plan_id)
-        .maybeSingle();
+      // Lookup runs server-side (table is service-role only).
+      const { data: statusData, error: statusError } = await supabase.functions.invoke("syncpay-subscription-status", {
+        body: { customer_id: customer.id, syncpay_plan_id: sp.syncpay_plan_id },
+        headers: {
+          "x-customer-token": useAuthStore.getState().token || "",
+        }
+      });
+      const existingSub = statusData?.subscription_id ? { syncpay_subscription_id: statusData.subscription_id as string } : null;
 
       if (existingSub) {
-        // Se existe, consulta o status real na SyncPay
-        const { data: statusData, error: statusError } = await supabase.functions.invoke("syncpay-subscription-status", {
-          body: { subscription_id: existingSub.syncpay_subscription_id },
-          headers: {
-            "x-customer-token": useAuthStore.getState().token || "",
-          }
-        });
-
         if (!statusError && statusData) {
           const res = statusData as { status: string; mandate_status?: string; raw?: any };
           const sub = res.raw || {};
@@ -345,7 +339,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           await updateCustomer(customer.id, patch);
           try {
             const cust = await getCustomer(customer.id);
-            login((cust.data || cust) as Customer);
+            login((cust.data || cust) as Customer, undefined, useAuthStore.getState().scope);
           } catch { /* ignore refresh error */ }
         }
       } catch (e) {
@@ -440,7 +434,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           localStorage.removeItem("loreall_pending_ref");
           try {
             const cust = await getCustomer(customer.id);
-            login((cust.data || cust) as Customer);
+            login((cust.data || cust) as Customer, undefined, useAuthStore.getState().scope);
           } catch (e) {
             console.error("refresh customer failed", e);
           }
@@ -490,7 +484,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           queryClient.invalidateQueries({ queryKey: ["active-subscription", customer?.id] });
           try {
             const cust = await getCustomer(customer!.id);
-            login((cust.data || cust) as Customer);
+            login((cust.data || cust) as Customer, undefined, useAuthStore.getState().scope);
           } catch (e) {
             console.error("refresh customer failed", e);
           }
@@ -568,7 +562,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
         data.data?.invoice?.checkout_url;
       if (url) {
         const cust = await getCustomer(customer.id);
-        login((cust.data || cust) as Customer);
+        login((cust.data || cust) as Customer, undefined, useAuthStore.getState().scope);
         queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
         setPaymentUrl(url);
         toast.success("Fatura gerada com sucesso!");
