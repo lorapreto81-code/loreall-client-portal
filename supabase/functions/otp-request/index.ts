@@ -37,57 +37,37 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Rate limit per identifier
-    const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
-    const { count: identifierCount } = await supabase
-      .from("otp_codes")
-      .select("id", { count: "exact", head: true })
-      .eq("phone", key)
-      .gte("created_at", since);
+    // Start the TopGestor lookup right away (customer mode) so it runs in
+    // parallel with the rate-limit checks instead of after them.
+    const tgSearchPromise: Promise<any[]> | null = context === "customer"
+      ? tgSearchCustomers(key).catch((e) => { console.error("[otp-request] tg search", e); return []; })
+      : null;
 
-    if ((identifierCount ?? 0) >= MAX_REQUESTS_PER_IDENTIFIER) {
+    const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString();
+    const cooldownSince = new Date(Date.now() - 45_000).toISOString();
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+
+    const [idRes, recentRes, ipRes, globalRes] = await Promise.all([
+      supabase.from("otp_codes").select("id", { count: "exact", head: true }).eq("phone", key).gte("created_at", since),
+      supabase.from("otp_codes").select("id").eq("phone", key).gte("created_at", cooldownSince).limit(1).maybeSingle(),
+      ip
+        ? supabase.from("otp_codes").select("id", { count: "exact", head: true }).eq("ip_address", ip).gte("created_at", since)
+        : Promise.resolve({ count: 0 } as { count: number | null }),
+      supabase.from("otp_codes").select("id", { count: "exact", head: true }).gte("created_at", oneMinuteAgo),
+    ]);
+
+    if ((idRes.count ?? 0) >= MAX_REQUESTS_PER_IDENTIFIER) {
       return json({ error: "Muitas tentativas para este identificador. Aguarde alguns minutos." }, 429, {}, req);
     }
-
-    // Intervalo mínimo entre pedidos consecutivos — impede rajadas mesmo dentro do 
-    // limite total da janela de 15 minutos.
-    const cooldownSince = new Date(Date.now() - 45_000).toISOString();
-    const { data: recentRequest } = await supabase
-      .from("otp_codes")
-      .select("id")
-      .eq("phone", key)
-      .gte("created_at", cooldownSince)
-      .limit(1)
-      .maybeSingle();
-
-    if (recentRequest) {
+    if (recentRes.data) {
       return json({ error: "Aguarde alguns segundos antes de solicitar um novo código." }, 429, {}, req);
     }
-
-    // Rate limit per IP
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
-    if (ip) {
-      const { count: ipCount } = await supabase
-        .from("otp_codes")
-        .select("id", { count: "exact", head: true })
-        .eq("ip_address", ip)
-        .gte("created_at", since);
-      
-      if ((ipCount ?? 0) >= MAX_REQUESTS_PER_IP) {
-        return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429, {}, req);
-      }
+    if ((ipRes.count ?? 0) >= MAX_REQUESTS_PER_IP) {
+      return json({ error: "Limite de tentativas excedido para sua rede. Aguarde." }, 429, {}, req);
     }
-
-    // Freio geral: limite de envios do sistema inteiro por minuto, independente de 
-    // quem está pedindo — protege contra rajadas que ameaçam o número de WhatsApp.
-    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
-    const { count: globalMinuteCount } = await supabase
-      .from("otp_codes")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", oneMinuteAgo);
-
-    if ((globalMinuteCount ?? 0) >= MAX_GLOBAL_PER_MINUTE) {
-      console.error("[SECURITY] otp-request: limite global por minuto atingido", globalMinuteCount);
+    if ((globalRes.count ?? 0) >= MAX_GLOBAL_PER_MINUTE) {
+      console.error("[SECURITY] otp-request: limite global por minuto atingido", globalRes.count);
       return json({ error: "Sistema com alta demanda no momento. Tente novamente em instantes." }, 429, {}, req);
     }
 
@@ -183,15 +163,7 @@ Deno.serve(async (req) => {
       // Customer mode (TopGestor)
       console.log(`[otp-request] Customer mode. Searching for: ${key}`);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-      
-      let customers = [];
-      try {
-        customers = await tgSearchCustomers(key);
-      } finally {
-        clearTimeout(timeoutId);
-      }
+      let customers = (await tgSearchPromise) ?? [];
 
       if (isTextual && customers.length === 0) {
         const localPart = key.split('@')[0];

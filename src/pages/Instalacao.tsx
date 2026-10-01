@@ -6,14 +6,14 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
-import imgSmartTv from "@/assets/dev-smarttv.png.asset.json";
-import imgAndroidTv from "@/assets/dev-androidtv.png.asset.json";
-import imgTvBox from "@/assets/dev-tvbox.png.asset.json";
-import imgFireStick from "@/assets/dev-firestick.png.asset.json";
-import imgCelular from "@/assets/dev-celular.png.asset.json";
-import imgComputador from "@/assets/dev-computador.png.asset.json";
-import imgWplayScreenshot from "@/assets/wplay-screenshot.png.asset.json";
-import imgWplayProScreenshot from "@/assets/wplay-pro-screenshot.png.asset.json";
+import imgSmartTv from "@/assets/dev-smarttv.webp.asset.json";
+import imgAndroidTv from "@/assets/dev-androidtv.webp.asset.json";
+import imgTvBox from "@/assets/dev-tvbox.webp.asset.json";
+import imgFireStick from "@/assets/dev-firestick.webp.asset.json";
+import imgCelular from "@/assets/dev-celular.webp.asset.json";
+import imgComputador from "@/assets/dev-computador.webp.asset.json";
+import imgWplayScreenshot from "@/assets/wplay-screenshot.webp.asset.json";
+import imgWplayProScreenshot from "@/assets/wplay-pro-screenshot.webp.asset.json";
 import iconDownloader from "@/assets/downloader-icon.png.asset.json";
 
 const logo = "/logo.png";

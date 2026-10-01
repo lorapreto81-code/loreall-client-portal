@@ -1,6 +1,6 @@
 import { AlertTriangle, ChevronRight, Clock, Lock } from "lucide-react";
 import type { JourneyStep } from "../hooks/useCustomerJourney";
-import promoAsset from "@/assets/promo-15.png.asset.json";
+import promoAsset from "@/assets/promo-15.webp.asset.json";
 
 interface BannersProps {
   step: JourneyStep;

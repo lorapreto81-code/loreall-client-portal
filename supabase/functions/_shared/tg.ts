@@ -97,37 +97,29 @@ export async function tgSearchCustomers(query: string): Promise<Record<string, u
   const digits = query.replace(/\D/g, "");
   const isPhone = digits.length >= 8;
 
-  // PRIORITY 1: Search exactly as provided.
-  const initialRes = await fetch(`${TG_API_BASE}/customers/search/${encodeURIComponent(query)}`, { headers: tgHeaders() });
-  const initialList = initialRes.ok ? normalizeList(await initialRes.json().catch(() => null)) : [];
-  
-  if (initialList.length > 0) return initialList;
+  const fetchList = async (q: string) => {
+    try {
+      const r = await fetch(`${TG_API_BASE}/customers/search/${encodeURIComponent(q)}`, {
+        headers: tgHeaders(), signal: AbortSignal.timeout(8000),
+      });
+      return r.ok ? normalizeList(await r.json().catch(() => null)) : [];
+    } catch (err) {
+      console.error(`[tgSearchCustomers] search for ${q} failed:`, err);
+      return [];
+    }
+  };
 
-  if (!isPhone) return [];
+  if (!isPhone) return fetchList(query);
 
-  // PRIORITY 2: Only if exact search fails, try variants.
+  // Phones: query the exact value and the tolerant variants in ONE parallel
+  // round-trip (previously exact first, then variants = 2 sequential waits).
+  const variants = Array.from(new Set([query, ...buildPhoneVariants(digits)]));
 
-  // OPTIMIZATION: Parallelize search across variants but only use variants that are actually likely to match.
-  // We limit the number of variants to avoid hitting TopGestor rate limits too hard.
-  const variants = buildPhoneVariants(digits);
-  
   // Cache to store unique results by ID to avoid duplicates in the merged list.
   const seen = new Set<string>();
   const merged: Record<string, unknown>[] = [];
 
-  const results = await Promise.all(
-    variants.map(async (v) => {
-      try {
-        const r = await fetch(`${TG_API_BASE}/customers/search/${encodeURIComponent(v)}`, { headers: tgHeaders() });
-        if (!r.ok) return [];
-        const list = normalizeList(await r.json().catch(() => null));
-        return list;
-      } catch (err) {
-        console.error(`[tgSearchCustomers] search for variant ${v} failed:`, err);
-        return [];
-      }
-    })
-  );
+  const results = await Promise.all(variants.map(fetchList));
 
   for (const list of results) {
     for (const c of list) {
