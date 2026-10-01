@@ -131,6 +131,36 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_passwords: {
+        Row: {
+          created_at: string
+          customer_id: number
+          failed_attempts: number
+          locked_until: string | null
+          password_hash: string
+          salt: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: number
+          failed_attempts?: number
+          locked_until?: string | null
+          password_hash: string
+          salt: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: number
+          failed_attempts?: number
+          locked_until?: string | null
+          password_hash?: string
+          salt?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       discount_codes: {
         Row: {
           code: string
