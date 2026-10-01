@@ -20,8 +20,6 @@ export function authHeaders(): Record<string, string> {
   };
 }
 
-/** Verifies the customer's credentials server-side and returns signed sessions. */
-export const customerLogin = (identifier: string, password: string) => AuthService.customerLogin(identifier, password);
 
 /** Sends a 6-digit login code to the customer's WhatsApp. */
 export const requestOtp = (phone: string, context?: "customer" | "reseller", slug?: string, channel?: "whatsapp" | "email", preferCode?: boolean) => AuthService.requestOtp(phone, context, slug, channel, preferCode);
