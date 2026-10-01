@@ -15,6 +15,8 @@ const Login = () => {
     setCode,
     step,
     setStep,
+    password,
+    setPassword,
     resendIn,
     loading,
     refCode,
@@ -81,10 +83,13 @@ const Login = () => {
               targetHint={targetHint}
               customerName={customerName}
               channel={channel}
+              password={password}
+              onPasswordChange={setPassword}
+              onUseCode={() => sendCode(undefined, true)}
               onPhoneChange={setPhone}
               onCodeChange={setCode}
               onSendCode={() => sendCode()}
-              onBackToPhone={() => { setStep("phone"); setCode(""); }}
+              onBackToPhone={() => { setStep("phone"); setCode(""); setPassword(""); }}
               onSubmit={handleSubmit}
             />
           )}
