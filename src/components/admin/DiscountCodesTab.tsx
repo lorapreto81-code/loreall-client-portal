@@ -82,6 +82,7 @@ export default function DiscountCodesTab() {
 
   return (
     <div className="space-y-6">
+      <FirstRenewalCard input={input} />
       <div className="card-elevated p-5 space-y-4">
         <div className="flex items-center gap-2">
           <TicketPercent className="h-5 w-5 text-primary" />
