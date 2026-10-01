@@ -29,7 +29,31 @@ Deno.serve(async (req) => {
       }, 200, {}, req);
     }
 
+    if (action === "first-renewal") {
+      const session = await getCustomerSession(req);
+      if (!isCustomerSession(session)) return json({ eligible: false, percent: 0 }, 200, {}, req);
+      const r = await isFirstRenewalEligible(supabase, Number(session!.sub));
+      return json(r, 200, {}, req);
+    }
+
     if (!isAdminRequest(req)) return json({ error: "unauthorized" }, 401, {}, req);
+
+    if (action === "get-first-renewal") {
+      const cfg = await getFirstRenewalConfig(supabase);
+      const { count } = await supabase.from("payments").select("id", { count: "exact", head: true })
+        .eq("fastdepix_status", "paid").contains("metadata", { first_renewal: true });
+      return json({ ...cfg, uses: count || 0 }, 200, {}, req);
+    }
+    if (action === "set-first-renewal") {
+      const percent = Number(body.percent);
+      if (!Number.isInteger(percent) || percent < 1 || percent > 90) return json({ error: "Porcentagem inválida." }, 400, {}, req);
+      const now = new Date().toISOString();
+      await supabase.from("system_config").upsert([
+        { config_key: "first_renewal_discount_enabled", config_value: body.enabled ? "true" : "false", updated_at: now },
+        { config_key: "first_renewal_discount_percent", config_value: String(percent), updated_at: now },
+      ], { onConflict: "config_key" });
+      return json({ ok: true }, 200, {}, req);
+    }
 
     if (action === "list") {
       const { data: codes } = await supabase.from("discount_codes").select("*").order("created_at", { ascending: false });
