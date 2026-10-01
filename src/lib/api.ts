@@ -24,7 +24,10 @@ export function authHeaders(): Record<string, string> {
 export const customerLogin = (identifier: string, password: string) => AuthService.customerLogin(identifier, password);
 
 /** Sends a 6-digit login code to the customer's WhatsApp. */
-export const requestOtp = (phone: string, context?: "customer" | "reseller", slug?: string, channel?: "whatsapp" | "email") => AuthService.requestOtp(phone, context, slug, channel);
+export const requestOtp = (phone: string, context?: "customer" | "reseller", slug?: string, channel?: "whatsapp" | "email", preferCode?: boolean) => AuthService.requestOtp(phone, context, slug, channel, preferCode);
+export const passwordLogin = (identifier: string, password: string) => AuthService.passwordLogin(identifier, password);
+export const setCustomerPassword = (password: string) => AuthService.setPassword(password);
+export const getPasswordStatus = () => AuthService.passwordStatus();
 
 /** Validates the code and returns signed sessions for the matching accounts. */
 export const verifyOtp = (phone: string, code: string, context?: "customer" | "reseller") => AuthService.verifyOtp(phone, code, context);

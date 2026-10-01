@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { requestOtp, verifyOtp, LoginAccount } from "@/lib/api";
+import { requestOtp, verifyOtp, passwordLogin, LoginAccount } from "@/lib/api";
 import { useAuthStore, Customer } from "@/store/authStore";
 import { onlyDigits } from "@/utils/formatters";
 import { REF_KEY, EMAIL_RE } from "@/utils/constants";
@@ -9,7 +9,8 @@ import { REF_KEY, EMAIL_RE } from "@/utils/constants";
 export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: string) => {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [step, setStep] = useState<"phone" | "code" | "password">("phone");
+  const [password, setPassword] = useState("");
   const [resendIn, setResendIn] = useState(0);
   const [loading, setLoading] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
@@ -55,7 +56,18 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     navigate("/welcome");
   };
 
-  const sendCode = async (chosen?: "whatsapp" | "email") => {
+  const getIdentifier = () => {
+    const isEmailInput = EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone) || (phone.length > 3 && !/^\d+$/.test(phone));
+    return isEmailInput ? phone.toLowerCase().trim() : onlyDigits(phone).slice(0, 13);
+  };
+
+  const finishAccounts = (accounts: LoginAccount[]) => {
+    if (!accounts || accounts.length === 0) { toast.error("Conta não encontrada."); return; }
+    if (accounts.length === 1) { pickAccount(accounts[0]); return; }
+    setMatches(accounts);
+  };
+
+  const sendCode = async (chosen?: "whatsapp" | "email", preferCode?: boolean) => {
     const useChannel = chosen ?? (step === "code" ? channel : undefined);
     const isEmail = EMAIL_RE.test(phone) || /^[a-zA-Z0-9_\-\.]+(@[a-zA-Z0-9_\-\.]+)?$/.test(phone) || (phone.length > 3 && !/^\d+$/.test(phone));
     const digits = onlyDigits(phone).slice(0, 13);
@@ -68,7 +80,13 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     const identifier = isEmail ? phone.toLowerCase().trim() : digits;
     setLoading(true);
     try {
-      const res = await requestOtp(identifier, mode, slug, useChannel);
+      const res = await requestOtp(identifier, mode, slug, useChannel, preferCode || step === "password");
+      if (res.password) {
+        setCustomerName(res.customer_name || null);
+        setPassword("");
+        setStep("password");
+        return;
+      }
       if (res.choose && res.options) {
         setCustomerName(res.customer_name || null);
         setChannelOptions({ ...res.options, preferred: res.preferred || "whatsapp" });
@@ -98,6 +116,19 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     e.preventDefault();
     if (step === "phone") {
       await sendCode();
+      return;
+    }
+    if (step === "password") {
+      if (!password) { toast.error("Digite sua senha."); return; }
+      setLoading(true);
+      try {
+        const { accounts } = await passwordLogin(getIdentifier(), password);
+        finishAccounts(accounts);
+      } catch (err: any) {
+        toast.error(err.message || "Senha incorreta.");
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     const c = onlyDigits(code);
@@ -133,6 +164,8 @@ export const useLoginFlow = (mode: "customer" | "reseller" = "customer", slug?: 
     setCode,
     step,
     setStep,
+    password,
+    setPassword,
     resendIn,
     loading,
     refCode,
