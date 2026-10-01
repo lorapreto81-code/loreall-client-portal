@@ -19,6 +19,8 @@ import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { DashboardBanners } from "@/features/dashboard/components/DashboardBanners";
 import { DashboardNavigation } from "@/features/dashboard/components/DashboardNavigation";
+import { useFirstRenewal } from "@/features/dashboard/hooks/useFirstRenewal";
+import { useCustomerJourney } from "@/features/dashboard/hooks/useCustomerJourney";
 
 const Dashboard = () => {
   const {
@@ -71,6 +73,7 @@ const Dashboard = () => {
   const handleRenewalClose = () => {
     setRenewalOpen(false);
     queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
+    queryClient.invalidateQueries({ queryKey: ["first-renewal", customer.id] });
   };
 
   return (
@@ -100,11 +103,13 @@ const Dashboard = () => {
 
       <main className="px-4 py-4 w-full max-w-[480px] md:max-w-4xl mx-auto flex flex-col md:grid md:grid-cols-2 gap-[14px]">
         <DashboardBanners
-          profileIncomplete={profileIncomplete}
+          step={step}
+          days={days}
           hasValidPhone={String((customer as any)?.whatsapp || (customer as any)?.celular || "").replace(/\D/g, "").length >= 10}
-          showEmailBanner={showEmailBanner}
+          promoPercent={promoPercent}
           onOpenAccount={openAccount}
-          onDismissEmailBanner={dismissEmailBanner}
+          onRenew={() => setRenewalOpen(true)}
+          onSnoozeProfile={snoozeProfile}
         />
 
         <PlanCard customer={customer} days={days} onRenewClick={() => setRenewalOpen(true)} />
