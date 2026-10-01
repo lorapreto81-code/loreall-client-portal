@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Lock, Clock, CalendarDays, X } from "lucide-react";
+import { Lock, Clock, CalendarDays } from "lucide-react";
+import { BannerCloseButton } from "@/components/BannerCloseButton";
 
 const logo = "/logo.png";
 const WHATSAPP_NUMBER = "5583985591952";
@@ -22,7 +23,7 @@ export function shouldShow(days: number): PopupType {
 
 export function canShow(type: PopupType): boolean {
   if (!type) return false;
-  if (type === "expired") return true;
+  if (type === "expired") return !sessionStorage.getItem("popup_vencido");
 
   if (type === "urgent") {
     const today = new Date().toISOString().slice(0, 10);
@@ -38,6 +39,7 @@ export function canShow(type: PopupType): boolean {
 }
 
 function markShown(type: PopupType) {
+  if (type === "expired") sessionStorage.setItem("popup_vencido", "1");
   if (type === "urgent") {
     localStorage.setItem("popup_urgente_data", new Date().toISOString().slice(0, 10));
   }
@@ -54,7 +56,7 @@ const daysLabel = (d: number) => {
 const configs = {
   expired: {
     overlayBg: "rgba(0,0,0,0.8)",
-    closeable: false,
+    closeable: true,
     icon: <Lock className="h-12 w-12" style={{ color: "#F09595" }} />,
     titleColor: "#F09595",
     borderDark: "#E24B4A",
@@ -163,13 +165,7 @@ export default function ExpirationPopup({ days, customerUsuario, onRenew, isRead
         onClick={(e) => e.stopPropagation()}
       >
         {cfg.closeable && (
-          <button
-            onClick={close}
-            className="absolute top-3 right-3 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
-            style={{ minHeight: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <BannerCloseButton onClick={close} className="absolute top-3 right-3" />
         )}
 
         <img src={logo} alt="Loreall Play TV" style={{ height: 40, width: "auto" }} className="mb-4" />

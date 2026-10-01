@@ -1,5 +1,7 @@
-import { AlertTriangle, ChevronRight, Clock, Lock } from "lucide-react";
+import { AlertTriangle, Clock, Lock } from "lucide-react";
 import type { JourneyStep } from "../hooks/useCustomerJourney";
+import { useState } from "react";
+import { BannerCloseButton } from "@/components/BannerCloseButton";
 import promoAsset from "@/assets/promo-15.webp.asset.json";
 
 interface BannersProps {
@@ -16,15 +18,22 @@ interface BannersProps {
 export const DashboardBanners = ({
   step, days, hasValidPhone, promoPercent, onOpenAccount, onRenew, onSnoozeProfile,
 }: BannersProps) => {
+  const storeKey = `banner_closed_${step}`;
+  const [closed, setClosed] = useState(() => !!sessionStorage.getItem(storeKey));
+  const [closedStep, setClosedStep] = useState(step);
+  if (closedStep !== step) { setClosedStep(step); setClosed(!!sessionStorage.getItem(storeKey)); }
+  const dismiss = () => { sessionStorage.setItem(storeKey, "1"); setClosed(true); };
+  if (closed) return null;
   if (step === "expired" || step === "expiring") {
     const expired = step === "expired";
     const color = expired ? "var(--destructive)" : "var(--warning)";
     return (
       <div
-        className="w-full rounded-xl p-4 border-2 animate-in fade-in slide-in-from-top duration-300 md:col-span-2"
+        className="relative w-full rounded-xl p-4 border-2 animate-in fade-in slide-in-from-top duration-300 md:col-span-2"
         style={{ borderColor: `hsl(${color})`, background: `hsl(${color} / 0.08)` }}
       >
-        <div className="flex items-start gap-3">
+        <BannerCloseButton onClick={dismiss} className="absolute top-2 right-2" />
+        <div className="flex items-start gap-3 pr-8">
           <div className="rounded-full p-2.5 shrink-0" style={{ background: `hsl(${color} / 0.18)` }}>
             {expired ? <Lock className="h-4 w-4" style={{ color: `hsl(${color})` }} /> : <Clock className="h-4 w-4" style={{ color: `hsl(${color})` }} />}
           </div>
@@ -48,10 +57,11 @@ export const DashboardBanners = ({
   if (step === "profile") {
     return (
       <div
-        className="w-full rounded-xl p-4 border-2 animate-in fade-in slide-in-from-top duration-300 md:col-span-2"
+        className="relative w-full rounded-xl p-4 border-2 animate-in fade-in slide-in-from-top duration-300 md:col-span-2"
         style={{ borderColor: "hsl(var(--primary) / 0.45)", background: "hsl(var(--primary) / 0.06)" }}
       >
-        <button onClick={() => onOpenAccount("dados")} className="w-full text-left flex items-center gap-3">
+        <BannerCloseButton onClick={() => { onSnoozeProfile(); dismiss(); }} className="absolute top-2 right-2" />
+        <button onClick={() => onOpenAccount("dados")} className="w-full text-left flex items-center gap-3 pr-8">
           <div className="rounded-full p-2.5 shrink-0 bg-primary/15">
             <AlertTriangle className="h-4 w-4 text-primary" />
           </div>
@@ -63,7 +73,7 @@ export const DashboardBanners = ({
                 : "Cadastre seu e-mail para receber lembretes antes do vencimento, com link para renovar em 1 clique."}
             </p>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+
         </button>
         <div className="flex gap-2 mt-3">
           <button onClick={() => onOpenAccount("dados")} className="btn-primary-gradient flex-1 py-2.5 rounded-xl font-semibold text-sm">Atualizar agora</button>
@@ -75,6 +85,8 @@ export const DashboardBanners = ({
 
   if (step === "promo") {
     return (
+      <div className="relative md:col-span-2">
+      <BannerCloseButton onClick={dismiss} className="absolute top-2 right-2 z-10" />
       <button
         onClick={onRenew}
         className="w-full rounded-2xl overflow-hidden border border-primary/30 shadow-lg shadow-primary/10 transition-transform hover:scale-[1.01] active:scale-[0.99] md:col-span-2 animate-in fade-in duration-300 text-left"
@@ -86,6 +98,7 @@ export const DashboardBanners = ({
           <span className="text-xs font-bold text-primary whitespace-nowrap">Aproveitar →</span>
         </div>
       </button>
+      </div>
     );
   }
 

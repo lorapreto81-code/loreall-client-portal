@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { Megaphone, X } from "lucide-react";
+import { Megaphone } from "lucide-react";
+import { BannerCloseButton } from "@/components/BannerCloseButton";
 
 interface Notice {
   ativo: boolean;
@@ -50,13 +51,7 @@ const NoticeBanner = () => {
             <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Aviso importante</p>
             <p className="mt-1 text-sm text-card-foreground whitespace-pre-line break-words">{notice.mensagem}</p>
           </div>
-          <button
-            onClick={handleDismiss}
-            aria-label="Fechar aviso"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <BannerCloseButton onClick={handleDismiss} label="Fechar aviso" />
         </div>
       </div>
     </div>
