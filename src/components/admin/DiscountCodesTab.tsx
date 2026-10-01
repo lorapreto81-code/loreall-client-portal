@@ -82,6 +82,7 @@ export default function DiscountCodesTab() {
 
   return (
     <div className="space-y-6">
+      <FirstRenewalCard input={input} />
       <div className="card-elevated p-5 space-y-4">
         <div className="flex items-center gap-2">
           <TicketPercent className="h-5 w-5 text-primary" />
@@ -157,6 +158,43 @@ export default function DiscountCodesTab() {
             </table>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function FirstRenewalCard({ input }: { input: string }) {
+  const [cfg, setCfg] = useState<{ enabled: boolean; percent: string; uses: number } | null>(null);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    call("get-first-renewal").then((d) => setCfg({ enabled: !!d.enabled, percent: String(d.percent), uses: d.uses || 0 }))
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Erro"));
+  }, []);
+  if (!cfg) return null;
+  const save = async () => {
+    setSaving(true);
+    try { await call("set-first-renewal", { enabled: cfg.enabled, percent: Number(cfg.percent) }); toast.success("Desconto de 1ª renovação salvo!"); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Erro"); }
+    setSaving(false);
+  };
+  return (
+    <div className="card-elevated p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <TicketPercent className="h-5 w-5 text-primary" />
+        <h2 className="font-bold text-foreground">Desconto de primeira renovação</h2>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Aplicado automaticamente 1 única vez por cliente, só em PIX gerado na área do cliente. Não soma com cupom (vale o maior). Já usado por {cfg.uses} cliente(s).
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input type="checkbox" checked={cfg.enabled} onChange={(e) => setCfg({ ...cfg, enabled: e.target.checked })} /> Ativo
+        </label>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input className={`${input} w-20`} inputMode="numeric" value={cfg.percent}
+            onChange={(e) => setCfg({ ...cfg, percent: e.target.value.replace(/\D/g, "").slice(0, 2) })} /> %
+        </label>
+        <button onClick={save} disabled={saving} className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-bold disabled:opacity-50">Salvar</button>
       </div>
     </div>
   );

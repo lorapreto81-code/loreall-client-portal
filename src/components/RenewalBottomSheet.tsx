@@ -12,6 +12,7 @@ import {
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useFirstRenewal } from "@/features/dashboard/hooks/useFirstRenewal";
 import { getPlans, getCustomer, renewCustomer, createPixPayment, CreatePixResponse, updateCustomer, authHeaders } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { maskDoc, isValidDoc, onlyDigits as onlyDigitsDoc, detectDoc } from "@/lib/doc";
@@ -187,8 +188,15 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const activeCard = periodCards[selectedIdx] || periodCards[0];
   const selectedPlan = activeCard?.plan;
   const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
-  const activeCoupon = coupon && coupon.forValue === planValue ? coupon : null;
-  const payValue = activeCoupon ? activeCoupon.final : planValue;
+  const firstRenewalQ = useFirstRenewal();
+  const frPercent = authScope !== "checkout" && firstRenewalQ.data?.eligible ? firstRenewalQ.data.percent : 0;
+  const applyFr = (v: number) => Math.round((v - Math.round(v * frPercent) / 100) * 100) / 100;
+  const frFinal = frPercent > 0 && planValue > 0 && applyFr(planValue) >= 5 ? applyFr(planValue) : planValue;
+  const couponCandidate = coupon && coupon.forValue === planValue ? coupon : null;
+  // Não soma: vale o maior desconto (mesma regra do servidor).
+  const activeCoupon = couponCandidate && couponCandidate.final < frFinal ? couponCandidate : null;
+  const frActive = !activeCoupon && frFinal < planValue;
+  const payValue = activeCoupon ? activeCoupon.final : frFinal;
 
   const applyCoupon = async (codeArg?: string) => {
     const code = (codeArg ?? couponInput).trim().toUpperCase();
@@ -991,9 +999,17 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                       <p className={`text-xs font-semibold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
                         {card.label}
                       </p>
-                      <p className="text-xl font-black text-foreground mt-1 tabular-nums">
-                        {card.plan ? formatCurrency(value) : "—"}
-                      </p>
+                      {frPercent > 0 && value > 0 && applyFr(value) >= 5 ? (
+                        <>
+                          <p className="text-[11px] text-muted-foreground line-through tabular-nums mt-1">{formatCurrency(value)}</p>
+                          <p className="text-xl font-black text-foreground tabular-nums">{formatCurrency(applyFr(value))}</p>
+                          <span className="inline-block mt-0.5 text-[9px] font-black tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">{frPercent}% OFF · 1ª RENOVAÇÃO</span>
+                        </>
+                      ) : (
+                        <p className="text-xl font-black text-foreground mt-1 tabular-nums">
+                          {card.plan ? formatCurrency(value) : "—"}
+                        </p>
+                      )}
                       {savePct > 0 && full > value ? (
                         <p className="text-[11px] text-emerald-500 font-semibold mt-0.5">Economize {formatCurrency(full - value)}</p>
                       ) : (
@@ -1031,10 +1047,19 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                       )}
                     </div>
                     {couponError && <p className="text-[11px] text-destructive mt-1.5">{couponError}</p>}
-                    {coupon && !activeCoupon && <p className="text-[11px] text-muted-foreground mt-1.5">O cupom foi removido porque você trocou de plano. Aplique de novo.</p>}
+                    {coupon && !couponCandidate && <p className="text-[11px] text-muted-foreground mt-1.5">O cupom foi removido porque você trocou de plano. Aplique de novo.</p>}
                   </div>
                 )}
 
+                {frActive && (
+                  <div className="space-y-1 mb-2 text-sm">
+                    <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(planValue)}</span></div>
+                    <div className="flex justify-between text-emerald-500 font-semibold"><span>{frPercent}% OFF na 1ª renovação</span><span className="tabular-nums">− {formatCurrency(planValue - frFinal)}</span></div>
+                  </div>
+                )}
+                {couponCandidate && !activeCoupon && (
+                  <p className="text-[11px] text-muted-foreground mb-2">Seu desconto de 1ª renovação já é maior que o cupom, então ele foi mantido.</p>
+                )}
                 {activeCoupon && (
                   <div className="space-y-1 mb-2 text-sm">
                     <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(planValue)}</span></div>

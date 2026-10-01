@@ -19,6 +19,8 @@ import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { DashboardBanners } from "@/features/dashboard/components/DashboardBanners";
 import { DashboardNavigation } from "@/features/dashboard/components/DashboardNavigation";
+import { useFirstRenewal } from "@/features/dashboard/hooks/useFirstRenewal";
+import { useCustomerJourney } from "@/features/dashboard/hooks/useCustomerJourney";
 
 const Dashboard = () => {
   const {
@@ -45,35 +47,33 @@ const Dashboard = () => {
     setMenuOpen(false);
   };
 
-  const hasEmail = !!String((customer as any)?.email || "").trim();
-  const emailBannerKey = customer ? `loreall_email_banner_dismissed_${customer.id}` : "";
-  const [emailBannerDismissed, setEmailBannerDismissed] = useState<boolean>(() => {
-    if (typeof window === "undefined" || !emailBannerKey) return false;
-    return localStorage.getItem(emailBannerKey) === "1";
+  const firstRenewal = useFirstRenewal();
+  const promoPercent = firstRenewal.data?.eligible ? firstRenewal.data.percent : 0;
+  const { step, profileSnoozed, snoozeProfile } = useCustomerJourney({
+    customerId: customer?.id,
+    days,
+    profileIncomplete,
+    promoEligible: promoPercent > 0,
   });
 
-  const showEmailBanner = !!customer && !hasEmail && !emailBannerDismissed && !profileIncomplete;
-
-  const dismissEmailBanner = () => {
-    if (emailBannerKey) localStorage.setItem(emailBannerKey, "1");
-    setEmailBannerDismissed(true);
-  };
-
+  // No máximo 1 abertura automática por visita, e só quando a etapa atual é "dados".
   useEffect(() => {
-    if (!customer || !profileIncomplete) return;
+    if (!customer || step !== "profile" || profileSnoozed) return;
     const key = `loreall_profile_prompted_${customer.id}`;
     if (sessionStorage.getItem(key)) return;
     const expirationType = shouldShow(days);
-    if (expirationType && canShow(expirationType)) return; // deixa o pop-up de vencimento aparecer sozinho primeiro
+    if (expirationType && canShow(expirationType)) return;
     sessionStorage.setItem(key, "1");
-    setTimeout(() => openAccount("dados"), 600);
-  }, [profileIncomplete, customer, days]);
+    const t = setTimeout(() => openAccount("dados"), 600);
+    return () => clearTimeout(t);
+  }, [step, customer, days, profileSnoozed]);
 
   if (!customer) return null;
 
   const handleRenewalClose = () => {
     setRenewalOpen(false);
     queryClient.invalidateQueries({ queryKey: ["invoices", customer.id] });
+    queryClient.invalidateQueries({ queryKey: ["first-renewal", customer.id] });
   };
 
   return (
@@ -103,11 +103,13 @@ const Dashboard = () => {
 
       <main className="px-4 py-4 w-full max-w-[480px] md:max-w-4xl mx-auto flex flex-col md:grid md:grid-cols-2 gap-[14px]">
         <DashboardBanners
-          profileIncomplete={profileIncomplete}
+          step={step}
+          days={days}
           hasValidPhone={String((customer as any)?.whatsapp || (customer as any)?.celular || "").replace(/\D/g, "").length >= 10}
-          showEmailBanner={showEmailBanner}
+          promoPercent={promoPercent}
           onOpenAccount={openAccount}
-          onDismissEmailBanner={dismissEmailBanner}
+          onRenew={() => setRenewalOpen(true)}
+          onSnoozeProfile={snoozeProfile}
         />
 
         <PlanCard customer={customer} days={days} onRenewClick={() => setRenewalOpen(true)} />

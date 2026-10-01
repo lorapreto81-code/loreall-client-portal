@@ -170,6 +170,20 @@ Deno.serve(async (req) => {
       discountInfo = { id: d.code.id, code: d.code.code, discount: d.discount };
     }
 
+    // Desconto de 1ª renovação (só área do cliente). Não soma com cupom: vale o maior.
+    let firstRenewal: { percent: number; discount: number } | null = null;
+    if (session!.role !== "checkout") {
+      const fr = await isFirstRenewalEligible(supabase, body.customer_id);
+      if (fr.eligible) {
+        const a = applyPercent(realAmount, fr.percent);
+        if (a.final >= 5 && a.final < chargeAmount) {
+          chargeAmount = a.final;
+          discountInfo = null;
+          firstRenewal = { percent: fr.percent, discount: a.discount };
+        }
+      }
+    }
+
     // Reaproveita um Pix já pendente e ainda válido pro mesmo cliente + mesmo plano,
     // em vez de gerar um novo a cada clique.
     const { data: existingPending } = await supabase
