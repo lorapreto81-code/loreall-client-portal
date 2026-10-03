@@ -1,6 +1,7 @@
 // Discount codes: admin CRUD + public validation (preview only; create-pix re-validates).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isAdminRequest } from "../_shared/auth.ts";
+import { isAdminRequest, getCustomerSession, isCustomerSession } from "../_shared/auth.ts";
+import { getFirstRenewalConfig, isFirstRenewalEligible } from "../_shared/firstRenewal.ts";
 import { jsonResponse as json, securityHeadersFor, checkRateLimit } from "../_shared/security.ts";
 import { evaluateDiscount, normalizeCode, CODE_RE } from "../_shared/discount.ts";
 
