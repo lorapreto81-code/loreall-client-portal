@@ -4,6 +4,7 @@ import { createPixSchema } from "../_shared/validation.ts";
 import { jsonResponse as json, securityHeadersFor, checkRateLimit } from "../_shared/security.ts";
 import { evaluateDiscount } from "../_shared/discount.ts";
 import { getCustomerSession, isRenewalSession } from "../_shared/auth.ts";
+import { isFirstRenewalEligible, applyPercent } from "../_shared/firstRenewal.ts";
 
 const TG_BASE = "https://topgestor.me/api/v1";
 
