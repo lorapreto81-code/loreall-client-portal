@@ -948,18 +948,24 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
 
   // ---------- Tela: seleção de plano ----------
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={handleClose}>
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-foreground/50 backdrop-blur-md p-0 md:p-4" onClick={handleClose}>
       <div
-        className="bg-card w-full max-w-[480px] md:max-w-2xl md:rounded-2xl rounded-t-2xl p-6 animate-in slide-in-from-bottom duration-200"
+        className="bg-card w-full max-w-[480px] md:max-w-2xl md:rounded-3xl rounded-t-3xl p-5 sm:p-6 max-h-[92vh] overflow-y-auto border border-border/60 shadow-2xl shadow-primary/10 animate-in slide-in-from-bottom duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold text-foreground">Renovar acesso</h3>
+          <h3 className="text-xl font-bold tracking-tight text-foreground">Renovar acesso</h3>
           <button onClick={handleClose} className="text-muted-foreground hover:text-foreground p-2" style={{ minHeight: 44, minWidth: 44 }}>
             <X className="h-5 w-5" />
           </button>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">Valores do seu plano atual</p>
+        <p className="text-sm text-muted-foreground mb-4">Escolha o período e pague via PIX com liberação automática</p>
+        {frPercent > 0 && !pricingLoading && (
+          <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2">
+            <span className="text-[11px] font-black tracking-wide px-2 py-0.5 rounded-full bg-emerald-500 text-background">{frPercent}% OFF</span>
+            <span className="text-xs font-semibold text-foreground">Desconto na sua 1ª renovação, aplicado em todos os planos</span>
+          </div>
+        )}
 
         {pricingLoading ? (
           <div className="grid grid-cols-2 gap-3">
@@ -969,7 +975,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
           </div>
         ) : periodCards.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-5 pt-1">
               {(() => {
                 const monthlyCard = periodCards.find((c) => c.months === 1);
                 const monthlyBase = monthlyCard?.plan ? getPlanValue(monthlyCard.plan) : 0;
@@ -985,48 +991,53 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     <button
                       key={card.months}
                       onClick={() => setSelectedIdx(idx)}
-                      className={`relative p-4 pt-5 rounded-2xl text-left transition-all hover:-translate-y-0.5 active:scale-[0.98] border-2 ${
-                        isSelected
-                          ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
-                          : "border-border bg-card hover:border-primary/40"
+                      className={`relative flex flex-col p-3.5 sm:p-4 rounded-2xl text-left transition-all hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                        isBest
+                          ? `pt-6 border-2 bg-gradient-to-br from-primary/10 via-card to-secondary/10 ${isSelected ? "border-primary shadow-lg shadow-primary/20" : "border-primary/40 hover:border-primary/70"}`
+                          : `border ${isSelected ? "border-primary bg-primary/5 ring-1 ring-primary shadow-md shadow-primary/10" : "border-border bg-card hover:border-primary/40"}`
                       }`}
                     >
                       {isBest && (
-                        <span className="absolute -top-2.5 left-3 text-[9px] font-black tracking-wider px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
-                          ⭐ MELHOR OFERTA
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-black tracking-wider px-3 py-1 rounded-full bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-md shadow-primary/30">
+                          MELHOR OFERTA
                         </span>
                       )}
-                      <p className={`text-xs font-semibold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                      <p className={`text-sm ${isBest ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
                         {card.label}
                       </p>
-                      {frPercent > 0 && value > 0 && applyFr(value) >= 5 ? (
-                        <div className="mt-1 space-y-0.5 text-[11px] tabular-nums">
-                          <div className="flex justify-between gap-1 text-muted-foreground">
-                            <span>Preço</span><span className="line-through">{formatCurrency(value)}</span>
-                          </div>
-                          <div className="flex justify-between gap-1 text-emerald-500 font-semibold">
-                            <span>-{frPercent}%</span><span>− {formatCurrency(Math.round((value - applyFr(value)) * 100) / 100)}</span>
-                          </div>
-                          <p className="text-[10px] text-muted-foreground pt-0.5">Você paga</p>
-                          <p className="text-xl font-black text-foreground leading-none">{formatCurrency(applyFr(value))}</p>
-                          <span className="inline-block mt-1 text-[9px] font-black tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">1ª RENOVAÇÃO</span>
-                        </div>
-                      ) : (
-                        <p className="text-xl font-black text-foreground mt-1 tabular-nums">
-                          {card.plan ? formatCurrency(value) : "—"}
-                        </p>
-                      )}
-                      {frPercent > 0 && value > 0 && applyFr(value) >= 5 ? (
-                        <p className="text-[11px] text-emerald-500 font-semibold mt-0.5">
-                          Economia total {formatCurrency(Math.round((Math.max(full, value) - applyFr(value)) * 100) / 100)}
-                        </p>
-                      ) : savePct > 0 && full > value ? (
-                        <p className="text-[11px] text-emerald-500 font-semibold mt-0.5">Economize {formatCurrency(full - value)}</p>
-                      ) : (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{card.months > 1 && perMonth > 0 ? `${formatCurrency(perMonth)}/mês` : "Cobrança única"}</p>
-                      )}
+                      {(() => {
+                        const hasFr = frPercent > 0 && value > 0 && applyFr(value) >= 5;
+                        const finalV = hasFr ? applyFr(value) : value;
+                        const totalSave = Math.round((Math.max(full, value) - finalV) * 100) / 100;
+                        return (
+                          <>
+                            {hasFr && (
+                              <div className="mt-1.5 flex items-center gap-1.5 tabular-nums">
+                                <span className="text-xs text-muted-foreground line-through">{formatCurrency(value)}</span>
+                                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500">-{frPercent}%</span>
+                              </div>
+                            )}
+                            <p className={`font-black tabular-nums leading-tight ${hasFr ? "mt-0.5" : "mt-1.5"} ${isBest ? "text-2xl sm:text-[28px] gradient-primary-text" : "text-xl text-foreground"}`}>
+                              {card.plan ? formatCurrency(finalV) : "—"}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground tabular-nums">
+                              {card.months > 1 && finalV > 0 ? `${formatCurrency(finalV / card.months)}/mês` : "Cobrança única"}
+                            </p>
+                            {hasFr && (
+                              <p className="text-[11px] text-emerald-500 font-semibold tabular-nums mt-1">
+                                Desconto − {formatCurrency(Math.round((value - finalV) * 100) / 100)}
+                              </p>
+                            )}
+                            {totalSave > 0 && (card.months > 1 || hasFr) && (
+                              <span className={`mt-1.5 self-start rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums ${isBest ? "bg-emerald-500 text-background" : "bg-emerald-500/10 text-emerald-500"}`}>
+                                Economia total {formatCurrency(totalSave)}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
                       {isLegacyPlanName(customer?.plan?.name) && card.keyword !== "mensal" && (
-                        <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                        <p className={`mt-2 text-[10px] font-semibold tracking-wide ${isBest ? "text-primary" : "text-muted-foreground"}`}>
                           MANTÉM 3 TELAS
                         </p>
                       )}
@@ -1046,7 +1057,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                         onChange={(e) => { setCouponInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 30)); setCouponError(""); }}
                         onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
                         placeholder="Tem um cupom de desconto?"
-                        className="flex-1 min-w-0 h-11 px-3 rounded-xl border border-border bg-background text-sm font-semibold tracking-wide text-foreground placeholder:font-normal placeholder:tracking-normal placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                        className={`flex-1 min-w-0 h-11 px-3 rounded-xl border border-border bg-background text-sm font-semibold tracking-wide text-foreground placeholder:font-normal placeholder:tracking-normal placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-shadow ${activeCoupon ? "border-emerald-500/60 bg-emerald-500/5" : ""}`}
                       />
                       {activeCoupon ? (
                         <button onClick={() => { setCoupon(null); setCouponInput(""); }} className="h-11 px-4 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-foreground">Remover</button>
@@ -1056,6 +1067,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                         </button>
                       )}
                     </div>
+                    {activeCoupon && <p className="text-[11px] text-emerald-500 font-semibold mt-1.5 inline-flex items-center gap-1"><Check className="h-3.5 w-3.5" /> Cupom {activeCoupon.code} aplicado</p>}
                     {couponError && <p className="text-[11px] text-destructive mt-1.5">{couponError}</p>}
                     {coupon && !couponCandidate && <p className="text-[11px] text-muted-foreground mt-1.5">O cupom foi removido porque você trocou de plano. Aplique de novo.</p>}
                   </div>
@@ -1076,17 +1088,17 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                     <div className="flex justify-between text-emerald-500 font-semibold"><span>Cupom {activeCoupon.code}</span><span className="tabular-nums">− {formatCurrency(activeCoupon.discount)}</span></div>
                   </div>
                 )}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-muted-foreground">Total</span>
-                  <span className="text-xl font-bold text-foreground">{formatCurrency(payValue)}</span>
+                <div className="flex items-center justify-between mb-4 pt-2 border-t border-border/60">
+                  <span className="text-sm font-semibold text-foreground">Total</span>
+                  <span className="text-2xl font-black tracking-tight text-foreground tabular-nums">{formatCurrency(payValue)}</span>
                 </div>
 
                 {canUsePix ? (
                   <button
                     onClick={handleGeneratePix}
                     disabled={generating}
-                    className="btn-primary-gradient w-full py-4 font-bold text-base rounded-xl inline-flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-primary/25"
-                    style={{ minHeight: 54 }}
+                    className="btn-primary-gradient w-full py-4 font-bold text-base rounded-2xl inline-flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-primary/25 transition-all hover:brightness-110 hover:shadow-xl hover:shadow-primary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                    style={{ minHeight: 56 }}
                   >
                     {generating ? <Loader2 className="h-5 w-5 animate-spin" /> : <QrCode className="h-5 w-5" />}
                     {generating ? "Gerando pagamento..." : `Pagar ${formatCurrency(payValue)} via PIX`}
@@ -1115,10 +1127,10 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
               <div className="mt-5 pt-4 border-t border-border">
                 <button
                   onClick={() => openSubscribeForm(recommendedSubPlan)}
-                  className="w-full text-left block p-3 rounded-xl border border-border bg-card/50 transition-colors hover:border-primary/40"
+                  className="w-full text-left block p-3.5 rounded-2xl border border-border bg-muted/30 transition-colors hover:border-primary/40 hover:bg-muted/50"
                 >
                   <div className="flex items-center gap-3">
-                    <Zap className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><Zap className="h-4 w-4 text-primary" /></span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">
                         {recommendedSubPlan.billing_method === "pix_automatico"
