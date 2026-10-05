@@ -26,7 +26,7 @@ export const mapProviderToServidor = (iptvProvider?: string | null): string | nu
   const v = String(iptvProvider || "").toLowerCase().trim();
   if (v === "wplay_main") return "warez";
   if (v === "uniplay_main") return "uniplay_iptv"; // cobre P2P e IPTV — preço igual pra 1 tela
-  return null; // desconhecido: quem chama deve cair no sistema antigo
+  return "warez"; // desconhecido: tabela unificada (mesmos preços em todos os servidores)
 };
 
 
