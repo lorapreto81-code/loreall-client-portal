@@ -25,12 +25,21 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data, error } = await supabase
-      .from("area_plan_mapping")
-      .select("periodicidade, topgestor_plan_id, display_name, base_amount")
-      .eq("servidor", servidor)
-      .eq("telas", telas)
+    const sel = "periodicidade, topgestor_plan_id, display_name, base_amount, telas";
+    let { data, error } = await supabase
+      .from("area_plan_mapping").select(sel)
+      .eq("servidor", servidor).eq("telas", telas)
       .order("base_amount", { ascending: true });
+
+    // Fallback: no table for this screen count -> use the server's unified table (all periods).
+    if (!error && (!data || data.length === 0)) {
+      const r = await supabase.from("area_plan_mapping").select(sel)
+        .eq("servidor", servidor).order("telas", { ascending: false }).order("base_amount", { ascending: true });
+      error = r.error;
+      const rows = r.data || [];
+      const t = rows[0]?.telas;
+      data = rows.filter((x: any) => x.telas === t);
+    }
 
     if (error) {
       console.error("[area-pricing] query error", error);
