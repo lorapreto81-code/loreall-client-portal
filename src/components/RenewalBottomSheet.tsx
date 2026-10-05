@@ -1000,17 +1000,27 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
                         {card.label}
                       </p>
                       {frPercent > 0 && value > 0 && applyFr(value) >= 5 ? (
-                        <>
-                          <p className="text-[11px] text-muted-foreground line-through tabular-nums mt-1">{formatCurrency(value)}</p>
-                          <p className="text-xl font-black text-foreground tabular-nums">{formatCurrency(applyFr(value))}</p>
-                          <span className="inline-block mt-0.5 text-[9px] font-black tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">{frPercent}% OFF · 1ª RENOVAÇÃO</span>
-                        </>
+                        <div className="mt-1 space-y-0.5 text-[11px] tabular-nums">
+                          <div className="flex justify-between gap-1 text-muted-foreground">
+                            <span>Preço</span><span className="line-through">{formatCurrency(value)}</span>
+                          </div>
+                          <div className="flex justify-between gap-1 text-emerald-500 font-semibold">
+                            <span>-{frPercent}%</span><span>− {formatCurrency(Math.round((value - applyFr(value)) * 100) / 100)}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground pt-0.5">Você paga</p>
+                          <p className="text-xl font-black text-foreground leading-none">{formatCurrency(applyFr(value))}</p>
+                          <span className="inline-block mt-1 text-[9px] font-black tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">1ª RENOVAÇÃO</span>
+                        </div>
                       ) : (
                         <p className="text-xl font-black text-foreground mt-1 tabular-nums">
                           {card.plan ? formatCurrency(value) : "—"}
                         </p>
                       )}
-                      {savePct > 0 && full > value ? (
+                      {frPercent > 0 && value > 0 && applyFr(value) >= 5 ? (
+                        <p className="text-[11px] text-emerald-500 font-semibold mt-0.5">
+                          Economia total {formatCurrency(Math.round((Math.max(full, value) - applyFr(value)) * 100) / 100)}
+                        </p>
+                      ) : savePct > 0 && full > value ? (
                         <p className="text-[11px] text-emerald-500 font-semibold mt-0.5">Economize {formatCurrency(full - value)}</p>
                       ) : (
                         <p className="text-[11px] text-muted-foreground mt-0.5">{card.months > 1 && perMonth > 0 ? `${formatCurrency(perMonth)}/mês` : "Cobrança única"}</p>
