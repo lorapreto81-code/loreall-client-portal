@@ -189,7 +189,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
   const selectedPlan = activeCard?.plan;
   const planValue = selectedPlan ? getPlanValue(selectedPlan) : 0;
   const firstRenewalQ = useFirstRenewal();
-  const frPercent = authScope !== "checkout" && firstRenewalQ.data?.eligible ? firstRenewalQ.data.percent : 0;
+  const frPercent = firstRenewalQ.data?.eligible ? firstRenewalQ.data.percent : 0;
   const applyFr = (v: number) => Math.round((v - Math.round(v * frPercent) / 100) * 100) / 100;
   const frFinal = frPercent > 0 && planValue > 0 && applyFr(planValue) >= 5 ? applyFr(planValue) : planValue;
   const couponCandidate = coupon && coupon.forValue === planValue ? coupon : null;

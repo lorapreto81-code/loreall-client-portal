@@ -8,7 +8,7 @@ export function useFirstRenewal() {
   const scope = useAuthStore((s) => s.scope);
   return useQuery<{ eligible: boolean; percent: number }>({
     queryKey: ["first-renewal", customerId],
-    enabled: !!customerId && scope === "full",
+    enabled: !!customerId && !!scope,
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("discount-codes?action=first-renewal", {

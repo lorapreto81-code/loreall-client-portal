@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
 
     // Desconto de 1ª renovação (só área do cliente). Não soma com cupom: vale o maior.
     let firstRenewal: { percent: number; discount: number } | null = null;
-    if (session!.role !== "checkout") {
+    {
       const fr = await isFirstRenewalEligible(supabase, body.customer_id);
       if (fr.eligible) {
         const a = applyPercent(realAmount, fr.percent);
