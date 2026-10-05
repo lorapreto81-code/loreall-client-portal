@@ -1,6 +1,6 @@
 // Discount codes: admin CRUD + public validation (preview only; create-pix re-validates).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isAdminRequest, getCustomerSession, isCustomerSession } from "../_shared/auth.ts";
+import { isAdminRequest, getCustomerSession, isCustomerSession, isRenewalSession } from "../_shared/auth.ts";
 import { getFirstRenewalConfig, isFirstRenewalEligible } from "../_shared/firstRenewal.ts";
 import { jsonResponse as json, securityHeadersFor, checkRateLimit } from "../_shared/security.ts";
 import { evaluateDiscount, normalizeCode, CODE_RE } from "../_shared/discount.ts";
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     if (action === "first-renewal") {
       const session = await getCustomerSession(req);
-      if (!isCustomerSession(session)) return json({ eligible: false, percent: 0 }, 200, {}, req);
+      if (!isRenewalSession(session)) return json({ eligible: false, percent: 0 }, 200, {}, req);
       const r = await isFirstRenewalEligible(supabase, Number(session!.sub));
       return json(r, 200, {}, req);
     }
