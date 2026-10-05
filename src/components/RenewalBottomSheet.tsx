@@ -24,6 +24,8 @@ import {
 } from "@/lib/planUtils";
 import { WHATSAPP_NUMBER } from "@/utils/constants";
 const logo = "/logo.png";
+// PIX Automático desativado temporariamente até as melhorias do sistema recorrente.
+const PIX_AUTOMATICO_ENABLED = false;
 
 interface SyncpayPublicPlan {
   id: string;
@@ -1123,7 +1125,7 @@ const RenewalBottomSheet = ({ open, onClose }: Props) => {
             )}
 
             {/* PIX Automático — card único destacado */}
-            {recommendedSubPlan && authScope !== "checkout" && (
+            {PIX_AUTOMATICO_ENABLED && recommendedSubPlan && authScope !== "checkout" && (
               <div className="mt-5 pt-4 border-t border-border">
                 <button
                   onClick={() => openSubscribeForm(recommendedSubPlan)}
