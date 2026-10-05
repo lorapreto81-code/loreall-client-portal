@@ -173,7 +173,13 @@ const Renovar = () => {
                 <QrCode className="h-5 w-5" />
                 {planValue > 0 ? `Renovar por ${formatCurrency(planValue)} via PIX` : "Escolher plano e pagar via PIX"}
               </button>
-              <p className="text-[10px] text-muted-foreground/80 text-center">Na próxima etapa: planos de 3, 6 e 12 meses com desconto e campo para cupom.</p>
+              <p className="flex items-center justify-center gap-1.5 text-xs font-semibold text-foreground">
+                <Zap className="h-3.5 w-3.5 text-accent" /> Pagamento confirmado = liberação automática
+              </p>
+              <div className="rounded-xl bg-primary/5 border border-primary/15 px-3.5 py-2.5 text-center">
+                <p className="text-xs font-bold text-primary">Quer economizar mais?</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Na próxima etapa, confira planos de 3, 6 e 12 meses com desconto.</p>
+              </div>
             </section>
 
             <section className="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap text-[10px] text-muted-foreground">
