@@ -149,7 +149,19 @@ Deno.serve(async (req) => {
       return json({ error: "Cliente não encontrado." }, 404, {}, req);
     }
 
-    const realAmount = await fetchPlanPrice(body.plan_id);
+    // Preço oficial: primeiro a tabela de preços da área (area_plan_mapping),
+    // depois a API do TopGestor como fallback. Alguns planos mapeados não
+    // aparecem na listagem pública do TopGestor, mas são válidos para renovação.
+    const { data: mapped } = await supabase
+      .from("area_plan_mapping")
+      .select("base_amount")
+      .eq("topgestor_plan_id", body.plan_id)
+      .limit(1)
+      .maybeSingle();
+    let realAmount = mapped ? Number(mapped.base_amount) : null;
+    if (realAmount == null || realAmount <= 0) {
+      realAmount = await fetchPlanPrice(body.plan_id);
+    }
     if (realAmount == null || realAmount <= 0) {
       console.error("[SECURITY] create-pix: plano não encontrado", body.plan_id);
       return json({ error: "Plano não encontrado." }, 404, {}, req);
