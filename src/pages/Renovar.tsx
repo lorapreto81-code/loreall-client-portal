@@ -5,10 +5,11 @@ import { formatCurrency } from "@/lib/format";
 import RenewalBottomSheet from "@/components/RenewalBottomSheet";
 import { useAuthStore, Customer } from "@/store/authStore";
 import { getDisplayPlanLabel } from "@/lib/planUtils";
+import { SUPPORT_WHATSAPP_NUMBER, SUPPORT_WHATSAPP_DISPLAY } from "@/config/contact";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const SUPPORT_WHATSAPP = "5583998551952";
+const SUPPORT_WHATSAPP = SUPPORT_WHATSAPP_NUMBER;
 
 function parseDate(raw?: string) {
   if (!raw) return null;
@@ -192,7 +193,7 @@ const Renovar = () => {
               <a href={supportUrl(`Olá! Sou ${customer.name}${customer.usuario ? ` (usuário ${customer.usuario})` : ""} e preciso de ajuda com a renovação da Loreall Play.`)}
                 target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1">
-                <MessageCircle className="h-3.5 w-3.5 text-emerald-500" /> Dúvidas? Suporte no WhatsApp <span className="font-semibold">(83) 99855-1952</span>
+                <MessageCircle className="h-3.5 w-3.5 text-emerald-500" /> Dúvidas? Suporte no WhatsApp <span className="font-semibold">{SUPPORT_WHATSAPP_DISPLAY}</span>
               </a>
               <p className="text-center text-[10px] text-muted-foreground/50">Loreall Play · Link pessoal de renovação — não compartilhe.</p>
             </div>

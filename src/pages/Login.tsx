@@ -150,14 +150,14 @@ const banners = [
     id: "renove",
     asset: renoveBanner,
     alt: "Renove sua assinatura ou atualize seu acesso agora",
-    href: "https://wa.me/5583985591952?text=Olá!%20Quero%20renovar%20minha%20assinatura.",
+    href: "https://wa.me/5511967886234?text=Olá!%20Quero%20renovar%20minha%20assinatura.",
     label: "Renove sua assinatura"
   },
   {
     id: "indique",
     asset: indiqueBanner,
     alt: "Indique e ganhe +1 mês grátis para cada amigo que assinar",
-    href: "https://wa.me/5583985591952?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe.",
+    href: "https://wa.me/5511967886234?text=Olá!%20Quero%20saber%20mais%20sobre%20a%20promoção%20Indique%20e%20Ganhe.",
     label: "Indique e ganhe 1 mês grátis"
   }
 ];

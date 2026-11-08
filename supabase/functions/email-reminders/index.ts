@@ -32,7 +32,7 @@ function daysUntil(due: string): number | null {
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
 const LOGO_URL = `${PUBLIC_BASE}/brand-logo.png`;
-const SUPPORT_WA = "5583998551952";
+const SUPPORT_WA = "5511967886234";
 
 interface EmailExtra { usuario?: string; plan?: string; telas?: number }
 
@@ -105,7 +105,7 @@ function buildEmail(name: string, days: number, dueBr: string, url: string, extr
     <p style="margin:10px 0 0;color:#64748b;font-size:12px">Pagamento via PIX • Liberação automática</p>
   </td></tr>
   <tr><td align="center" style="padding:18px 24px 22px">
-    <p style="margin:0;color:#64748b;font-size:13px">Dúvidas? Fale com nosso suporte no WhatsApp<br><a href="${waUrl}" style="color:#16a34a;font-weight:bold;text-decoration:none">(83) 99855-1952</a></p>
+    <p style="margin:0;color:#64748b;font-size:13px">Dúvidas? Fale com nosso suporte no WhatsApp<br><a href="${waUrl}" style="color:#16a34a;font-weight:bold;text-decoration:none">(11) 96788-6234</a></p>
   </td></tr>
 </table>
 <p style="max-width:520px;margin:12px auto 0;color:#94a3b8;font-size:11px;line-height:1.5;text-align:center">Loreall Play · Link pessoal de renovação — não compartilhe.</p>
