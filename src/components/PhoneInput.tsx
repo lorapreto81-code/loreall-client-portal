@@ -10,7 +10,7 @@ import {
 interface PhoneInputProps {
   /** Digits (with or without country code) or a formatted string. */
   value: string;
-  /** Emits digits only, always including the country code (e.g. 5583985591952). */
+  /** Emits digits only, always including the country code (e.g. 5511967886234). */
   onChange: (digits: string) => void;
   placeholder?: string;
   disabled?: boolean;

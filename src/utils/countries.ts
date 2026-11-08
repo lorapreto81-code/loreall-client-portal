@@ -1,7 +1,7 @@
 /**
  * Country dial codes used by the phone inputs across the app.
  * The canonical value stored/sent is always digits only, including the
- * country code (E.164 without "+"), e.g. "5583985591952".
+ * country code (E.164 without "+"), e.g. "5511967886234".
  * The backend matches by suffix, so legacy records saved without the
  * country code keep working.
  */

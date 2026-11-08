@@ -258,7 +258,7 @@ export const LoginForm = ({
 
       <div className="mt-4 pt-4 border-t border-border/30">
         <a
-          href="https://wa.me/5583985591952?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
+          href="https://wa.me/5511967886234?text=Olá!%20Não%20tenho%20acesso%20e%20gostaria%20de%20criar%20minha%20conta%20na%20Loreall%20Play%20TV."
           target="_blank"
           rel="noopener noreferrer"
           className="w-full text-[11px] font-medium text-muted-foreground transition-colors flex items-center justify-center gap-1 group"

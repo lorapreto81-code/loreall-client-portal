@@ -11,10 +11,11 @@ import LaunchesBanner from "@/components/LaunchesBanner";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { useLoginFlow } from "@/features/auth/hooks/useLoginFlow";
 import { useAuthStore, getCustomerToken } from "@/store/authStore";
+import { SUPPORT_WHATSAPP_NUMBER } from "@/config/contact";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const SUPPORT_WHATSAPP = "5583998551952";
+const SUPPORT_WHATSAPP = SUPPORT_WHATSAPP_NUMBER;
 const WAREZ_PANEL_URL = "https://revenda.loreallplay.com/";
 
 interface ResellerLink {

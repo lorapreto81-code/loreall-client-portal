@@ -1,10 +1,11 @@
 import { onlyDigits } from "./formatters";
 import { daysUntil } from "@/lib/format";
+import { SUPPORT_WHATSAPP_NUMBER } from "@/config/contact";
 
 export const logo = "/logo.png";
 export const REF_KEY = "loreall_pending_ref";
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const WHATSAPP_NUMBER = "5583985591952";
+export const WHATSAPP_NUMBER = SUPPORT_WHATSAPP_NUMBER;
 
 /** Returns color for days remaining */
 export const getDaysColor = (days: number): string => {
