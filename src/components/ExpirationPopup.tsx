@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Lock, Clock, CalendarDays } from "lucide-react";
 import { BannerCloseButton } from "@/components/BannerCloseButton";
+import { SUPPORT_WHATSAPP_NUMBER } from "@/config/contact";
 
 const logo = "/logo.png";
-const WHATSAPP_NUMBER = "5583985591952";
+const WHATSAPP_NUMBER = SUPPORT_WHATSAPP_NUMBER;
 
 type PopupType = "expired" | "urgent" | "nearby" | null;
 

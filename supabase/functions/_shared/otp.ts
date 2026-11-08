@@ -49,7 +49,7 @@ function brTail8(d: string): string {
 /**
  * Compares two phone numbers written in any format / country.
  * Matches by the longest common significant suffix (min 8 digits),
- * so "937453826" matches "+351 937 453 826" and "83985591952" matches "5583985591952".
+ * so "937453826" matches "+351 937 453 826" and "11967886234" matches "5511967886234".
  */
 export function phoneMatches(a: string, b: string): boolean {
   const x = normalizePhoneDigits(a);
